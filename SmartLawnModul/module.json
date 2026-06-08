@@ -1,0 +1,11 @@
+{
+    "id": "{B6D219C1-F0B8-4FEF-9F59-7A6F5643B9D5}",
+    "name": "SmartLawn AI",
+    "type": 3,
+    "vendor": "Florian Graßinger",
+    "aliases": ["SmartLawnAI"],
+    "parentRequirements": [],
+    "childRequirements": [],
+    "implemented": ["{00000000-0000-0000-0000-000000000000}"],
+    "prefix": "SLAI"
+}
