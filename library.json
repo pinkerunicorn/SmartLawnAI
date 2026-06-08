@@ -1,8 +1,8 @@
 {
     "id": "{7B851C81-8083-424F-A14E-7EB459D6BE9F}",
-    "author": "Rosalie de Champagne",
-    "name": "SmartLawn",
-    "url": "https://github.com/DeinGitHubName/SmartLawnAI",
+    "author": "Florian Graßinger",
+    "name": "SmartLawnAI",
+    "url": "https://github.com/pinkerunicorn/SmartLawnAI",
     "compatibility": {
         "version": "7.1"
     },
