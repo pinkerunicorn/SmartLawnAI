@@ -1,0 +1,102 @@
+{
+    "elements": [
+        {
+            "type": "Label",
+            "caption": "Globale Bewässerungs-Parameter (Defaults)"
+        },
+        {
+            "type": "NumberSpinner",
+            "name": "DefaultZielFeuchte",
+            "caption": "Default Tiefenflutung (Zielwert in %)",
+            "suffix": "%"
+        },
+        {
+            "type": "NumberSpinner",
+            "name": "DefaultStartSchwellwert",
+            "caption": "Default Trockenstress (Startwert in %)",
+            "suffix": "%"
+        },
+        {
+            "type": "Label",
+            "caption": "Globale Sensorik (Thermodynamik & Wetter)"
+        },
+        {
+            "type": "SelectVariable",
+            "name": "GlobalAirTempID",
+            "caption": "Umgebungstemperatur-Sensor (ID Lufttemperatur in °C)"
+        },
+        {
+            "type": "SelectVariable",
+            "name": "GlobalHumidityID",
+            "caption": "Luftfeuchtigkeits-Sensor (ID relative Feuchte in %)"
+        },
+        {
+            "type": "SelectVariable",
+            "name": "GlobalIlluminanceID",
+            "caption": "Helligkeitssensor (ID in Lux)"
+        },
+        {
+            "type": "Label",
+            "caption": "Zonen & Hardware-Zuweisung (0 = nutzt globales Default)"
+        },
+        {
+            "type": "List",
+            "name": "Zones",
+            "caption": "Beregnungskreise",
+            "rowCount": 5,
+            "add": true,
+            "delete": true,
+            "columns": [
+                {
+                    "caption": "Gruppen-Name",
+                    "name": "GroupName",
+                    "width": "150px",
+                    "add": "",
+                    "edit": { "type": "ValidationTextBox" }
+                },
+                {
+                    "caption": "Feuchte-Sensor",
+                    "name": "SensorID",
+                    "width": "120px",
+                    "add": 0,
+                    "edit": { "type": "SelectVariable" }
+                },
+                {
+                    "caption": "Ventil-Aktor",
+                    "name": "ValveID",
+                    "width": "120px",
+                    "add": 0,
+                    "edit": { "type": "SelectVariable" }
+                },
+                {
+                    "caption": "Indiv. Ziel (%)",
+                    "name": "CustomZiel",
+                    "width": "100px",
+                    "add": 0,
+                    "edit": { "type": "NumberSpinner" }
+                },
+                {
+                    "caption": "Indiv. Start (%)",
+                    "name": "CustomStart",
+                    "width": "100px",
+                    "add": 0,
+                    "edit": { "type": "NumberSpinner" }
+                },
+                {
+                    "caption": "Gardena Status",
+                    "name": "HardwareStatusID",
+                    "width": "120px",
+                    "add": 0,
+                    "edit": { "type": "SelectVariable" }
+                },
+                {
+                    "caption": "Gardena Dauer",
+                    "name": "DurationID",
+                    "width": "120px",
+                    "add": 0,
+                    "edit": { "type": "SelectVariable" }
+                }
+            ]
+        }
+    ]
+}

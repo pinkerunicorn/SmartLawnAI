@@ -1,0 +1,28 @@
+{
+    "id": "{7B851C81-8083-424F-A14E-7EB459D6BE9F}",
+    "author": "Rosalie de Champagne",
+    "name": "SmartLawn",
+    "url": "https://github.com/DeinGitHubName/SmartLawnAI",
+    "compatibility": {
+        "version": "7.1"
+    },
+    "build": 0,
+    "date": 0,
+    "modules": [
+        {
+            "id": "{B6D219C1-F0B8-4FEF-9F59-7A6F5643B9D5}",
+            "name": "SmartLawn AI",
+            "type": 3,
+            "vendor": "SmartLawn",
+            "aliases": [
+                "SmartLawnAI"
+            ],
+            "parentRequirements": [],
+            "childRequirements": [],
+            "implemented": [
+                "{00000000-0000-0000-0000-000000000000}"
+            ],
+            "prefix": "SLAI"
+        }
+    ]
+}

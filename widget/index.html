@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="widget.css">
+    <title>SmartLawn AI</title>
+</head>
+<body>
+    <div class="dashboard">
+        <header class="header">
+            <div class="title-bar">
+                <h2 class="title">🌱 SmartLawn AI</h2>
+                <span id="global-status" class="badge">System Bereit</span>
+            </div>
+            
+            <div class="climate-data">
+                <div class="data-point">🌡️ <span id="val-temp">--</span> °C</div>
+                <div class="data-point">💧 <span id="val-vpd">--</span> kPa</div>
+                <div class="data-point">☀️ <span id="val-lux">--</span> lx</div>
+            </div>
+
+            <div class="controls">
+                <button id="btn-party" class="btn" onclick="togglePartyMode()">🎉 Party-Modus: Aus</button>
+                <button id="btn-force" class="btn btn-primary" onclick="triggerForceStart()">💦 Sequenz Erzwingen</button>
+            </div>
+        </header>
+
+        <main class="zones-container" id="zones-container">
+            </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
