@@ -4,6 +4,8 @@
     "name": "SmartLawn",
     "url": "https://github.com/pinkerunicorn/SmartLawnAI",
     "version": "1.0",
+    "build": 0,
+    "date": 0,
     "compatibility": {
         "version": "9.0"
     }
