@@ -3,8 +3,8 @@
     "author": "Florian Graßinger",
     "name": "SmartLawnAI",
     "url": "https://github.com/pinkerunicorn/SmartLawnAI",
-    "compatibility": {
-        "version": "7.1"
+	"compatibility": {
+        "version": "9.0"
     },
     "build": 0,
     "date": 0,
