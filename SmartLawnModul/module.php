@@ -20,11 +20,23 @@ class SmartLawnAI extends IPSModule {
         $this->RegisterTimer('LawnAITimer', 0, 'SLAI_ProcessLogic($_IPS[\'TARGET\']);');
     }
 
+    public function RequestAction($Ident, $Value) {
+        if ($Ident === 'AutomaticActive') {
+            SetValue($this->GetIDForIdent($Ident), $Value);
+        }
+    }
+
     public function ApplyChanges() {
         parent::ApplyChanges();
         
         // Timer aktivieren (alle 60.000 ms = 1 Minute)
         $this->SetTimerInterval('LawnAITimer', 60000);
+
+        $this->RegisterVariableBoolean('AutomaticActive', 'Automatik aktiv', '~Switch', 0);
+        $this->EnableAction('AutomaticActive');
+        if (!IPS_VariableExists($this->GetIDForIdent('AutomaticActive')) || (GetValue($this->GetIDForIdent('AutomaticActive')) === false && IPS_GetVariable($this->GetIDForIdent('AutomaticActive'))['VariableUpdated'] == 0)) {
+            SetValue($this->GetIDForIdent('AutomaticActive'), true); // Default true
+        }
 
         $zonesJson = $this->ReadPropertyString('Zones');
         $zones = json_decode($zonesJson, true);
@@ -102,19 +114,31 @@ class SmartLawnAI extends IPSModule {
                 }
             }
 
+            $automaticActive = GetValue($this->GetIDForIdent('AutomaticActive'));
+
             switch ($aktuellerStatus) {
                 case 'IDLE':
                 case 'QUEUED':
-                    if ($aktuelleFeuchte <= $startWert) {
+                    $sollStarten = false;
+                    if ($aktuellerStatus === 'QUEUED') {
+                        $sollStarten = true; 
+                    } else if ($automaticActive && $aktuelleFeuchte <= $startWert) {
+                        $sollStarten = true;
+                    }
+
+                    if ($sollStarten) {
                         if ($einVentilIstAktiv) {
                             SetValue($this->GetIDForIdent('Status_' . $zone['SensorID']), 'QUEUED');
                         } else {
                             SetValue($this->GetIDForIdent('Status_' . $zone['SensorID']), 'VERIFYING_START');
                             
-                            // KI-Laufzeitberechnung (Basiswert 30 Minuten, wenn noch kein Effizienzfaktor gelernt wurde)
+                            // KI-Laufzeitberechnung
                             $effizienz = (float)GetValue($this->GetIDForIdent('Effizienz_' . $zone['SensorID']));
                             if ($effizienz <= 0) $effizienz = 1.0; 
+                            
                             $differenz = $zielWert - $aktuelleFeuchte;
+                            if ($differenz <= 0) $differenz = 5.0; // Minimaler Feuchte-Hub für manuelle Starts
+                            
                             $berechneteMinuten = (int)ceil($differenz / $effizienz);
 
                             // Gardena Hardware-Watchdog: Dauer setzen
@@ -182,6 +206,30 @@ class SmartLawnAI extends IPSModule {
     }
 
     public function UIRequest($Action, $Payload) {
+        switch ($Action) {
+            case 'TOGGLE_AUTOMATIC':
+                $id = $this->GetIDForIdent('AutomaticActive');
+                SetValue($id, !GetValue($id));
+                break;
+            case 'FORCE_START_SEQUENCE':
+                $zonesJson = $this->ReadPropertyString('Zones');
+                $zones = json_decode($zonesJson, true);
+                if (is_array($zones)) {
+                    foreach ($zones as $zone) {
+                        $sid = $zone['SensorID'];
+                        $statusId = @$this->GetIDForIdent('Status_' . $sid);
+                        if ($statusId > 0) {
+                            $st = GetValue($statusId);
+                            if ($st === 'IDLE') {
+                                SetValue($statusId, 'QUEUED');
+                            }
+                        }
+                    }
+                }
+                $this->ProcessLogic();
+                break;
+        }
+
         $airTempID = $this->ReadPropertyInteger('GlobalAirTempID');
         $humidityID = $this->ReadPropertyInteger('GlobalHumidityID');
         $illuminanceID = $this->ReadPropertyInteger('GlobalIlluminanceID');
@@ -238,7 +286,7 @@ class SmartLawnAI extends IPSModule {
                 'airTemp' => $t,
                 'vpd' => $vpd,
                 'lux' => $lux,
-                'partyModeActive' => false
+                'automaticActive' => GetValue($this->GetIDForIdent('AutomaticActive'))
             ],
             'zones' => $zoneData
         ];

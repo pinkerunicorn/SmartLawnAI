@@ -9,7 +9,8 @@ let config = {
         airTemp: 0.0,
         vpd: 0.0,
         lux: 0,
-        partyModeActive: false
+        lux: 0,
+        automaticActive: true
     },
     zones: []
 };
@@ -41,13 +42,15 @@ function updateGlobalData() {
     document.getElementById('val-vpd').innerText = config.globalVars.vpd.toFixed(2);
     document.getElementById('val-lux').innerText = config.globalVars.lux;
     
-    const btnParty = document.getElementById('btn-party');
-    if (config.globalVars.partyModeActive) {
-        btnParty.innerText = "🎉 Party-Modus: Aktiv";
-        btnParty.classList.add('btn-active');
-    } else {
-        btnParty.innerText = "🎉 Party-Modus: Aus";
-        btnParty.classList.remove('btn-active');
+    const btnAuto = document.getElementById('btn-auto');
+    if (btnAuto) {
+        if (config.globalVars.automaticActive) {
+            btnAuto.innerText = "🤖 Automatik: Ein";
+            btnAuto.classList.add('btn-active');
+        } else {
+            btnAuto.innerText = "⏸️ Automatik: Aus";
+            btnAuto.classList.remove('btn-active');
+        }
     }
 }
 
@@ -104,16 +107,16 @@ function handleVariableUpdate(variableId, newValue) {
 
 // --- BENUTZER INTERAKTIONEN (Senden an PHP) ---
 
-function togglePartyMode() {
+function toggleAutomatic() {
     if (typeof parent.requestMessage === 'function') {
-        parent.requestMessage('TOGGLE_PARTY_MODE', {});
+        parent.requestMessage('TOGGLE_AUTOMATIC', {});
     } else {
-        console.log("Symcon SDK nicht verbunden. Befehl: TOGGLE_PARTY_MODE");
+        console.log("Symcon SDK nicht verbunden. Befehl: TOGGLE_AUTOMATIC");
     }
 }
 
 function triggerForceStart() {
-    if (confirm("Möchtest du den Sequencer für alle Kreise manuell starten? (Dünger-Modus)")) {
+    if (confirm("Möchtest du die Bewässerung für alle Kreise manuell starten?")) {
         if (typeof parent.requestMessage === 'function') {
             parent.requestMessage('FORCE_START_SEQUENCE', {});
         } else {
