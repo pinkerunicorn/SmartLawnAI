@@ -23,7 +23,32 @@ class SmartLawnAI extends IPSModule {
     public function RequestAction($Ident, $Value) {
         if ($Ident === 'AutomaticActive') {
             SetValue($this->GetIDForIdent($Ident), $Value);
+        } else if ($Ident === 'ForceStart') {
+            if ($Value) {
+                SetValue($this->GetIDForIdent($Ident), true);
+                $this->triggerManualStart();
+                IPS_Sleep(500);
+                SetValue($this->GetIDForIdent($Ident), false);
+            }
         }
+    }
+
+    private function triggerManualStart() {
+        $zonesJson = $this->ReadPropertyString('Zones');
+        $zones = json_decode($zonesJson, true);
+        if (is_array($zones)) {
+            foreach ($zones as $zone) {
+                $sid = $zone['SensorID'];
+                $statusId = @$this->GetIDForIdent('Status_' . $sid);
+                if ($statusId > 0) {
+                    $st = GetValue($statusId);
+                    if ($st === 'IDLE') {
+                        SetValue($statusId, 'QUEUED');
+                    }
+                }
+            }
+        }
+        $this->ProcessLogic();
     }
 
     public function ApplyChanges() {
@@ -37,6 +62,10 @@ class SmartLawnAI extends IPSModule {
         if (!IPS_VariableExists($this->GetIDForIdent('AutomaticActive')) || (GetValue($this->GetIDForIdent('AutomaticActive')) === false && IPS_GetVariable($this->GetIDForIdent('AutomaticActive'))['VariableUpdated'] == 0)) {
             SetValue($this->GetIDForIdent('AutomaticActive'), true); // Default true
         }
+
+        $this->RegisterVariableBoolean('ForceStart', 'Manuell Starten', '~Switch', 0);
+        $this->EnableAction('ForceStart');
+        SetValue($this->GetIDForIdent('ForceStart'), false);
 
         $zonesJson = $this->ReadPropertyString('Zones');
         $zones = json_decode($zonesJson, true);
@@ -212,21 +241,7 @@ class SmartLawnAI extends IPSModule {
                 SetValue($id, !GetValue($id));
                 break;
             case 'FORCE_START_SEQUENCE':
-                $zonesJson = $this->ReadPropertyString('Zones');
-                $zones = json_decode($zonesJson, true);
-                if (is_array($zones)) {
-                    foreach ($zones as $zone) {
-                        $sid = $zone['SensorID'];
-                        $statusId = @$this->GetIDForIdent('Status_' . $sid);
-                        if ($statusId > 0) {
-                            $st = GetValue($statusId);
-                            if ($st === 'IDLE') {
-                                SetValue($statusId, 'QUEUED');
-                            }
-                        }
-                    }
-                }
-                $this->ProcessLogic();
+                $this->triggerManualStart();
                 break;
         }
 
