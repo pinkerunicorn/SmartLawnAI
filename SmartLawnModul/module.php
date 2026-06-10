@@ -31,7 +31,7 @@ class SmartLawnAI extends IPSModule {
         if (is_array($zones)) {
             foreach ($zones as $zone) {
                 $sid = $zone['SensorID'];
-                $name = isset($zone['Name']) && !empty($zone['Name']) ? $zone['Name'] : 'Zone ' . $sid;
+                $name = isset($zone['GroupName']) && !empty($zone['GroupName']) ? $zone['GroupName'] : 'Zone ' . $sid;
                 
                 $this->RegisterVariableString('Status_' . $sid, 'Status ' . $name, '', 0);
                 $this->RegisterVariableFloat('Effizienz_' . $sid, 'Effizienz ' . $name, '', 0);
@@ -221,7 +221,7 @@ class SmartLawnAI extends IPSModule {
                 
                 $zoneData[] = [
                     'id' => $sid,
-                    'name' => isset($zone['Name']) ? $zone['Name'] : 'Zone ' . $sid,
+                    'name' => isset($zone['GroupName']) && !empty($zone['GroupName']) ? $zone['GroupName'] : 'Zone ' . $sid,
                     'sensorVarId' => $sid,
                     'currentMoisture' => ($sid > 0) ? (float)GetValue($sid) : 0.0,
                     'targetMoisture' => $zielWert,
