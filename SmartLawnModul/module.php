@@ -25,6 +25,19 @@ class SmartLawnAI extends IPSModule {
         
         // Timer aktivieren (alle 60.000 ms = 1 Minute)
         $this->SetTimerInterval('LawnAITimer', 60000);
+
+        $zonesJson = $this->ReadPropertyString('Zones');
+        $zones = json_decode($zonesJson, true);
+        if (is_array($zones)) {
+            foreach ($zones as $zone) {
+                $sid = $zone['SensorID'];
+                $this->RegisterVariableString('Status_' . $sid, 'Status Zone ' . $sid, '', 0);
+                $this->RegisterVariableFloat('Effizienz_' . $sid, 'Effizienz Zone ' . $sid, '', 0);
+                $this->RegisterVariableFloat('StartFeuchte_' . $sid, 'StartFeuchte Zone ' . $sid, '', 0);
+                $this->RegisterVariableFloat('Dauer_' . $sid, 'Dauer Zone ' . $sid, '', 0);
+                $this->RegisterVariableFloat('SickerpauseStart_' . $sid, 'SickerpauseStart Zone ' . $sid, '', 0);
+            }
+        }
     }
 
     public function ProcessLogic() {
@@ -41,7 +54,7 @@ class SmartLawnAI extends IPSModule {
         // 1. Sequenz-Check: Ist bereits ein Ventil in Bearbeitung?
         $einVentilIstAktiv = false;
         foreach ($zones as $zone) {
-            $status = $this->GetBuffer('Status_' . $zone['SensorID']);
+            $status = GetValue($this->GetIDForIdent('Status_' . $zone['SensorID']));
             if ($status === 'WATERING' || $status === 'VERIFYING_START') {
                 $einVentilIstAktiv = true;
                 break; 
@@ -66,7 +79,7 @@ class SmartLawnAI extends IPSModule {
             $startWert = ($zone['CustomStart'] > 0) ? $zone['CustomStart'] : $defaultStart;
             
             $aktuelleFeuchte = GetValue($zone['SensorID']);
-            $aktuellerStatus = $this->GetBuffer('Status_' . $zone['SensorID']);
+            $aktuellerStatus = GetValue($this->GetIDForIdent('Status_' . $zone['SensorID']));
             if (empty($aktuellerStatus)) {
                 $aktuellerStatus = 'IDLE';
             }
@@ -75,7 +88,7 @@ class SmartLawnAI extends IPSModule {
             if ($zone['HardwareStatusID'] > 0) {
                 $hwStatus = GetValue($zone['HardwareStatusID']);
                 if ($hwStatus !== 0 && $hwStatus !== 'OK') {
-                    $this->SetBuffer('Status_' . $zone['SensorID'], 'HARDWARE_FEHLER');
+                    SetValue($this->GetIDForIdent('Status_' . $zone['SensorID']), 'HARDWARE_FEHLER');
                     continue; 
                 }
             }
@@ -85,12 +98,12 @@ class SmartLawnAI extends IPSModule {
                 case 'QUEUED':
                     if ($aktuelleFeuchte <= $startWert) {
                         if ($einVentilIstAktiv) {
-                            $this->SetBuffer('Status_' . $zone['SensorID'], 'QUEUED');
+                            SetValue($this->GetIDForIdent('Status_' . $zone['SensorID']), 'QUEUED');
                         } else {
-                            $this->SetBuffer('Status_' . $zone['SensorID'], 'VERIFYING_START');
+                            SetValue($this->GetIDForIdent('Status_' . $zone['SensorID']), 'VERIFYING_START');
                             
                             // KI-Laufzeitberechnung (Basiswert 30 Minuten, wenn noch kein Effizienzfaktor gelernt wurde)
-                            $effizienz = (float)$this->GetBuffer('Effizienz_' . $zone['SensorID']);
+                            $effizienz = (float)GetValue($this->GetIDForIdent('Effizienz_' . $zone['SensorID']));
                             if ($effizienz <= 0) $effizienz = 1.0; 
                             $differenz = $zielWert - $aktuelleFeuchte;
                             $berechneteMinuten = (int)ceil($differenz / $effizienz);
@@ -105,13 +118,13 @@ class SmartLawnAI extends IPSModule {
                             @RequestAction($zone['ValveID'], true);
                             
                             // Zwischenspeichern für den Lern-Algorithmus später
-                            $this->SetBuffer('StartFeuchte_' . $zone['SensorID'], $aktuelleFeuchte);
-                            $this->SetBuffer('Dauer_' . $zone['SensorID'], $berechneteMinuten);
+                            SetValue($this->GetIDForIdent('StartFeuchte_' . $zone['SensorID']), $aktuelleFeuchte);
+                            SetValue($this->GetIDForIdent('Dauer_' . $zone['SensorID']), $berechneteMinuten);
                             
                             $einVentilIstAktiv = true; 
                         }
                     } else {
-                        $this->SetBuffer('Status_' . $zone['SensorID'], 'IDLE');
+                        SetValue($this->GetIDForIdent('Status_' . $zone['SensorID']), 'IDLE');
                     }
                     break;
                     
@@ -121,16 +134,16 @@ class SmartLawnAI extends IPSModule {
                     $ventilOffen = GetValue($zone['ValveID']);
                     
                     if ($ventilOffen && $aktuellerStatus === 'VERIFYING_START') {
-                        $this->SetBuffer('Status_' . $zone['SensorID'], 'WATERING');
+                        SetValue($this->GetIDForIdent('Status_' . $zone['SensorID']), 'WATERING');
                     } elseif (!$ventilOffen && $aktuellerStatus === 'WATERING') {
                         // Ventil hat planmäßig geschlossen -> Sickerpause starten
-                        $this->SetBuffer('Status_' . $zone['SensorID'], 'WAITING_FOR_RESULT');
-                        $this->SetBuffer('SickerpauseStart_' . $zone['SensorID'], time());
+                        SetValue($this->GetIDForIdent('Status_' . $zone['SensorID']), 'WAITING_FOR_RESULT');
+                        SetValue($this->GetIDForIdent('SickerpauseStart_' . $zone['SensorID']), time());
                     }
                     break;
 
                 case 'WAITING_FOR_RESULT':
-                    $sickerStart = (int)$this->GetBuffer('SickerpauseStart_' . $zone['SensorID']);
+                    $sickerStart = (int)GetValue($this->GetIDForIdent('SickerpauseStart_' . $zone['SensorID']));
                     // 15 Minuten (900 Sekunden) Sickerpause abwarten
                     if ((time() - $sickerStart) > 900) {
                         
@@ -140,8 +153,8 @@ class SmartLawnAI extends IPSModule {
                         $gesamtVerlustFaktor = 1.0 + $verdunstungsFaktorVPD + $verdunstungsFaktorLux;
 
                         // Lernerfolg auswerten
-                        $startFeuchte = (float)$this->GetBuffer('StartFeuchte_' . $zone['SensorID']);
-                        $dauer = (int)$this->GetBuffer('Dauer_' . $zone['SensorID']);
+                        $startFeuchte = (float)GetValue($this->GetIDForIdent('StartFeuchte_' . $zone['SensorID']));
+                        $dauer = (int)GetValue($this->GetIDForIdent('Dauer_' . $zone['SensorID']));
                         
                         $erreichteFeuchte = $aktuelleFeuchte - $startFeuchte;
                         $korrigiertesErgebnis = $erreichteFeuchte * $gesamtVerlustFaktor;
@@ -149,13 +162,78 @@ class SmartLawnAI extends IPSModule {
                         // Neuen Effizienzfaktor sichern
                         if ($dauer > 0) {
                             $neueEffizienz = $korrigiertesErgebnis / $dauer;
-                            $this->SetBuffer('Effizienz_' . $zone['SensorID'], $neueEffizienz);
+                            SetValue($this->GetIDForIdent('Effizienz_' . $zone['SensorID']), $neueEffizienz);
                         }
 
-                        $this->SetBuffer('Status_' . $zone['SensorID'], 'IDLE');
+                        SetValue($this->GetIDForIdent('Status_' . $zone['SensorID']), 'IDLE');
                     }
                     break;
             }
         }
+    }
+
+    public function UIRequest($Action, $Payload) {
+        $airTempID = $this->ReadPropertyInteger('GlobalAirTempID');
+        $humidityID = $this->ReadPropertyInteger('GlobalHumidityID');
+        $illuminanceID = $this->ReadPropertyInteger('GlobalIlluminanceID');
+
+        $t = ($airTempID > 0) ? (float)GetValue($airTempID) : 20.0;
+        $rh = ($humidityID > 0) ? (float)GetValue($humidityID) : 50.0;
+        $lux = ($illuminanceID > 0) ? (float)GetValue($illuminanceID) : 0.0;
+
+        $es = 0.6108 * exp((17.27 * $t) / ($t + 237.3));
+        $vpd = $es * (1 - ($rh / 100.0));
+
+        $defaultZiel  = $this->ReadPropertyFloat('DefaultZielFeuchte');
+        $defaultStart = $this->ReadPropertyFloat('DefaultStartSchwellwert');
+        
+        $zonesJson = $this->ReadPropertyString('Zones');
+        $zones = json_decode($zonesJson, true);
+        
+        $zoneData = [];
+        if (is_array($zones)) {
+            foreach ($zones as $zone) {
+                $sid = $zone['SensorID'];
+                $zielWert  = ($zone['CustomZiel'] > 0) ? $zone['CustomZiel'] : $defaultZiel;
+                $startWert = ($zone['CustomStart'] > 0) ? $zone['CustomStart'] : $defaultStart;
+                
+                $hwStatus = false;
+                if (isset($zone['HardwareStatusID']) && $zone['HardwareStatusID'] > 0) {
+                    $hwVal = GetValue($zone['HardwareStatusID']);
+                    if ($hwVal === 0 || $hwVal === 'OK') {
+                        $hwStatus = true;
+                    }
+                } else {
+                    $hwStatus = true;
+                }
+
+                $statusId = @$this->GetIDForIdent('Status_' . $sid);
+                $effizienzId = @$this->GetIDForIdent('Effizienz_' . $sid);
+                
+                $zoneData[] = [
+                    'id' => $sid,
+                    'name' => isset($zone['Name']) ? $zone['Name'] : 'Zone ' . $sid,
+                    'sensorVarId' => $sid,
+                    'currentMoisture' => ($sid > 0) ? (float)GetValue($sid) : 0.0,
+                    'targetMoisture' => $zielWert,
+                    'startMoisture' => $startWert,
+                    'status' => $statusId > 0 ? GetValue($statusId) : 'IDLE',
+                    'efficiency' => $effizienzId > 0 ? (float)GetValue($effizienzId) : 1.0,
+                    'hardwareOk' => $hwStatus
+                ];
+            }
+        }
+
+        $config = [
+            'globalVars' => [
+                'airTemp' => $t,
+                'vpd' => $vpd,
+                'lux' => $lux,
+                'partyModeActive' => false
+            ],
+            'zones' => $zoneData
+        ];
+        
+        $this->UpdateUI('INITIAL_CONFIG', $config);
     }
 }
