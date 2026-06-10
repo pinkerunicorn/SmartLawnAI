@@ -32,11 +32,19 @@ class SmartLawnAI extends IPSModule {
             foreach ($zones as $zone) {
                 $sid = $zone['SensorID'];
                 $name = isset($zone['Name']) && !empty($zone['Name']) ? $zone['Name'] : 'Zone ' . $sid;
+                
                 $this->RegisterVariableString('Status_' . $sid, 'Status ' . $name, '', 0);
                 $this->RegisterVariableFloat('Effizienz_' . $sid, 'Effizienz ' . $name, '', 0);
                 $this->RegisterVariableFloat('StartFeuchte_' . $sid, 'StartFeuchte ' . $name, '', 0);
                 $this->RegisterVariableFloat('Dauer_' . $sid, 'Dauer ' . $name, '', 0);
                 $this->RegisterVariableFloat('SickerpauseStart_' . $sid, 'SickerpauseStart ' . $name, '', 0);
+
+                // IP-Symcon benennt bestehende Variablen nicht automatisch um, daher erzwingen wir es hier
+                IPS_SetName($this->GetIDForIdent('Status_' . $sid), 'Status ' . $name);
+                IPS_SetName($this->GetIDForIdent('Effizienz_' . $sid), 'Effizienz ' . $name);
+                IPS_SetName($this->GetIDForIdent('StartFeuchte_' . $sid), 'StartFeuchte ' . $name);
+                IPS_SetName($this->GetIDForIdent('Dauer_' . $sid), 'Dauer ' . $name);
+                IPS_SetName($this->GetIDForIdent('SickerpauseStart_' . $sid), 'SickerpauseStart ' . $name);
             }
         }
     }
