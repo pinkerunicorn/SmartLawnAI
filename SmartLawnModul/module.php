@@ -31,11 +31,12 @@ class SmartLawnAI extends IPSModule {
         if (is_array($zones)) {
             foreach ($zones as $zone) {
                 $sid = $zone['SensorID'];
-                $this->RegisterVariableString('Status_' . $sid, 'Status Zone ' . $sid, '', 0);
-                $this->RegisterVariableFloat('Effizienz_' . $sid, 'Effizienz Zone ' . $sid, '', 0);
-                $this->RegisterVariableFloat('StartFeuchte_' . $sid, 'StartFeuchte Zone ' . $sid, '', 0);
-                $this->RegisterVariableFloat('Dauer_' . $sid, 'Dauer Zone ' . $sid, '', 0);
-                $this->RegisterVariableFloat('SickerpauseStart_' . $sid, 'SickerpauseStart Zone ' . $sid, '', 0);
+                $name = isset($zone['Name']) && !empty($zone['Name']) ? $zone['Name'] : 'Zone ' . $sid;
+                $this->RegisterVariableString('Status_' . $sid, 'Status ' . $name, '', 0);
+                $this->RegisterVariableFloat('Effizienz_' . $sid, 'Effizienz ' . $name, '', 0);
+                $this->RegisterVariableFloat('StartFeuchte_' . $sid, 'StartFeuchte ' . $name, '', 0);
+                $this->RegisterVariableFloat('Dauer_' . $sid, 'Dauer ' . $name, '', 0);
+                $this->RegisterVariableFloat('SickerpauseStart_' . $sid, 'SickerpauseStart ' . $name, '', 0);
             }
         }
     }
