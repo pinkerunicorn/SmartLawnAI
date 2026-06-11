@@ -109,7 +109,7 @@ function handleVariableUpdate(variableId, newValue) {
 
 function toggleAutomatic() {
     if (typeof parent.requestMessage === 'function') {
-        parent.requestMessage('TOGGLE_AUTOMATIC', {});
+        parent.requestMessage('TOGGLE_AUTOMATIC', "");
     } else {
         console.log("Symcon SDK nicht verbunden. Befehl: TOGGLE_AUTOMATIC");
     }
@@ -118,7 +118,7 @@ function toggleAutomatic() {
 function triggerForceStart() {
     if (confirm("Möchtest du die Bewässerung für alle Kreise manuell starten?")) {
         if (typeof parent.requestMessage === 'function') {
-            parent.requestMessage('FORCE_START_SEQUENCE', {});
+            parent.requestMessage('FORCE_START_SEQUENCE', "");
         } else {
             console.log("Symcon SDK nicht verbunden. Befehl: FORCE_START");
         }
