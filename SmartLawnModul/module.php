@@ -138,13 +138,12 @@ class SmartLawnAI extends IPSModule {
             return; 
         }
 
-        // 1. Sequenz-Check: Ist bereits ein Ventil in Bearbeitung?
         $einVentilIstAktiv = false;
         foreach ($zones as $zone) {
             $status = GetValue($this->GetIDForIdent('Status_' . $zone['SensorID']));
-            if ($status === 'WATERING' || $status === 'VERIFYING_START') {
+            if ($status === 'WATERING' || $status === 'VERIFYING_START' || $status === 'WAITING_FOR_RESULT') {
                 $einVentilIstAktiv = true;
-                $this->SendDebug('Sequencer', 'Ein anderes Ventil ist aktiv (' . $status . ' bei Zone ' . $zone['SensorID'] . '). Warte...', 0);
+                $this->SendDebug('Sequencer', 'Ein anderes Ventil blockiert die Sequenz (' . $status . ' bei Zone ' . $zone['SensorID'] . '). Warte...', 0);
                 break; 
             }
         }
