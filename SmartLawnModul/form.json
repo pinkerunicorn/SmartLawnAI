@@ -95,6 +95,13 @@
                     "width": "120px",
                     "add": 0,
                     "edit": { "type": "SelectVariable" }
+                },
+                {
+                    "caption": "Verbl. Sekunden",
+                    "name": "RemainingSecondsID",
+                    "width": "120px",
+                    "add": 0,
+                    "edit": { "type": "SelectVariable" }
                 }
             ]
         }

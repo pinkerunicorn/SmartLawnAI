@@ -353,7 +353,8 @@ class SmartLawnAI extends IPSModule {
                     'startMoisture' => $startWert,
                     'status' => $statusId > 0 ? GetValue($statusId) : 'IDLE',
                     'efficiency' => $effizienzId > 0 ? (float)GetValue($effizienzId) : 1.0,
-                    'hardwareOk' => $hwStatus
+                    'hardwareOk' => $hwStatus,
+                    'remainingSeconds' => (isset($zone['RemainingSecondsID']) && $zone['RemainingSecondsID'] > 0) ? (int)GetValue($zone['RemainingSecondsID']) : 0
                 ];
             }
         }

@@ -88,6 +88,11 @@ function renderZones() {
                 <span>KI Effizienz: ${zone.efficiency.toFixed(2)} %/min</span>
                 <span>Watchdog: ${zone.hardwareOk ? '🟢 OK' : '🔴 FEHLER'}</span>
             </div>
+            ${(zone.status === 'WATERING' && zone.remainingSeconds > 0) ? `
+            <div class="zone-countdown" style="text-align: center; margin-top: 10px; font-weight: bold; color: #4fc3f7;">
+                ⏱️ Restzeit: ${Math.floor(zone.remainingSeconds / 60)}:${(zone.remainingSeconds % 60).toString().padStart(2, '0')} min
+            </div>
+            ` : ''}
         `;
         container.appendChild(card);
     });
