@@ -23,6 +23,9 @@ class SmartLawnAI extends IPSModule {
     public function RequestAction($Ident, $Value) {
         if ($Ident === 'AutomaticActive') {
             SetValue($this->GetIDForIdent($Ident), $Value);
+            if (!$Value) {
+                $this->resetAllZones(false);
+            }
         } else if ($Ident === 'ForceStart') {
             if ($Value) {
                 SetValue($this->GetIDForIdent($Ident), true);
@@ -33,8 +36,14 @@ class SmartLawnAI extends IPSModule {
         }
     }
 
-    private function triggerManualStart() {
-        $this->SendDebug('ManualStart', 'triggerManualStart aufgerufen (Hard Reset)', 0);
+    private function resetAllZones(bool $queueForStart) {
+        $actionName = $queueForStart ? 'ManualStart (Hard Reset)' : 'Automatik Off (Hard Stop)';
+        $this->SendDebug('Reset', $actionName . ' aufgerufen', 0);
+        
+        if (!$queueForStart) {
+            IPS_LogMessage('SmartLawnAI', 'Automatik deaktiviert! Alle Ventile werden gestoppt und Zonen zurückgesetzt.');
+        }
+
         $zonesJson = $this->ReadPropertyString('Zones');
         $zones = json_decode($zonesJson, true);
         if (is_array($zones)) {
@@ -53,10 +62,16 @@ class SmartLawnAI extends IPSModule {
                     @SetValue($this->GetIDForIdent('Dauer_' . $sid), 0.0);
                     @SetValue($this->GetIDForIdent('SickerpauseStart_' . $sid), 0.0);
 
-                    // 3. Status hart auf QUEUED setzen
-                    SetValue($statusId, 'QUEUED');
-                    $this->SendDebug('ManualStart', 'Zone ' . $sid . ' hart resettet und -> QUEUED.', 0);
-                    IPS_LogMessage('SmartLawnAI', 'Zone ' . $sid . ' wurde manuell zurückgesetzt und in Warteschlange eingereiht.');
+                    // 3. Status setzen
+                    $newStatus = $queueForStart ? 'QUEUED' : 'IDLE';
+                    SetValue($statusId, $newStatus);
+                    
+                    if ($queueForStart) {
+                        $this->SendDebug('Reset', 'Zone ' . $sid . ' hart resettet und -> QUEUED.', 0);
+                        IPS_LogMessage('SmartLawnAI', 'Zone ' . $sid . ' wurde manuell zurückgesetzt und in Warteschlange eingereiht.');
+                    } else {
+                        $this->SendDebug('Reset', 'Zone ' . $sid . ' hart resettet und gestoppt -> IDLE.', 0);
+                    }
                 }
             }
         }
@@ -64,7 +79,13 @@ class SmartLawnAI extends IPSModule {
         // Kurze Pause, damit Gardena die Aus-Befehle sicher verarbeitet hat
         IPS_Sleep(1000);
         
-        $this->ProcessLogic();
+        if ($queueForStart) {
+            $this->ProcessLogic();
+        }
+    }
+
+    private function triggerManualStart() {
+        $this->resetAllZones(true);
     }
 
     public function ApplyChanges() {
@@ -273,7 +294,11 @@ class SmartLawnAI extends IPSModule {
         switch ($Action) {
             case 'TOGGLE_AUTOMATIC':
                 $id = $this->GetIDForIdent('AutomaticActive');
-                SetValue($id, !GetValue($id));
+                $newVal = !GetValue($id);
+                SetValue($id, $newVal);
+                if (!$newVal) {
+                    $this->resetAllZones(false);
+                }
                 break;
             case 'FORCE_START_SEQUENCE':
                 $this->triggerManualStart();
