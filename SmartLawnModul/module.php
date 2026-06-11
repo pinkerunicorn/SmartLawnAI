@@ -241,17 +241,28 @@ class SmartLawnAI extends IPSModule {
                 case 'WATERING':
                     // Ventil-Rückkanal von Gardena prüfen
                     $ventilOffen = false;
+                    $hwVal = 'UNKNOWN';
                     if (isset($zone['HardwareStatusID']) && $zone['HardwareStatusID'] > 0) {
                         $hwVal = strtoupper((string)GetValue($zone['HardwareStatusID']));
                         $ventilOffen = in_array($hwVal, ['MANUAL_WATERING', 'AUTOMATIC_WATERING', 'WATERING', 'OPEN']);
                     } else {
                         $v = GetValue($zone['ValveID']);
+                        $hwVal = (string)$v;
                         $ventilOffen = ($v && $v !== 'STOP_UNTIL_NEXT_TASK' && $v !== 'CLOSED');
+                    }
+                    
+                    // Fallback: Wenn Sekunden noch > 0 sind, läuft es definitiv noch!
+                    if (!$ventilOffen && isset($zone['RemainingSecondsID']) && $zone['RemainingSecondsID'] > 0) {
+                        if ((int)GetValue($zone['RemainingSecondsID']) > 0) {
+                            $ventilOffen = true;
+                            $hwVal .= ' (Kept alive by RemainingSeconds > 0)';
+                        }
                     }
                     
                     if ($ventilOffen && $aktuellerStatus === 'VERIFYING_START') {
                         SetValue($this->GetIDForIdent('Status_' . $zone['SensorID']), 'WATERING');
                     } elseif (!$ventilOffen && $aktuellerStatus === 'WATERING') {
+                        IPS_LogMessage('SmartLawnAI', 'Zone ' . $zone['SensorID'] . ' ist scheinbar fertig. Letzter Hardware-Status war: ' . $hwVal);
                         // Ventil hat planmäßig geschlossen -> Sickerpause starten
                         SetValue($this->GetIDForIdent('Status_' . $zone['SensorID']), 'WAITING_FOR_RESULT');
                         SetValue($this->GetIDForIdent('SickerpauseStart_' . $zone['SensorID']), time());
