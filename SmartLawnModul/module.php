@@ -34,6 +34,7 @@ class SmartLawnAI extends IPSModule {
     }
 
     private function triggerManualStart() {
+        $this->SendDebug('ManualStart', 'triggerManualStart aufgerufen', 0);
         $zonesJson = $this->ReadPropertyString('Zones');
         $zones = json_decode($zonesJson, true);
         if (is_array($zones)) {
@@ -42,8 +43,13 @@ class SmartLawnAI extends IPSModule {
                 $statusId = @$this->GetIDForIdent('Status_' . $sid);
                 if ($statusId > 0) {
                     $st = GetValue($statusId);
-                    if ($st === 'IDLE') {
+                    $this->SendDebug('ManualStart', 'Prüfe Zone ' . $sid . ', Status: ' . $st, 0);
+                    if ($st === 'IDLE' || $st === 'HARDWARE_FEHLER') {
                         SetValue($statusId, 'QUEUED');
+                        $this->SendDebug('ManualStart', 'Zone ' . $sid . ' -> QUEUED.', 0);
+                        IPS_LogMessage('SmartLawnAI', 'Zone ' . $sid . ' wurde manuell in Warteschlange eingereiht.');
+                    } else {
+                        $this->SendDebug('ManualStart', 'Zone ' . $sid . ' wird übersprungen (bereits aktiv: ' . $st . ').', 0);
                     }
                 }
             }
@@ -107,6 +113,7 @@ class SmartLawnAI extends IPSModule {
             $status = GetValue($this->GetIDForIdent('Status_' . $zone['SensorID']));
             if ($status === 'WATERING' || $status === 'VERIFYING_START') {
                 $einVentilIstAktiv = true;
+                $this->SendDebug('Sequencer', 'Ein anderes Ventil ist aktiv (' . $status . ' bei Zone ' . $zone['SensorID'] . '). Warte...', 0);
                 break; 
             }
         }
@@ -133,6 +140,7 @@ class SmartLawnAI extends IPSModule {
             if (empty($aktuellerStatus)) {
                 $aktuellerStatus = 'IDLE';
             }
+            $this->SendDebug('ProcessLogic', 'Bearbeite Zone ' . $zone['SensorID'] . ' (Aktueller Status: ' . $aktuellerStatus . ')', 0);
 
             // Gardena Not-Aus Check
             if (isset($zone['HardwareStatusID']) && $zone['HardwareStatusID'] > 0) {
@@ -164,8 +172,11 @@ class SmartLawnAI extends IPSModule {
 
                     if ($sollStarten) {
                         if ($einVentilIstAktiv) {
+                            $this->SendDebug('Sequencer', 'Zone ' . $zone['SensorID'] . ' bleibt QUEUED, da ein anderes Ventil aktiv ist.', 0);
                             SetValue($this->GetIDForIdent('Status_' . $zone['SensorID']), 'QUEUED');
                         } else {
+                            $this->SendDebug('Sequencer', 'Startbedingung erfüllt. Starte Zone ' . $zone['SensorID'] . ' (VERIFYING_START).', 0);
+                            IPS_LogMessage('SmartLawnAI', 'Bewässerung für Zone ' . $zone['SensorID'] . ' wird gestartet!');
                             SetValue($this->GetIDForIdent('Status_' . $zone['SensorID']), 'VERIFYING_START');
                             
                             // KI-Laufzeitberechnung
