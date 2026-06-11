@@ -43,7 +43,7 @@ class SmartLawnAI extends IPSModule {
                 
                 // 1. Physisches Ventil stoppen (sicherheitshalber)
                 if (isset($zone['ValveID']) && $zone['ValveID'] > 0) {
-                    @RequestAction($zone['ValveID'], false);
+                    @RequestAction($zone['ValveID'], 'STOP_UNTIL_NEXT_TASK');
                 }
 
                 $statusId = @$this->GetIDForIdent('Status_' . $sid);
@@ -204,8 +204,8 @@ class SmartLawnAI extends IPSModule {
                                 IPS_Sleep(500); 
                             }
 
-                            // Start-Befehl senden
-                            @RequestAction($zone['ValveID'], true);
+                            // Start-Befehl senden (Gardena spezifisch)
+                            @RequestAction($zone['ValveID'], 'START_SECONDS_TO_OVERRIDE');
                             
                             // Zwischenspeichern für den Lern-Algorithmus später
                             SetValue($this->GetIDForIdent('StartFeuchte_' . $zone['SensorID']), $aktuelleFeuchte);
