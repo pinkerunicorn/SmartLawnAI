@@ -157,11 +157,11 @@ class SmartLawnAI extends IPSModule {
                 $hwStatus = GetValue($zone['HardwareStatusID']);
                 $this->SendDebug('Hardware-Check', 'Zone ' . $zone['SensorID'] . ' HW-Status: ' . print_r($hwStatus, true) . ' (Typ: ' . gettype($hwStatus) . ')', 0);
                 
-                // Wir tolerieren 0, '0', false, 'OK', 'ok', 'CLOSED', 'OPEN' als gültige Zustände
+                // Wir tolerieren 0, '0', false, 'OK', 'ok', 'CLOSED', 'OPEN', 'MANUAL_WATERING', 'AUTOMATIC_WATERING', 'WATERING' als gültige Zustände
+                $hwStr = strtoupper((string)$hwStatus);
                 if ($hwStatus !== 0 && $hwStatus !== '0' && $hwStatus !== false && 
-                    $hwStatus !== 'OK' && $hwStatus !== 'ok' && 
-                    $hwStatus !== 'CLOSED' && $hwStatus !== 'closed' && 
-                    $hwStatus !== 'OPEN' && $hwStatus !== 'open') {
+                    $hwStr !== 'OK' && $hwStr !== 'CLOSED' && $hwStr !== 'OPEN' && 
+                    $hwStr !== 'MANUAL_WATERING' && $hwStr !== 'AUTOMATIC_WATERING' && $hwStr !== 'WATERING') {
                     IPS_LogMessage('SmartLawnAI', 'HARDWARE_FEHLER für Zone ' . $zone['SensorID'] . '! Status-Variable (' . $zone['HardwareStatusID'] . ') liefert: ' . print_r($hwStatus, true));
                     SetValue($this->GetIDForIdent('Status_' . $zone['SensorID']), 'HARDWARE_FEHLER');
                     continue; 
@@ -221,7 +221,14 @@ class SmartLawnAI extends IPSModule {
                 case 'VERIFYING_START':
                 case 'WATERING':
                     // Ventil-Rückkanal von Gardena prüfen
-                    $ventilOffen = GetValue($zone['ValveID']);
+                    $ventilOffen = false;
+                    if (isset($zone['HardwareStatusID']) && $zone['HardwareStatusID'] > 0) {
+                        $hwVal = strtoupper((string)GetValue($zone['HardwareStatusID']));
+                        $ventilOffen = in_array($hwVal, ['MANUAL_WATERING', 'AUTOMATIC_WATERING', 'WATERING', 'OPEN']);
+                    } else {
+                        $v = GetValue($zone['ValveID']);
+                        $ventilOffen = ($v && $v !== 'STOP_UNTIL_NEXT_TASK' && $v !== 'CLOSED');
+                    }
                     
                     if ($ventilOffen && $aktuellerStatus === 'VERIFYING_START') {
                         SetValue($this->GetIDForIdent('Status_' . $zone['SensorID']), 'WATERING');
@@ -300,10 +307,9 @@ class SmartLawnAI extends IPSModule {
                 $hwStatus = false;
                 if (isset($zone['HardwareStatusID']) && $zone['HardwareStatusID'] > 0) {
                     $hwVal = GetValue($zone['HardwareStatusID']);
+                    $hwStr = strtoupper((string)$hwVal);
                     if ($hwVal === 0 || $hwVal === '0' || $hwVal === false || 
-                        $hwVal === 'OK' || $hwVal === 'ok' || 
-                        $hwVal === 'CLOSED' || $hwVal === 'closed' || 
-                        $hwVal === 'OPEN' || $hwVal === 'open') {
+                        in_array($hwStr, ['OK', 'CLOSED', 'OPEN', 'MANUAL_WATERING', 'AUTOMATIC_WATERING', 'WATERING'])) {
                         $hwStatus = true;
                     }
                 } else {
