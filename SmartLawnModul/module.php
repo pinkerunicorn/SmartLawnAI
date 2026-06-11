@@ -34,26 +34,36 @@ class SmartLawnAI extends IPSModule {
     }
 
     private function triggerManualStart() {
-        $this->SendDebug('ManualStart', 'triggerManualStart aufgerufen', 0);
+        $this->SendDebug('ManualStart', 'triggerManualStart aufgerufen (Hard Reset)', 0);
         $zonesJson = $this->ReadPropertyString('Zones');
         $zones = json_decode($zonesJson, true);
         if (is_array($zones)) {
             foreach ($zones as $zone) {
                 $sid = $zone['SensorID'];
+                
+                // 1. Physisches Ventil stoppen (sicherheitshalber)
+                if (isset($zone['ValveID']) && $zone['ValveID'] > 0) {
+                    @RequestAction($zone['ValveID'], false);
+                }
+
                 $statusId = @$this->GetIDForIdent('Status_' . $sid);
                 if ($statusId > 0) {
-                    $st = GetValue($statusId);
-                    $this->SendDebug('ManualStart', 'Prüfe Zone ' . $sid . ', Status: ' . $st, 0);
-                    if ($st === 'IDLE' || $st === 'HARDWARE_FEHLER') {
-                        SetValue($statusId, 'QUEUED');
-                        $this->SendDebug('ManualStart', 'Zone ' . $sid . ' -> QUEUED.', 0);
-                        IPS_LogMessage('SmartLawnAI', 'Zone ' . $sid . ' wurde manuell in Warteschlange eingereiht.');
-                    } else {
-                        $this->SendDebug('ManualStart', 'Zone ' . $sid . ' wird übersprungen (bereits aktiv: ' . $st . ').', 0);
-                    }
+                    // 2. Laufzeit-Variablen zurücksetzen (gelernt wird nicht beeinflusst: Effizienz bleibt!)
+                    @SetValue($this->GetIDForIdent('StartFeuchte_' . $sid), 0.0);
+                    @SetValue($this->GetIDForIdent('Dauer_' . $sid), 0.0);
+                    @SetValue($this->GetIDForIdent('SickerpauseStart_' . $sid), 0.0);
+
+                    // 3. Status hart auf QUEUED setzen
+                    SetValue($statusId, 'QUEUED');
+                    $this->SendDebug('ManualStart', 'Zone ' . $sid . ' hart resettet und -> QUEUED.', 0);
+                    IPS_LogMessage('SmartLawnAI', 'Zone ' . $sid . ' wurde manuell zurückgesetzt und in Warteschlange eingereiht.');
                 }
             }
         }
+        
+        // Kurze Pause, damit Gardena die Aus-Befehle sicher verarbeitet hat
+        IPS_Sleep(1000);
+        
         $this->ProcessLogic();
     }
 
