@@ -178,12 +178,11 @@ class SmartLawnAI extends IPSModule {
                 $hwStatus = GetValue($zone['HardwareStatusID']);
                 $this->SendDebug('Hardware-Check', 'Zone ' . $zone['SensorID'] . ' HW-Status: ' . print_r($hwStatus, true) . ' (Typ: ' . gettype($hwStatus) . ')', 0);
                 
-                // Wir tolerieren 0, '0', false, 'OK', 'ok', 'CLOSED', 'OPEN', 'MANUAL_WATERING', 'AUTOMATIC_WATERING', 'WATERING' als gültige Zustände
+                // Wir nutzen eine Blacklist: Nur bei echten Fehlermeldungen greift der Not-Aus!
+                // So verhindern wir, dass Übergangszustände (z.B. "PENDING") fälschlicherweise als Fehler gewertet werden.
                 $hwStr = strtoupper((string)$hwStatus);
-                if ($hwStatus !== 0 && $hwStatus !== '0' && $hwStatus !== false && 
-                    $hwStr !== 'OK' && $hwStr !== 'CLOSED' && $hwStr !== 'OPEN' && 
-                    $hwStr !== 'MANUAL_WATERING' && $hwStr !== 'AUTOMATIC_WATERING' && $hwStr !== 'WATERING') {
-                    IPS_LogMessage('SmartLawnAI', 'HARDWARE_FEHLER für Zone ' . $zone['SensorID'] . '! Status-Variable (' . $zone['HardwareStatusID'] . ') liefert: ' . print_r($hwStatus, true));
+                if (in_array($hwStr, ['ERROR', 'WARNING', 'OFFLINE', 'DEFECT', 'FAULT'])) {
+                    IPS_LogMessage('SmartLawnAI', 'HARDWARE_FEHLER für Zone ' . $zone['SensorID'] . '! Status-Variable (' . $zone['HardwareStatusID'] . ') meldet einen Defekt: ' . print_r($hwStatus, true));
                     SetValue($this->GetIDForIdent('Status_' . $zone['SensorID']), 'HARDWARE_FEHLER');
                     continue; 
                 }
@@ -333,8 +332,8 @@ class SmartLawnAI extends IPSModule {
                 if (isset($zone['HardwareStatusID']) && $zone['HardwareStatusID'] > 0) {
                     $hwVal = GetValue($zone['HardwareStatusID']);
                     $hwStr = strtoupper((string)$hwVal);
-                    if ($hwVal === 0 || $hwVal === '0' || $hwVal === false || 
-                        in_array($hwStr, ['OK', 'CLOSED', 'OPEN', 'MANUAL_WATERING', 'AUTOMATIC_WATERING', 'WATERING'])) {
+                    // In der UI geben wir HardwareOk = false nur aus, wenn es wirklich ein Fehler ist.
+                    if (!in_array($hwStr, ['ERROR', 'WARNING', 'OFFLINE', 'DEFECT', 'FAULT'])) {
                         $hwStatus = true;
                     }
                 } else {
