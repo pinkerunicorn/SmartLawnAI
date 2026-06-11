@@ -241,7 +241,7 @@ class SmartLawnAI extends IPSModule {
         }
     }
 
-    public function UIRequest($Action, $Payload) {
+    public function UIRequest(string $Action, string $Payload) {
         switch ($Action) {
             case 'TOGGLE_AUTOMATIC':
                 $id = $this->GetIDForIdent('AutomaticActive');
