@@ -135,9 +135,13 @@ class SmartLawnAI extends IPSModule {
             }
 
             // Gardena Not-Aus Check
-            if ($zone['HardwareStatusID'] > 0) {
+            if (isset($zone['HardwareStatusID']) && $zone['HardwareStatusID'] > 0) {
                 $hwStatus = GetValue($zone['HardwareStatusID']);
-                if ($hwStatus !== 0 && $hwStatus !== 'OK') {
+                $this->SendDebug('Hardware-Check', 'Zone ' . $zone['SensorID'] . ' HW-Status: ' . print_r($hwStatus, true) . ' (Typ: ' . gettype($hwStatus) . ')', 0);
+                
+                // Wir tolerieren 0, '0', false, 'OK', 'ok' als gültige Zustände
+                if ($hwStatus !== 0 && $hwStatus !== '0' && $hwStatus !== false && $hwStatus !== 'OK' && $hwStatus !== 'ok') {
+                    IPS_LogMessage('SmartLawnAI', 'HARDWARE_FEHLER für Zone ' . $zone['SensorID'] . '! Status-Variable (' . $zone['HardwareStatusID'] . ') liefert: ' . print_r($hwStatus, true));
                     SetValue($this->GetIDForIdent('Status_' . $zone['SensorID']), 'HARDWARE_FEHLER');
                     continue; 
                 }
@@ -272,7 +276,7 @@ class SmartLawnAI extends IPSModule {
                 $hwStatus = false;
                 if (isset($zone['HardwareStatusID']) && $zone['HardwareStatusID'] > 0) {
                     $hwVal = GetValue($zone['HardwareStatusID']);
-                    if ($hwVal === 0 || $hwVal === 'OK') {
+                    if ($hwVal === 0 || $hwVal === '0' || $hwVal === false || $hwVal === 'OK' || $hwVal === 'ok') {
                         $hwStatus = true;
                     }
                 } else {
