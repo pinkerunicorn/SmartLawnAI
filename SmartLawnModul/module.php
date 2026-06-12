@@ -258,7 +258,7 @@ class SmartLawnAI extends IPSModule {
                             if ($berechneteMinuten <= 0) {
                                 $this->SendDebug('Sequencer', 'Zone ' . $zone['SensorID'] . ' hat keine gültige Dauer. Überspringe.', 0);
                                 SetValue($this->GetIDForIdent('Status_' . $zone['SensorID']), 'IDLE');
-                                continue;
+                                continue 2;
                             }
 
                             // Gardena Hardware-Watchdog: Dauer setzen
