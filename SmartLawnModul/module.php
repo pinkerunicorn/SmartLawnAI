@@ -165,7 +165,7 @@ class SmartLawnAI extends IPSModule {
         $anyQueued = false;
         foreach ($zones as $zone) {
             $status = GetValue($this->GetIDForIdent('Status_' . $zone['SensorID']));
-            if ($status === 'WATERING' || $status === 'VERIFYING_START' || $status === 'WAITING_FOR_RESULT') {
+            if ($status === 'WATERING' || $status === 'VERIFYING_START') {
                 $einVentilIstAktiv = true;
                 $this->SendDebug('Sequencer', 'Ein anderes Ventil blockiert die Sequenz (' . $status . ' bei Zone ' . $zone['SensorID'] . '). Warte...', 0);
             }
@@ -217,7 +217,7 @@ class SmartLawnAI extends IPSModule {
             $einVentilIstAktiv = false;
             foreach ($zones as $zone) {
                 $status = GetValue($this->GetIDForIdent('Status_' . $zone['SensorID']));
-                if ($status === 'WATERING' || $status === 'VERIFYING_START' || $status === 'WAITING_FOR_RESULT') {
+                if ($status === 'WATERING' || $status === 'VERIFYING_START') {
                     $einVentilIstAktiv = true;
                 }
             }
@@ -250,19 +250,22 @@ class SmartLawnAI extends IPSModule {
 
             // Gardena Not-Aus Check (prüfe alle Sprinkler dieser Zone)
             $hardwareFehler = false;
+            $fehlerhafterSprinklerName = '';
             foreach ($zoneSprinklers as $s) {
                 if (isset($s['HardwareStatusID']) && $s['HardwareStatusID'] > 0) {
                     $hwStatus = GetValue($s['HardwareStatusID']);
                     $hwStr = strtoupper((string)$hwStatus);
                     if (in_array($hwStr, ['ERROR', 'WARNING', 'OFFLINE', 'DEFECT', 'FAULT'])) {
-                        $this->SendDebug('Hardware-Check', 'Zone ' . $zone['SensorID'] . ' Sprinkler ' . $s['ValveID'] . ' meldet Fehler: ' . $hwStr, 0);
+                        $sName = isset($s['SprinklerName']) && !empty($s['SprinklerName']) ? $s['SprinklerName'] : 'Sprinkler ' . $s['ValveID'];
+                        $this->SendDebug('Hardware-Check', 'Zone ' . $zone['SensorID'] . ' ' . $sName . ' meldet Fehler: ' . $hwStr, 0);
                         $hardwareFehler = true;
+                        $fehlerhafterSprinklerName = $sName;
                         break;
                     }
                 }
             }
             if ($hardwareFehler) {
-                IPS_LogMessage('SmartLawnAI', 'HARDWARE_FEHLER für Zone ' . $zone['SensorID'] . '! Ein zugeordneter Sprinkler meldet einen Defekt.');
+                IPS_LogMessage('SmartLawnAI', 'HARDWARE_FEHLER für Zone ' . $zone['SensorID'] . '! ' . $fehlerhafterSprinklerName . ' meldet einen Defekt.');
                 SetValue($this->GetIDForIdent('Status_' . $zone['SensorID']), 'HARDWARE_FEHLER');
                 continue; 
             }
@@ -273,6 +276,7 @@ class SmartLawnAI extends IPSModule {
                 $currentIndex = 0;
             }
             $currentSprinkler = $zoneSprinklers[$currentIndex];
+            $currentSprinklerName = isset($currentSprinkler['SprinklerName']) && !empty($currentSprinkler['SprinklerName']) ? $currentSprinkler['SprinklerName'] : 'Sprinkler ' . $currentSprinkler['ValveID'];
 
             switch ($aktuellerStatus) {
                 case 'IDLE':
@@ -341,7 +345,7 @@ class SmartLawnAI extends IPSModule {
                     if ($ventilOffen && $aktuellerStatus === 'VERIFYING_START') {
                         SetValue($this->GetIDForIdent('Status_' . $zone['SensorID']), 'WATERING');
                     } elseif (!$ventilOffen && $aktuellerStatus === 'WATERING') {
-                        IPS_LogMessage('SmartLawnAI', 'Sprinkler ' . $currentSprinkler['ValveID'] . ' in Zone ' . $zone['SensorID'] . ' ist fertig. Hardware-Status: ' . $hwVal);
+                        IPS_LogMessage('SmartLawnAI', $currentSprinklerName . ' in Zone ' . $zone['SensorID'] . ' ist fertig. Hardware-Status: ' . $hwVal);
                         
                         $currentIndex++;
                         if ($currentIndex < count($zoneSprinklers)) {
@@ -360,6 +364,13 @@ class SmartLawnAI extends IPSModule {
                     break;
 
                 case 'WAITING_FOR_RESULT':
+                    if ($einVentilIstAktiv || $anyQueued) {
+                        // Sickerpause verzögern, bis alle anderen Kreise mit der Bewässerung fertig sind
+                        SetValue($this->GetIDForIdent('SickerpauseStart_' . $zone['SensorID']), time());
+                        $this->SendDebug('Sequencer', 'Zone ' . $zone['SensorID'] . ' verzögert Sickerpause, da noch andere Ventile aktiv sind.', 0);
+                        break;
+                    }
+
                     $sickerStart = (int)GetValue($this->GetIDForIdent('SickerpauseStart_' . $zone['SensorID']));
                     // 15 Minuten (900 Sekunden) Sickerpause abwarten
                     if ((time() - $sickerStart) > 900) {

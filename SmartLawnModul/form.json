@@ -116,6 +116,13 @@
                     "edit": { "type": "ValidationTextBox" }
                 },
                 {
+                    "caption": "Sprinkler Name",
+                    "name": "SprinklerName",
+                    "width": "150px",
+                    "add": "",
+                    "edit": { "type": "ValidationTextBox" }
+                },
+                {
                     "caption": "Ventil-Aktor",
                     "name": "ValveID",
                     "width": "120px",
