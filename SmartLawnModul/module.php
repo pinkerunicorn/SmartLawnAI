@@ -499,7 +499,7 @@ class SmartLawnAI extends IPSModule {
     }
 
     private function CalculateAndApplyPlan($zones, $sprinklers, $isManualStart, $vpd, $lux) {
-        $apiKey = $this->ReadPropertyString('GeminiApiKey');
+        $apiKey = trim($this->ReadPropertyString('GeminiApiKey'));
         $model = $this->ReadPropertyString('GeminiModel');
         if (empty($model)) {
             $model = 'gemini-3.5-flash';
@@ -638,6 +638,7 @@ class SmartLawnAI extends IPSModule {
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
             'Content-Type: application/json'
         ]);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // Workaround for missing cacert.pem in local PHP setups
         curl_setopt($ch, CURLOPT_TIMEOUT, 10);
 
         $response = curl_exec($ch);
@@ -647,7 +648,7 @@ class SmartLawnAI extends IPSModule {
 
         if ($response === false || $httpCode !== 200) {
             $this->SendDebug('Planer Fehler', 'Gemini API call failed. HTTP Code: ' . $httpCode . ', Curl-Fehler: ' . $curlErr . ', Response: ' . $response, 0);
-            IPS_LogMessage('SmartLawnAI', 'Gemini API-Aufruf fehlgeschlagen (HTTP ' . $httpCode . '). Details: ' . $response);
+            IPS_LogMessage('SmartLawnAI', 'Gemini API-Aufruf fehlgeschlagen (HTTP ' . $httpCode . '). Curl-Fehler: ' . $curlErr . ' | Details: ' . $response);
             return;
         }
 
