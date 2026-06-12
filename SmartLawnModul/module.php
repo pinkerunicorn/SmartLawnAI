@@ -425,7 +425,7 @@ class SmartLawnAI extends IPSModule {
         $this->UpdateUI('INITIAL_CONFIG', $config);
     }
 
-    private function isZoneHardwareOk(array $zone): bool {
+    private function isZoneHardwareOk($zone) {
         if (isset($zone['HardwareStatusID']) && $zone['HardwareStatusID'] > 0) {
             $hwStatus = GetValue($zone['HardwareStatusID']);
             $hwStr = strtoupper((string)$hwStatus);
@@ -436,7 +436,7 @@ class SmartLawnAI extends IPSModule {
         return true;
     }
 
-    private function CalculateAndApplyPlan(array $zones, bool $isManualStart, float $vpd, float $lux) {
+    private function CalculateAndApplyPlan($zones, $isManualStart, $vpd, $lux) {
         $apiKey = $this->ReadPropertyString('GeminiApiKey');
         $model = $this->ReadPropertyString('GeminiModel');
         if (empty($model)) {
