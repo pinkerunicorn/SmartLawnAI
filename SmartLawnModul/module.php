@@ -646,8 +646,8 @@ class SmartLawnAI extends IPSModule {
         curl_close($ch);
 
         if ($response === false || $httpCode !== 200) {
-            $this->SendDebug('Planer Fehler', 'Gemini API call failed. HTTP Code: ' . $httpCode . ', Curl-Fehler: ' . $curlErr, 0);
-            IPS_LogMessage('SmartLawnAI', 'Gemini API-Aufruf fehlgeschlagen. Abbruch.');
+            $this->SendDebug('Planer Fehler', 'Gemini API call failed. HTTP Code: ' . $httpCode . ', Curl-Fehler: ' . $curlErr . ', Response: ' . $response, 0);
+            IPS_LogMessage('SmartLawnAI', 'Gemini API-Aufruf fehlgeschlagen (HTTP ' . $httpCode . '). Details: ' . $response);
             return;
         }
 
