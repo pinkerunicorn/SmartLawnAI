@@ -138,6 +138,7 @@ class SmartLawnAI extends IPSModule {
             }
         }
     }
+}
 
     public function ProcessLogic() {
         $defaultZiel  = $this->ReadPropertyFloat('DefaultZielFeuchte');
