@@ -96,6 +96,24 @@
                     "width": "120px",
                     "add": 0,
                     "edit": { "type": "SelectVariable" }
+                }
+            ]
+        },
+        {
+            "type": "List",
+            "name": "Sprinklers",
+            "caption": "Sprinkler / Ventile",
+            "rowCount": 10,
+            "add": true,
+            "delete": true,
+            "sort": false,
+            "columns": [
+                {
+                    "caption": "Zu Kreis (Name)",
+                    "name": "ZoneName",
+                    "width": "150px",
+                    "add": "",
+                    "edit": { "type": "ValidationTextBox" }
                 },
                 {
                     "caption": "Ventil-Aktor",

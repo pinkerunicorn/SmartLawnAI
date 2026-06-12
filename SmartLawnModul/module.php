@@ -25,6 +25,7 @@ class SmartLawnAI extends IPSModule {
 
         // Zonen (Hardware)
         $this->RegisterPropertyString('Zones', '[]');
+        $this->RegisterPropertyString('Sprinklers', '[]');
 
         // Timer für die 60-Sekunden-Taktung
         $this->RegisterTimer('LawnAITimer', 0, 'SLAI_ProcessLogic($_IPS[\'TARGET\']);');
@@ -129,6 +130,8 @@ class SmartLawnAI extends IPSModule {
                 $this->RegisterVariableFloat('StartFeuchte_' . $sid, 'StartFeuchte ' . $name, '', 3);
                 $this->RegisterVariableFloat('Dauer_' . $sid, 'Dauer ' . $name, '', 4);
                 $this->RegisterVariableFloat('SickerpauseStart_' . $sid, 'SickerpauseStart ' . $name, '', 5);
+                $this->RegisterVariableInteger('CurrentSprinklerIndex_' . $sid, 'Aktueller Sprinkler Index ' . $name, '', 6);
+                IPS_SetHidden($this->GetIDForIdent('CurrentSprinklerIndex_' . $sid), true);
 
                 // IP-Symcon benennt bestehende Variablen nicht automatisch um, daher erzwingen wir es hier
                 IPS_SetName($this->GetIDForIdent('Status_' . $sid), 'Status ' . $name);
@@ -136,6 +139,7 @@ class SmartLawnAI extends IPSModule {
                 IPS_SetName($this->GetIDForIdent('StartFeuchte_' . $sid), 'StartFeuchte ' . $name);
                 IPS_SetName($this->GetIDForIdent('Dauer_' . $sid), 'Dauer ' . $name);
                 IPS_SetName($this->GetIDForIdent('SickerpauseStart_' . $sid), 'SickerpauseStart ' . $name);
+                IPS_SetName($this->GetIDForIdent('CurrentSprinklerIndex_' . $sid), 'Aktueller Sprinkler Index ' . $name);
             }
         }
     }
@@ -147,6 +151,10 @@ class SmartLawnAI extends IPSModule {
         
         $zonesJson = $this->ReadPropertyString('Zones');
         $zones = json_decode($zonesJson, true);
+        
+        $sprinklersJson = $this->ReadPropertyString('Sprinklers');
+        $sprinklers = json_decode($sprinklersJson, true);
+        if (!is_array($sprinklers)) $sprinklers = [];
         
         if (!is_array($zones) || empty($zones)) {
             return; 
@@ -203,7 +211,7 @@ class SmartLawnAI extends IPSModule {
 
         if ($newCycleTriggered) {
             $this->SendDebug('Planer', 'Neuer Bewässerungszyklus initiiert. Berechne Laufzeiten...', 0);
-            $this->CalculateAndApplyPlan($zones, $isManualStart, $vpd, $lux);
+            $this->CalculateAndApplyPlan($zones, $sprinklers, $isManualStart, $vpd, $lux);
             
             // Status nach Berechnungsdurchlauf neu einlesen
             $einVentilIstAktiv = false;
@@ -220,6 +228,14 @@ class SmartLawnAI extends IPSModule {
             $zielWert  = $defaultZiel;
             $startWert = $defaultStart;
             
+            $zoneName = isset($zone['GroupName']) && !empty($zone['GroupName']) ? $zone['GroupName'] : 'Zone ' . $zone['SensorID'];
+            $zoneSprinklers = [];
+            foreach ($sprinklers as $s) {
+                if ($s['ZoneName'] === $zoneName) {
+                    $zoneSprinklers[] = $s;
+                }
+            }
+
             $aktuelleFeuchte = GetValue($zone['SensorID']);
             $aktuellerStatus = GetValue($this->GetIDForIdent('Status_' . $zone['SensorID']));
             if (empty($aktuellerStatus)) {
@@ -227,18 +243,36 @@ class SmartLawnAI extends IPSModule {
             }
             $this->SendDebug('ProcessLogic', 'Bearbeite Zone ' . $zone['SensorID'] . ' (Aktueller Status: ' . $aktuellerStatus . ')', 0);
 
-            // Gardena Not-Aus Check
-            if (isset($zone['HardwareStatusID']) && $zone['HardwareStatusID'] > 0) {
-                $hwStatus = GetValue($zone['HardwareStatusID']);
-                $this->SendDebug('Hardware-Check', 'Zone ' . $zone['SensorID'] . ' HW-Status: ' . print_r($hwStatus, true) . ' (Typ: ' . gettype($hwStatus) . ')', 0);
-                
-                $hwStr = strtoupper((string)$hwStatus);
-                if (in_array($hwStr, ['ERROR', 'WARNING', 'OFFLINE', 'DEFECT', 'FAULT'])) {
-                    IPS_LogMessage('SmartLawnAI', 'HARDWARE_FEHLER für Zone ' . $zone['SensorID'] . '! Status-Variable (' . $zone['HardwareStatusID'] . ') meldet einen Defekt: ' . print_r($hwStatus, true));
-                    SetValue($this->GetIDForIdent('Status_' . $zone['SensorID']), 'HARDWARE_FEHLER');
-                    continue; 
+            if (empty($zoneSprinklers)) {
+                $this->SendDebug('ProcessLogic', 'Zone ' . $zone['SensorID'] . ' hat keine zugeordneten Sprinkler. Überspringe.', 0);
+                continue;
+            }
+
+            // Gardena Not-Aus Check (prüfe alle Sprinkler dieser Zone)
+            $hardwareFehler = false;
+            foreach ($zoneSprinklers as $s) {
+                if (isset($s['HardwareStatusID']) && $s['HardwareStatusID'] > 0) {
+                    $hwStatus = GetValue($s['HardwareStatusID']);
+                    $hwStr = strtoupper((string)$hwStatus);
+                    if (in_array($hwStr, ['ERROR', 'WARNING', 'OFFLINE', 'DEFECT', 'FAULT'])) {
+                        $this->SendDebug('Hardware-Check', 'Zone ' . $zone['SensorID'] . ' Sprinkler ' . $s['ValveID'] . ' meldet Fehler: ' . $hwStr, 0);
+                        $hardwareFehler = true;
+                        break;
+                    }
                 }
             }
+            if ($hardwareFehler) {
+                IPS_LogMessage('SmartLawnAI', 'HARDWARE_FEHLER für Zone ' . $zone['SensorID'] . '! Ein zugeordneter Sprinkler meldet einen Defekt.');
+                SetValue($this->GetIDForIdent('Status_' . $zone['SensorID']), 'HARDWARE_FEHLER');
+                continue; 
+            }
+
+            $currentIndexVarId = $this->GetIDForIdent('CurrentSprinklerIndex_' . $zone['SensorID']);
+            $currentIndex = (int)GetValue($currentIndexVarId);
+            if (!isset($zoneSprinklers[$currentIndex])) {
+                $currentIndex = 0;
+            }
+            $currentSprinkler = $zoneSprinklers[$currentIndex];
 
             switch ($aktuellerStatus) {
                 case 'IDLE':
@@ -263,13 +297,13 @@ class SmartLawnAI extends IPSModule {
                             }
 
                             // Gardena Hardware-Watchdog: Dauer setzen
-                            if ($zone['DurationID'] > 0) {
-                                @RequestAction($zone['DurationID'], $berechneteMinuten);
+                            if ($currentSprinkler['DurationID'] > 0) {
+                                @RequestAction($currentSprinkler['DurationID'], $berechneteMinuten);
                                 IPS_Sleep(500); 
                             }
 
                             // Start-Befehl senden (Gardena spezifisch)
-                            @RequestAction($zone['ValveID'], 'START_SECONDS_TO_OVERRIDE');
+                            @RequestAction($currentSprinkler['ValveID'], 'START_SECONDS_TO_OVERRIDE');
                             
                             // Zwischenspeichern für den Lern-Algorithmus später
                             SetValue($this->GetIDForIdent('StartFeuchte_' . $zone['SensorID']), $aktuelleFeuchte);
@@ -287,18 +321,18 @@ class SmartLawnAI extends IPSModule {
                     // Ventil-Rückkanal von Gardena prüfen
                     $ventilOffen = false;
                     $hwVal = 'UNKNOWN';
-                    if (isset($zone['HardwareStatusID']) && $zone['HardwareStatusID'] > 0) {
-                        $hwVal = strtoupper((string)GetValue($zone['HardwareStatusID']));
+                    if (isset($currentSprinkler['HardwareStatusID']) && $currentSprinkler['HardwareStatusID'] > 0) {
+                        $hwVal = strtoupper((string)GetValue($currentSprinkler['HardwareStatusID']));
                         $ventilOffen = in_array($hwVal, ['MANUAL_WATERING', 'AUTOMATIC_WATERING', 'WATERING', 'OPEN']);
                     } else {
-                        $v = GetValue($zone['ValveID']);
+                        $v = GetValue($currentSprinkler['ValveID']);
                         $hwVal = (string)$v;
                         $ventilOffen = ($v && $v !== 'STOP_UNTIL_NEXT_TASK' && $v !== 'CLOSED');
                     }
                     
                     // Fallback: Wenn Sekunden noch > 0 sind, läuft es definitiv noch!
-                    if (!$ventilOffen && isset($zone['RemainingSecondsID']) && $zone['RemainingSecondsID'] > 0) {
-                        if ((int)GetValue($zone['RemainingSecondsID']) > 0) {
+                    if (!$ventilOffen && isset($currentSprinkler['RemainingSecondsID']) && $currentSprinkler['RemainingSecondsID'] > 0) {
+                        if ((int)GetValue($currentSprinkler['RemainingSecondsID']) > 0) {
                             $ventilOffen = true;
                             $hwVal .= ' (Kept alive by RemainingSeconds > 0)';
                         }
@@ -307,10 +341,21 @@ class SmartLawnAI extends IPSModule {
                     if ($ventilOffen && $aktuellerStatus === 'VERIFYING_START') {
                         SetValue($this->GetIDForIdent('Status_' . $zone['SensorID']), 'WATERING');
                     } elseif (!$ventilOffen && $aktuellerStatus === 'WATERING') {
-                        IPS_LogMessage('SmartLawnAI', 'Zone ' . $zone['SensorID'] . ' ist scheinbar fertig. Letzter Hardware-Status war: ' . $hwVal);
-                        // Ventil hat planmäßig geschlossen -> Sickerpause starten
-                        SetValue($this->GetIDForIdent('Status_' . $zone['SensorID']), 'WAITING_FOR_RESULT');
-                        SetValue($this->GetIDForIdent('SickerpauseStart_' . $zone['SensorID']), time());
+                        IPS_LogMessage('SmartLawnAI', 'Sprinkler ' . $currentSprinkler['ValveID'] . ' in Zone ' . $zone['SensorID'] . ' ist fertig. Hardware-Status: ' . $hwVal);
+                        
+                        $currentIndex++;
+                        if ($currentIndex < count($zoneSprinklers)) {
+                            // Nächster Sprinkler in dieser Zone
+                            SetValue($currentIndexVarId, $currentIndex);
+                            SetValue($this->GetIDForIdent('Status_' . $zone['SensorID']), 'QUEUED');
+                            $this->SendDebug('Sequencer', 'Sprinkler gewechselt. Nächster Index: ' . $currentIndex, 0);
+                        } else {
+                            // Alle Sprinkler der Zone fertig
+                            SetValue($currentIndexVarId, 0); // Reset
+                            SetValue($this->GetIDForIdent('Status_' . $zone['SensorID']), 'WAITING_FOR_RESULT');
+                            SetValue($this->GetIDForIdent('SickerpauseStart_' . $zone['SensorID']), time());
+                            $this->SendDebug('Sequencer', 'Alle Sprinkler fertig. Sickerpause gestartet.', 0);
+                        }
                     }
                     break;
 
@@ -426,18 +471,23 @@ class SmartLawnAI extends IPSModule {
         $this->UpdateUI('INITIAL_CONFIG', $config);
     }
 
-    private function isZoneHardwareOk($zone) {
-        if (isset($zone['HardwareStatusID']) && $zone['HardwareStatusID'] > 0) {
-            $hwStatus = GetValue($zone['HardwareStatusID']);
-            $hwStr = strtoupper((string)$hwStatus);
-            if (in_array($hwStr, ['ERROR', 'WARNING', 'OFFLINE', 'DEFECT', 'FAULT'])) {
-                return false;
+    private function isZoneHardwareOk($zone, $sprinklers) {
+        $zoneName = isset($zone['GroupName']) && !empty($zone['GroupName']) ? $zone['GroupName'] : 'Zone ' . $zone['SensorID'];
+        foreach ($sprinklers as $s) {
+            if ($s['ZoneName'] === $zoneName) {
+                if (isset($s['HardwareStatusID']) && $s['HardwareStatusID'] > 0) {
+                    $hwStatus = GetValue($s['HardwareStatusID']);
+                    $hwStr = strtoupper((string)$hwStatus);
+                    if (in_array($hwStr, ['ERROR', 'WARNING', 'OFFLINE', 'DEFECT', 'FAULT'])) {
+                        return false;
+                    }
+                }
             }
         }
         return true;
     }
 
-    private function CalculateAndApplyPlan($zones, $isManualStart, $vpd, $lux) {
+    private function CalculateAndApplyPlan($zones, $sprinklers, $isManualStart, $vpd, $lux) {
         $apiKey = $this->ReadPropertyString('GeminiApiKey');
         $model = $this->ReadPropertyString('GeminiModel');
         if (empty($model)) {
@@ -476,7 +526,7 @@ class SmartLawnAI extends IPSModule {
         $zonesContext = [];
         foreach ($zones as $zone) {
             $sid = $zone['SensorID'];
-            if (!$this->isZoneHardwareOk($zone)) {
+            if (!$this->isZoneHardwareOk($zone, $sprinklers)) {
                 $this->SendDebug('Planer', 'Zone ' . $sid . ' übersprungen (Hardware-Fehler).', 0);
                 SetValue($this->GetIDForIdent('Status_' . $sid), 'HARDWARE_FEHLER');
                 continue;
@@ -490,8 +540,7 @@ class SmartLawnAI extends IPSModule {
             $maxDuration = $this->ReadPropertyInteger('GlobalMaxDuration');
 
             $zonesContext[] = [
-                'valveId' => (int)$zone['ValveID'],
-                'sensorId' => (int)$sid,
+                'zoneId' => (int)$sid,
                 'groupName' => isset($zone['GroupName']) ? $zone['GroupName'] : ('Zone ' . $sid),
                 'currentMoisturePercent' => $aktuelleFeuchte,
                 'targetMoisturePercent' => $zielWert,
@@ -513,9 +562,9 @@ class SmartLawnAI extends IPSModule {
         $userPrompt .= "Berücksichtige bei der Laufzeitberechnung:\n";
         $userPrompt .= "- Ist die Bodentemperatur zu niedrig, kühle den Boden nicht weiter ab.\n";
         $userPrompt .= "- Nutze Helligkeit und Luftfeuchte, um die aktuelle Verdunstungsrate abzuschätzen.\n";
-        $userPrompt .= "- Berechne für JEDE 'valveId' die exakte Laufzeit in Minuten (0 bis maxDurationMinutes).\n";
+        $userPrompt .= "- Berechne für JEDE 'zoneId' die exakte Laufzeit in Minuten (0 bis maxDurationMinutes).\n";
         
-        $systemInstruction = "Du bist ein präzises Steuerungsmodul für Agrarsysteme. Deine Aufgabe ist es, für die übergebenen Ventil-IDs Laufzeiten in Minuten zu berechnen. Antworte ausschließlich im vorgegebenen JSON-Format.";
+        $systemInstruction = "Du bist ein präzises Steuerungsmodul für Agrarsysteme. Deine Aufgabe ist es, für die übergebenen Zonen-IDs (zoneId) Laufzeiten in Minuten zu berechnen. Antworte ausschließlich im vorgegebenen JSON-Format.";
 
         // 3. API-Aufruf (Gemini mit striktem JSON Schema)
         $url = "https://generativelanguage.googleapis.com/v1beta/models/" . $model . ":generateContent?key=" . $apiKey;
@@ -529,9 +578,9 @@ class SmartLawnAI extends IPSModule {
                     'items' => [
                         'type' => 'OBJECT',
                         'properties' => [
-                            'valveId' => [
+                            'zoneId' => [
                                 'type' => 'INTEGER',
-                                'description' => 'Die physische ID des Ventils.'
+                                'description' => 'Die ID der Zone (Beregnungskreis).'
                             ],
                             'durationMinutes' => [
                                 'type' => 'INTEGER',
@@ -542,7 +591,7 @@ class SmartLawnAI extends IPSModule {
                                 'description' => 'Kurze agronomische Begründung für diese Entscheidung.'
                             ]
                         ],
-                        'required' => ['valveId', 'durationMinutes', 'reasoning']
+                        'required' => ['zoneId', 'durationMinutes', 'reasoning']
                     ]
                 ]
             ],
@@ -607,23 +656,22 @@ class SmartLawnAI extends IPSModule {
         }
 
         // Apply Gemini calculations
-        $planByValve = [];
+        $planByZone = [];
         foreach ($planData['irrigationPlan'] as $item) {
-            if (isset($item['valveId'])) {
-                $planByValve[(int)$item['valveId']] = $item;
+            if (isset($item['zoneId'])) {
+                $planByZone[(int)$item['zoneId']] = $item;
             }
         }
 
         foreach ($zones as $zone) {
             $sid = $zone['SensorID'];
-            if (!$this->isZoneHardwareOk($zone)) {
+            if (!$this->isZoneHardwareOk($zone, $sprinklers)) {
                 continue;
             }
 
-            $valveId = (int)$zone['ValveID'];
-            if (isset($planByValve[$valveId])) {
-                $duration = (int)$planByValve[$valveId]['durationMinutes'];
-                $reasoning = $planByValve[$valveId]['reasoning'];
+            if (isset($planByZone[$sid])) {
+                $duration = (int)$planByZone[$sid]['durationMinutes'];
+                $reasoning = $planByZone[$sid]['reasoning'];
                 
                 $maxDuration = $this->ReadPropertyInteger('GlobalMaxDuration');
                 if ($duration > $maxDuration) {
