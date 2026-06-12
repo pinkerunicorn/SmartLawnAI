@@ -17,6 +17,31 @@
             "suffix": "%"
         },
         {
+            "type": "NumberSpinner",
+            "name": "SickerpauseMinuten",
+            "caption": "Sickerpause (Wartezeit nach dem Bewässern)",
+            "suffix": "Minuten"
+        },
+        {
+            "type": "Label",
+            "caption": "Gemini AI Konfiguration"
+        },
+        {
+            "type": "ValidationTextBox",
+            "name": "GeminiApiKey",
+            "caption": "Gemini API-Schlüssel"
+        },
+        {
+            "type": "Select",
+            "name": "GeminiModel",
+            "caption": "Gemini Modell",
+            "options": [
+                { "caption": "Gemini 3.5 Flash", "value": "gemini-3.5-flash" },
+                { "caption": "Gemini 2.5 Flash", "value": "gemini-2.5-flash" },
+                { "caption": "Gemini 2.5 Flash Preview", "value": "gemini-2.5-flash-preview-09-2025" }
+            ]
+        },
+        {
             "type": "Label",
             "caption": "Globale Sensorik (Thermodynamik & Wetter)"
         },
@@ -34,6 +59,16 @@
             "type": "SelectVariable",
             "name": "GlobalIlluminanceID",
             "caption": "Helligkeitssensor (ID in Lux)"
+        },
+        {
+            "type": "SelectVariable",
+            "name": "GlobalSoilTempID",
+            "caption": "Bodentemperatur-Sensor (ID Bodentemperatur in °C)"
+        },
+        {
+            "type": "SelectVariable",
+            "name": "GlobalWeatherForecastID",
+            "caption": "Wettervorhersage-Variable (ID)"
         },
         {
             "type": "Label",
@@ -102,6 +137,13 @@
                     "width": "120px",
                     "add": 0,
                     "edit": { "type": "SelectVariable" }
+                },
+                {
+                    "caption": "Max. Dauer (Min)",
+                    "name": "MaxDuration",
+                    "width": "100px",
+                    "add": 30,
+                    "edit": { "type": "NumberSpinner" }
                 }
             ]
         }
