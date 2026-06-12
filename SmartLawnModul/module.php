@@ -256,19 +256,9 @@ class SmartLawnAI extends IPSModule {
                             // Berechnete Laufzeit aus Variable lesen
                             $berechneteMinuten = (int)GetValue($this->GetIDForIdent('Dauer_' . $zone['SensorID']));
                             if ($berechneteMinuten <= 0) {
-                                // Lokaler Fallback bei 0 Minuten
-                                $effizienz = (float)GetValue($this->GetIDForIdent('Effizienz_' . $zone['SensorID']));
-                                if ($effizienz <= 0) $effizienz = 1.0; 
-                                
-                                $differenz = $zielWert - $aktuelleFeuchte;
-                                if ($differenz <= 0) $differenz = 5.0;
-                                
-                                $berechneteMinuten = (int)ceil($differenz / $effizienz);
-                                
-                                $maxDuration = isset($zone['MaxDuration']) && $zone['MaxDuration'] > 0 ? (int)$zone['MaxDuration'] : 30;
-                                if ($berechneteMinuten > $maxDuration) {
-                                    $berechneteMinuten = $maxDuration;
-                                }
+                                $this->SendDebug('Sequencer', 'Zone ' . $zone['SensorID'] . ' hat keine gültige Dauer. Überspringe.', 0);
+                                SetValue($this->GetIDForIdent('Status_' . $zone['SensorID']), 'IDLE');
+                                continue;
                             }
 
                             // Gardena Hardware-Watchdog: Dauer setzen
@@ -446,71 +436,6 @@ class SmartLawnAI extends IPSModule {
         return true;
     }
 
-    private function ApplyLocalFallbackPlan(array $zones, bool $isManualStart) {
-        $this->SendDebug('Planer', 'Führe lokalen Fallback-Plan aus.', 0);
-        
-        $soilTempID = $this->ReadPropertyInteger('GlobalSoilTempID');
-        if ($soilTempID > 0) {
-            $soilTemp = (float)GetValue($soilTempID);
-            if ($soilTemp < 5.0) {
-                $this->SendDebug('Planer', 'Frostschutz aktiv: Bodentemperatur beträgt ' . $soilTemp . ' °C (< 5 °C). Alle Zonen blockiert.', 0);
-                IPS_LogMessage('SmartLawnAI', 'Frostschutz aktiv: Bodentemperatur < 5 °C. Keine Bewässerung gestartet.');
-                foreach ($zones as $zone) {
-                    $sid = $zone['SensorID'];
-                    SetValue($this->GetIDForIdent('Status_' . $sid), 'IDLE');
-                }
-                return;
-            }
-        }
-
-        $defaultZiel  = $this->ReadPropertyFloat('DefaultZielFeuchte');
-        $defaultStart = $this->ReadPropertyFloat('DefaultStartSchwellwert');
-        $automaticActive = GetValue($this->GetIDForIdent('AutomaticActive'));
-
-        foreach ($zones as $zone) {
-            $sid = $zone['SensorID'];
-            
-            // Check hardware status
-            if (!$this->isZoneHardwareOk($zone)) {
-                SetValue($this->GetIDForIdent('Status_' . $sid), 'HARDWARE_FEHLER');
-                continue;
-            }
-
-            $zielWert  = ($zone['CustomZiel'] > 0) ? $zone['CustomZiel'] : $defaultZiel;
-            $startWert = ($zone['CustomStart'] > 0) ? $zone['CustomStart'] : $defaultStart;
-            $aktuelleFeuchte = GetValue($sid);
-
-            $sollStarten = false;
-            if ($isManualStart) {
-                $sollStarten = true;
-            } else if ($automaticActive && $aktuelleFeuchte <= $startWert) {
-                $sollStarten = true;
-            }
-
-            if ($sollStarten) {
-                $effizienz = (float)GetValue($this->GetIDForIdent('Effizienz_' . $sid));
-                if ($effizienz <= 0) $effizienz = 1.0; 
-                
-                $differenz = $zielWert - $aktuelleFeuchte;
-                if ($differenz <= 0) $differenz = 5.0; // Minimaler Feuchte-Hub
-                
-                $berechneteMinuten = (int)ceil($differenz / $effizienz);
-                
-                // Max duration cap
-                $maxDuration = isset($zone['MaxDuration']) && $zone['MaxDuration'] > 0 ? (int)$zone['MaxDuration'] : 30;
-                if ($berechneteMinuten > $maxDuration) {
-                    $berechneteMinuten = $maxDuration;
-                }
-
-                SetValue($this->GetIDForIdent('Dauer_' . $sid), $berechneteMinuten);
-                SetValue($this->GetIDForIdent('Status_' . $sid), 'QUEUED');
-                $this->SendDebug('Planer', 'Zone ' . $sid . ' eingereiht (Lokaler Fallback): ' . $berechneteMinuten . ' Minuten.', 0);
-            } else {
-                SetValue($this->GetIDForIdent('Status_' . $sid), 'IDLE');
-            }
-        }
-    }
-
     private function CalculateAndApplyPlan(array $zones, bool $isManualStart, float $vpd, float $lux) {
         $apiKey = $this->ReadPropertyString('GeminiApiKey');
         $model = $this->ReadPropertyString('GeminiModel');
@@ -519,14 +444,25 @@ class SmartLawnAI extends IPSModule {
         }
 
         if (empty($apiKey)) {
-            $this->SendDebug('Planer', 'Kein Gemini API-Schlüssel konfiguriert. Verwende lokalen Fallback.', 0);
-            $this->ApplyLocalFallbackPlan($zones, $isManualStart);
+            $this->SendDebug('Planer', 'Kein Gemini API-Schlüssel konfiguriert. Abbruch.', 0);
+            IPS_LogMessage('SmartLawnAI', 'Kein Gemini API-Schlüssel konfiguriert. Bewässerungsplan kann nicht berechnet werden.');
             return;
         }
 
         $soilTempID = $this->ReadPropertyInteger('GlobalSoilTempID');
         $soilTemp = ($soilTempID > 0) ? (float)GetValue($soilTempID) : null;
         
+        // Frostschutz Check
+        if ($soilTemp !== null && $soilTemp < 5.0) {
+            $this->SendDebug('Planer', 'Frostschutz aktiv: Bodentemperatur beträgt ' . $soilTemp . ' °C (< 5 °C). Alle Zonen blockiert.', 0);
+            IPS_LogMessage('SmartLawnAI', 'Frostschutz aktiv: Bodentemperatur < 5 °C. Keine Bewässerung gestartet.');
+            foreach ($zones as $zone) {
+                $sid = $zone['SensorID'];
+                SetValue($this->GetIDForIdent('Status_' . $sid), 'IDLE');
+            }
+            return;
+        }
+
         $forecastID = $this->ReadPropertyInteger('GlobalWeatherForecastID');
         $forecast = null;
         if ($forecastID > 0) {
@@ -667,15 +603,13 @@ class SmartLawnAI extends IPSModule {
 
         if ($response === false || $httpCode !== 200) {
             $this->SendDebug('Planer Fehler', 'Gemini API call failed. HTTP Code: ' . $httpCode . ', Curl-Fehler: ' . $curlErr, 0);
-            $this->SendDebug('Planer Response', (string)$response, 0);
-            $this->ApplyLocalFallbackPlan($zones, $isManualStart);
+            IPS_LogMessage('SmartLawnAI', 'Gemini API-Aufruf fehlgeschlagen. Abbruch.');
             return;
         }
 
         $result = json_decode($response, true);
         if (json_last_error() !== JSON_ERROR_NONE || !isset($result['candidates'][0]['content']['parts'][0]['text'])) {
             $this->SendDebug('Planer Fehler', 'Ungültiges API-Response-Format.', 0);
-            $this->ApplyLocalFallbackPlan($zones, $isManualStart);
             return;
         }
 
@@ -685,7 +619,6 @@ class SmartLawnAI extends IPSModule {
         $planData = json_decode($rawText, true);
         if (json_last_error() !== JSON_ERROR_NONE || !isset($planData['irrigationPlan']) || !is_array($planData['irrigationPlan'])) {
             $this->SendDebug('Planer Fehler', 'Plan-JSON konnte nicht geparst werden.', 0);
-            $this->ApplyLocalFallbackPlan($zones, $isManualStart);
             return;
         }
 
@@ -722,7 +655,6 @@ class SmartLawnAI extends IPSModule {
                     $this->SendDebug('Planer', 'Zone ' . $sid . ' nicht eingereiht (Gemini Dauer = 0). Begründung: ' . $reasoning, 0);
                 }
             } else {
-                // Not specified in plan, default to IDLE
                 SetValue($this->GetIDForIdent('Status_' . $sid), 'IDLE');
                 SetValue($this->GetIDForIdent('Dauer_' . $sid), 0);
                 $this->SendDebug('Planer', 'Zone ' . $sid . ' nicht im Gemini Plan enthalten. Gesetzt auf IDLE.', 0);
