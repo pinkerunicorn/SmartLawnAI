@@ -639,7 +639,7 @@ class SmartLawnAI extends IPSModule {
             'Content-Type: application/json'
         ]);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // Workaround for missing cacert.pem in local PHP setups
-        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 45); // Erhöht auf 45 Sekunden, da die Gemini API manchmal länger braucht
 
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
