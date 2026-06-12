@@ -58,6 +58,16 @@ class SmartLawnAI extends IPSModule {
 
         $zonesJson = $this->ReadPropertyString('Zones');
         $zones = json_decode($zonesJson, true);
+        $sprinklersJson = $this->ReadPropertyString('Sprinklers');
+        $sprinklers = json_decode($sprinklersJson, true);
+        if (is_array($sprinklers)) {
+            foreach ($sprinklers as $s) {
+                if (isset($s['ValveID']) && $s['ValveID'] > 0) {
+                    @RequestAction($s['ValveID'], 'STOP_UNTIL_NEXT_TASK');
+                }
+            }
+        }
+
         if (is_array($zones)) {
             foreach ($zones as $zone) {
                 $sid = $zone['SensorID'];
