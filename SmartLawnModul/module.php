@@ -36,6 +36,8 @@ class SmartLawnAI extends IPSModule {
             SetValue($this->GetIDForIdent($Ident), $Value);
             if (!$Value) {
                 $this->resetAllZones(false);
+            } else {
+                $this->SetSummaryStatus('Automatik aktiviert (Überwache Sensoren...)');
             }
         } else if ($Ident === 'ForceStart') {
             if ($Value) {
@@ -425,6 +427,8 @@ class SmartLawnAI extends IPSModule {
                 SetValue($id, $newVal);
                 if (!$newVal) {
                     $this->resetAllZones(false);
+                } else {
+                    $this->SetSummaryStatus('Automatik aktiviert (Überwache Sensoren...)');
                 }
                 break;
             case 'FORCE_START_SEQUENCE':
