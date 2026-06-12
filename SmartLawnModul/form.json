@@ -23,6 +23,12 @@
             "suffix": "Minuten"
         },
         {
+            "type": "NumberSpinner",
+            "name": "GlobalMaxDuration",
+            "caption": "Globale maximale Bewässerungsdauer",
+            "suffix": "Minuten"
+        },
+        {
             "type": "Label",
             "caption": "Gemini AI Konfiguration"
         },
@@ -99,20 +105,6 @@
                     "edit": { "type": "SelectVariable" }
                 },
                 {
-                    "caption": "Indiv. Ziel (%)",
-                    "name": "CustomZiel",
-                    "width": "100px",
-                    "add": 0,
-                    "edit": { "type": "NumberSpinner" }
-                },
-                {
-                    "caption": "Indiv. Start (%)",
-                    "name": "CustomStart",
-                    "width": "100px",
-                    "add": 0,
-                    "edit": { "type": "NumberSpinner" }
-                },
-                {
                     "caption": "Gardena Status",
                     "name": "HardwareStatusID",
                     "width": "120px",
@@ -132,13 +124,6 @@
                     "width": "120px",
                     "add": 0,
                     "edit": { "type": "SelectVariable" }
-                },
-                {
-                    "caption": "Max. Dauer (Min)",
-                    "name": "MaxDuration",
-                    "width": "100px",
-                    "add": 30,
-                    "edit": { "type": "NumberSpinner" }
                 }
             ]
         }

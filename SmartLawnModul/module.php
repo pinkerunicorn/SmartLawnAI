@@ -8,6 +8,7 @@ class SmartLawnAI extends IPSModule {
         $this->RegisterPropertyFloat('DefaultZielFeuchte', 55.0);
         $this->RegisterPropertyFloat('DefaultStartSchwellwert', 20.0);
         $this->RegisterPropertyInteger('SickerpauseMinuten', 15);
+        $this->RegisterPropertyInteger('GlobalMaxDuration', 30);
 
         // Summenstatus Variable (fürs Webfront)
         $this->RegisterVariableString('SummaryStatus', 'Aktueller Status', '', 0);
@@ -191,7 +192,7 @@ class SmartLawnAI extends IPSModule {
         } else if (!$einVentilIstAktiv && !$anyQueued) {
             // Prüfen, ob mindestens eine Zone Trockenstress hat
             foreach ($zones as $zone) {
-                $startWert = ($zone['CustomStart'] > 0) ? $zone['CustomStart'] : $defaultStart;
+                $startWert = $defaultStart;
                 $aktuelleFeuchte = GetValue($zone['SensorID']);
                 if ($automaticActive && $aktuelleFeuchte <= $startWert) {
                     $newCycleTriggered = true;
@@ -216,8 +217,8 @@ class SmartLawnAI extends IPSModule {
 
         // 4. Zonen-Durchlauf (State Machine)
         foreach ($zones as $zone) {
-            $zielWert  = ($zone['CustomZiel'] > 0) ? $zone['CustomZiel'] : $defaultZiel;
-            $startWert = ($zone['CustomStart'] > 0) ? $zone['CustomStart'] : $defaultStart;
+            $zielWert  = $defaultZiel;
+            $startWert = $defaultStart;
             
             $aktuelleFeuchte = GetValue($zone['SensorID']);
             $aktuellerStatus = GetValue($this->GetIDForIdent('Status_' . $zone['SensorID']));
@@ -379,8 +380,8 @@ class SmartLawnAI extends IPSModule {
         if (is_array($zones)) {
             foreach ($zones as $zone) {
                 $sid = $zone['SensorID'];
-                $zielWert  = ($zone['CustomZiel'] > 0) ? $zone['CustomZiel'] : $defaultZiel;
-                $startWert = ($zone['CustomStart'] > 0) ? $zone['CustomStart'] : $defaultStart;
+                $zielWert  = $defaultZiel;
+                $startWert = $defaultStart;
                 
                 $hwStatus = false;
                 if (isset($zone['HardwareStatusID']) && $zone['HardwareStatusID'] > 0) {
@@ -481,12 +482,12 @@ class SmartLawnAI extends IPSModule {
                 continue;
             }
 
-            $zielWert  = ($zone['CustomZiel'] > 0) ? $zone['CustomZiel'] : $defaultZiel;
-            $startWert = ($zone['CustomStart'] > 0) ? $zone['CustomStart'] : $defaultStart;
+            $zielWert  = $defaultZiel;
+            $startWert = $defaultStart;
             $aktuelleFeuchte = GetValue($sid);
             $effizienz = (float)GetValue($this->GetIDForIdent('Effizienz_' . $sid));
             if ($effizienz <= 0) $effizienz = 1.0;
-            $maxDuration = isset($zone['MaxDuration']) && $zone['MaxDuration'] > 0 ? (int)$zone['MaxDuration'] : 30;
+            $maxDuration = $this->ReadPropertyInteger('GlobalMaxDuration');
 
             $zonesContext[] = [
                 'valveId' => (int)$zone['ValveID'],
@@ -624,7 +625,7 @@ class SmartLawnAI extends IPSModule {
                 $duration = (int)$planByValve[$valveId]['durationMinutes'];
                 $reasoning = $planByValve[$valveId]['reasoning'];
                 
-                $maxDuration = isset($zone['MaxDuration']) && $zone['MaxDuration'] > 0 ? (int)$zone['MaxDuration'] : 30;
+                $maxDuration = $this->ReadPropertyInteger('GlobalMaxDuration');
                 if ($duration > $maxDuration) {
                     $duration = $maxDuration;
                 }
