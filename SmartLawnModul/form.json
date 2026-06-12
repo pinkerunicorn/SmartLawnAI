@@ -62,11 +62,6 @@
         },
         {
             "type": "SelectVariable",
-            "name": "GlobalSoilTempID",
-            "caption": "Bodentemperatur-Sensor (ID Bodentemperatur in °C)"
-        },
-        {
-            "type": "SelectVariable",
             "name": "GlobalWeatherForecastID",
             "caption": "Wettervorhersage-Variable (ID)"
         },

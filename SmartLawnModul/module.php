@@ -20,7 +20,6 @@ class SmartLawnAI extends IPSModule {
         $this->RegisterPropertyInteger('GlobalAirTempID', 0);
         $this->RegisterPropertyInteger('GlobalHumidityID', 0);
         $this->RegisterPropertyInteger('GlobalIlluminanceID', 0);
-        $this->RegisterPropertyInteger('GlobalSoilTempID', 0);
         $this->RegisterPropertyInteger('GlobalWeatherForecastID', 0);
 
         // Zonen (Hardware)
@@ -449,20 +448,6 @@ class SmartLawnAI extends IPSModule {
             return;
         }
 
-        $soilTempID = $this->ReadPropertyInteger('GlobalSoilTempID');
-        $soilTemp = ($soilTempID > 0) ? (float)GetValue($soilTempID) : null;
-        
-        // Frostschutz Check
-        if ($soilTemp !== null && $soilTemp < 5.0) {
-            $this->SendDebug('Planer', 'Frostschutz aktiv: Bodentemperatur beträgt ' . $soilTemp . ' °C (< 5 °C). Alle Zonen blockiert.', 0);
-            IPS_LogMessage('SmartLawnAI', 'Frostschutz aktiv: Bodentemperatur < 5 °C. Keine Bewässerung gestartet.');
-            foreach ($zones as $zone) {
-                $sid = $zone['SensorID'];
-                SetValue($this->GetIDForIdent('Status_' . $sid), 'IDLE');
-            }
-            return;
-        }
-
         $forecastID = $this->ReadPropertyInteger('GlobalWeatherForecastID');
         $forecast = null;
         if ($forecastID > 0) {
@@ -479,9 +464,6 @@ class SmartLawnAI extends IPSModule {
             'manualStartTriggered' => $isManualStart,
             'timestamp' => time()
         ];
-        if ($soilTemp !== null) {
-            $ambientContext['soilTemperatureCelsius'] = $soilTemp;
-        }
         if ($forecast !== null) {
             $ambientContext['weatherForecast'] = $forecast;
         }
