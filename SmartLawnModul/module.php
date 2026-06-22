@@ -417,6 +417,22 @@ class SmartLawnAI extends IPSModule {
                     break;
             }
         }
+
+        // 5. Heartbeat für die Webfront Anzeige (Zeitstempel aktualisieren)
+        $automaticActive = GetValue($this->GetIDForIdent('AutomaticActive'));
+        if ($automaticActive) {
+            $currentStatus = GetValue($this->GetIDForIdent('SummaryStatus'));
+            // Entferne alten Zeitstempel, falls vorhanden
+            $baseStatus = preg_replace('/ \(\d{2}:\d{2}\)$/', '', $currentStatus);
+            
+            // Textvereinheitlichung für den normalen Leerlauf
+            if ($baseStatus === 'Standby (Boden ausreichend feucht)' || 
+                $baseStatus === 'Automatik aktiviert (Überwache Sensoren...)') {
+                $baseStatus = 'Standby - Überwache Sensoren';
+            }
+            
+            $this->SetSummaryStatus($baseStatus . ' (' . date('H:i') . ')');
+        }
     }
 
     public function UIRequest(string $Action, string $Payload) {
