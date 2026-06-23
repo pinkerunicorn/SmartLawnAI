@@ -461,14 +461,14 @@ function initDashboard(data) {
                 <div class="setting-row">
                     <div class="setting-label"><span class="setting-icon">&#x23FB;</span> Automatik aktiv</div>
                     <label class="switch">
-                        <input type="checkbox" id="setting_AutomaticActive" onchange="requestAction(${data.settings.AutomaticActive.id}, this.checked)">
+                        <input type="checkbox" id="setting_AutomaticActive" onchange="requestAction('AutomaticActive', this.checked)">
                         <span class="slider"></span>
                     </label>
                 </div>
                 <div class="setting-row">
                     <div class="setting-label"><span class="setting-icon">&#x23FB;</span> Manuell Starten</div>
                     <label class="switch">
-                        <input type="checkbox" id="setting_ManualStart" onchange="requestAction(${data.settings.ManualStart.id}, this.checked)">
+                        <input type="checkbox" id="setting_ManualStart" onchange="requestAction('ForceStart', this.checked)">
                         <span class="slider"></span>
                     </label>
                 </div>
@@ -477,7 +477,7 @@ function initDashboard(data) {
                     <div class="setting-label"><span class="setting-icon">&#x1F4A7;</span> Bewässerungs-Trigger-Feuchte</div>
                     <div class="setting-control">
                         <input type="range" id="setting_DefaultStartSchwellwert" min="0" max="100" step="0.5" 
-                            onmousedown="window.isDragging=true" onmouseup="window.isDragging=false; requestAction(${data.settings.DefaultStartSchwellwert.id}, parseFloat(this.value))" ontouchend="window.isDragging=false; requestAction(${data.settings.DefaultStartSchwellwert.id}, parseFloat(this.value))"
+                            onmousedown="window.isDragging=true" onmouseup="window.isDragging=false; requestAction('DefaultStartSchwellwert', parseFloat(this.value))" ontouchend="window.isDragging=false; requestAction('DefaultStartSchwellwert', parseFloat(this.value))"
                             oninput="window.isDragging=true; document.getElementById('val_DefaultStartSchwellwert').innerText = this.value + ' %'">
                         <span id="val_DefaultStartSchwellwert" class="setting-value">-- %</span>
                     </div>
@@ -486,7 +486,7 @@ function initDashboard(data) {
                     <div class="setting-label"><span class="setting-icon">&#x1F4A7;</span> Bewässerungs-Ziel-Feuchte</div>
                     <div class="setting-control">
                         <input type="range" id="setting_DefaultZielFeuchte" min="0" max="100" step="0.5" 
-                            onmousedown="window.isDragging=true" onmouseup="window.isDragging=false; requestAction(${data.settings.DefaultZielFeuchte.id}, parseFloat(this.value))" ontouchend="window.isDragging=false; requestAction(${data.settings.DefaultZielFeuchte.id}, parseFloat(this.value))"
+                            onmousedown="window.isDragging=true" onmouseup="window.isDragging=false; requestAction('DefaultZielFeuchte', parseFloat(this.value))" ontouchend="window.isDragging=false; requestAction('DefaultZielFeuchte', parseFloat(this.value))"
                             oninput="window.isDragging=true; document.getElementById('val_DefaultZielFeuchte').innerText = this.value + ' %'">
                         <span id="val_DefaultZielFeuchte" class="setting-value">-- %</span>
                     </div>
@@ -495,7 +495,7 @@ function initDashboard(data) {
                     <div class="setting-label"><span class="setting-icon">&#x23F2;</span> Maximale Bewässerungsdauer</div>
                     <div class="setting-control">
                         <input type="range" id="setting_GlobalMaxDuration" min="1" max="120" step="1" 
-                            onmousedown="window.isDragging=true" onmouseup="window.isDragging=false; requestAction(${data.settings.GlobalMaxDuration.id}, parseInt(this.value))" ontouchend="window.isDragging=false; requestAction(${data.settings.GlobalMaxDuration.id}, parseInt(this.value))"
+                            onmousedown="window.isDragging=true" onmouseup="window.isDragging=false; requestAction('GlobalMaxDuration', parseInt(this.value))" ontouchend="window.isDragging=false; requestAction('GlobalMaxDuration', parseInt(this.value))"
                             oninput="window.isDragging=true; document.getElementById('val_GlobalMaxDuration').innerText = this.value + ' Min'">
                         <span id="val_GlobalMaxDuration" class="setting-value">-- Min</span>
                     </div>
@@ -504,7 +504,7 @@ function initDashboard(data) {
                     <div class="setting-label"><span class="setting-icon">&#x23F2;</span> Sickerpause</div>
                     <div class="setting-control">
                         <input type="range" id="setting_SickerpauseMinuten" min="1" max="120" step="1" 
-                            onmousedown="window.isDragging=true" onmouseup="window.isDragging=false; requestAction(${data.settings.SickerpauseMinuten.id}, parseInt(this.value))" ontouchend="window.isDragging=false; requestAction(${data.settings.SickerpauseMinuten.id}, parseInt(this.value))"
+                            onmousedown="window.isDragging=true" onmouseup="window.isDragging=false; requestAction('SickerpauseMinuten', parseInt(this.value))" ontouchend="window.isDragging=false; requestAction('SickerpauseMinuten', parseInt(this.value))"
                             oninput="window.isDragging=true; document.getElementById('val_SickerpauseMinuten').innerText = this.value + ' Min'">
                         <span id="val_SickerpauseMinuten" class="setting-value">-- Min</span>
                     </div>
