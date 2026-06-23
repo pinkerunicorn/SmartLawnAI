@@ -220,6 +220,13 @@ class SmartLawnAI extends IPSModule {
         $this->RegisterMessage($this->GetIDForIdent('ForecastRainToday'), VM_UPDATE);
         $this->RegisterMessage($this->GetIDForIdent('ForecastRainTomorrow'), VM_UPDATE);
         
+        $this->RegisterMessage($this->GetIDForIdent('AutomaticActive'), VM_UPDATE);
+        $this->RegisterMessage($this->GetIDForIdent('ForceStart'), VM_UPDATE);
+        $this->RegisterMessage($this->GetIDForIdent('DefaultZielFeuchte'), VM_UPDATE);
+        $this->RegisterMessage($this->GetIDForIdent('DefaultStartSchwellwert'), VM_UPDATE);
+        $this->RegisterMessage($this->GetIDForIdent('SickerpauseMinuten'), VM_UPDATE);
+        $this->RegisterMessage($this->GetIDForIdent('GlobalMaxDuration'), VM_UPDATE);
+        
         $zonesJson = $this->ReadPropertyString('Zones');
         $zones = json_decode($zonesJson, true);
         if (is_array($zones)) {
