@@ -394,9 +394,21 @@ class SmartLawnAI extends IPSModule {
                         }
                     }
                     
+                    $remaining = 0;
+                    if (isset($currentSprinkler['RemainingSecondsID']) && $currentSprinkler['RemainingSecondsID'] > 0) {
+                        $remaining = (int)GetValue($currentSprinkler['RemainingSecondsID']);
+                    } else {
+                        $timerID = $this->GetIDForIdent('ValveSequenceTimer');
+                        $timer = IPS_GetTimer($timerID);
+                        if ($timer['NextRun'] > 0) {
+                            $remaining = max(0, $timer['NextRun'] - time());
+                        }
+                    }
+                    $remainingText = $remaining > 0 ? ' (noch ' . $remaining . 's)' : '';
+
                     if ($ventilOffen && $aktuellerStatus === 'VERIFYING_START') {
                         SetValue($this->GetIDForIdent('Status_' . $zone['SensorID']), 'WATERING');
-                        $this->SetSummaryStatus('Bewässert: ' . $zoneName . ' (' . $currentSprinklerName . ')');
+                        $this->SetSummaryStatus('Bewässert: ' . $zoneName . ' (' . $currentSprinklerName . ')' . $remainingText);
                     } elseif (!$ventilOffen && $aktuellerStatus === 'WATERING') {
                         IPS_LogMessage('SmartLawnAI', $currentSprinklerName . ' in Zone ' . $zone['SensorID'] . ' ist fertig. Hardware-Status: ' . $hwVal);
                         
@@ -414,6 +426,9 @@ class SmartLawnAI extends IPSModule {
                             $this->LogAndDebug('Sequencer', 'Alle Sprinkler fertig. Sickerpause gestartet.', 0);
                             $this->SetSummaryStatus('Sickerpause: ' . $zoneName);
                         }
+                    } elseif ($aktuellerStatus === 'WATERING') {
+                        // Aktualisiere den Text mit der verbleibenden Zeit während der Bewässerung
+                        $this->SetSummaryStatus('Bewässert: ' . $zoneName . ' (' . $currentSprinklerName . ')' . $remainingText);
                     }
                     break;
 
