@@ -24,7 +24,7 @@ class SmartLawnAI extends IPSModule {
 
         // Gemini AI Konfiguration
         $this->RegisterPropertyString('GeminiApiKey', '');
-        $this->RegisterPropertyString('GeminiModel', 'gemini-3.5-flash');
+        $this->RegisterPropertyString('GeminiModel', 'gemini-1.5-flash');
 
         // Globale Sensoren (Thermodynamik & Boden)
         $this->RegisterPropertyInteger('GlobalAirTempID', 0);
@@ -842,7 +842,7 @@ class SmartLawnAI extends IPSModule {
         $apiKey = trim($this->ReadPropertyString('GeminiApiKey'));
         $model = $this->ReadPropertyString('GeminiModel');
         if (empty($model)) {
-            $model = 'gemini-3.5-flash';
+            $model = 'gemini-1.5-flash';
         }
 
         if (empty($apiKey)) {
@@ -1027,8 +1027,21 @@ class SmartLawnAI extends IPSModule {
             }
 
             if (isset($planByZone[$sid])) {
-                $duration = (int)$planByZone[$sid]['durationMinutes'];
-                $reasoning = $planByZone[$sid]['reasoning'];
+                $zonePlan = $planByZone[$sid];
+                $duration = isset($zonePlan['durationMinutes']) ? (int)$zonePlan['durationMinutes'] : 0;
+                
+                if ($duration <= 0 && $isManualStart) {
+                    $duration = 5; // Minimaler Fallback für manuellen Start, damit der User Feedback hat
+                    $this->LogAndDebug('Planer', 'Zone ' . $sid . ': Gemini meldet 0 Minuten. Da manueller Start, setze Fallback auf 5 Minuten.', 0);
+                }
+                
+                if ($duration <= 0) {
+                    SetValue($this->GetIDForIdent('Status_' . $sid), 'IDLE');
+                    SetValue($this->GetIDForIdent('Dauer_' . $sid), 0);
+                    continue;
+                }
+
+                $reasoning = $zonePlan['reasoning'];
                 
                 $maxDuration = GetValue($this->GetIDForIdent('GlobalMaxDuration'));
                 if ($duration > $maxDuration) {
