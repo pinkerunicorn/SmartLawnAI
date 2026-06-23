@@ -476,7 +476,7 @@ function initDashboard(data) {
                 <div class="setting-row">
                     <div class="setting-label"><span class="setting-icon">&#x1F4A7;</span> Bewässerungs-Trigger-Feuchte</div>
                     <div class="setting-control">
-                        <input type="range" id="setting_DefaultStartSchwellwert" min="0" max="100" step="0.5" 
+                        <input type="range" id="setting_DefaultStartSchwellwert" min="0" max="100" step="5" 
                             onmousedown="window.isDragging=true" onmouseup="window.isDragging=false; requestAction('DefaultStartSchwellwert', parseFloat(this.value))" ontouchend="window.isDragging=false; requestAction('DefaultStartSchwellwert', parseFloat(this.value))"
                             oninput="window.isDragging=true; document.getElementById('val_DefaultStartSchwellwert').innerText = this.value + ' %'">
                         <span id="val_DefaultStartSchwellwert" class="setting-value">-- %</span>
@@ -485,7 +485,7 @@ function initDashboard(data) {
                 <div class="setting-row">
                     <div class="setting-label"><span class="setting-icon">&#x1F4A7;</span> Bewässerungs-Ziel-Feuchte</div>
                     <div class="setting-control">
-                        <input type="range" id="setting_DefaultZielFeuchte" min="0" max="100" step="0.5" 
+                        <input type="range" id="setting_DefaultZielFeuchte" min="0" max="100" step="5" 
                             onmousedown="window.isDragging=true" onmouseup="window.isDragging=false; requestAction('DefaultZielFeuchte', parseFloat(this.value))" ontouchend="window.isDragging=false; requestAction('DefaultZielFeuchte', parseFloat(this.value))"
                             oninput="window.isDragging=true; document.getElementById('val_DefaultZielFeuchte').innerText = this.value + ' %'">
                         <span id="val_DefaultZielFeuchte" class="setting-value">-- %</span>
@@ -494,7 +494,7 @@ function initDashboard(data) {
                 <div class="setting-row">
                     <div class="setting-label"><span class="setting-icon">&#x23F2;</span> Maximale Bewässerungsdauer</div>
                     <div class="setting-control">
-                        <input type="range" id="setting_GlobalMaxDuration" min="1" max="120" step="1" 
+                        <input type="range" id="setting_GlobalMaxDuration" min="5" max="120" step="5" 
                             onmousedown="window.isDragging=true" onmouseup="window.isDragging=false; requestAction('GlobalMaxDuration', parseInt(this.value))" ontouchend="window.isDragging=false; requestAction('GlobalMaxDuration', parseInt(this.value))"
                             oninput="window.isDragging=true; document.getElementById('val_GlobalMaxDuration').innerText = this.value + ' Min'">
                         <span id="val_GlobalMaxDuration" class="setting-value">-- Min</span>
@@ -503,7 +503,7 @@ function initDashboard(data) {
                 <div class="setting-row">
                     <div class="setting-label"><span class="setting-icon">&#x23F2;</span> Sickerpause</div>
                     <div class="setting-control">
-                        <input type="range" id="setting_SickerpauseMinuten" min="1" max="120" step="1" 
+                        <input type="range" id="setting_SickerpauseMinuten" min="5" max="120" step="5" 
                             onmousedown="window.isDragging=true" onmouseup="window.isDragging=false; requestAction('SickerpauseMinuten', parseInt(this.value))" ontouchend="window.isDragging=false; requestAction('SickerpauseMinuten', parseInt(this.value))"
                             oninput="window.isDragging=true; document.getElementById('val_SickerpauseMinuten').innerText = this.value + ' Min'">
                         <span id="val_SickerpauseMinuten" class="setting-value">-- Min</span>
@@ -623,7 +623,7 @@ function updateDashboard(data) {
             const valEl = document.getElementById(`val_${key}`);
             if (el && !window.isDragging) {
                 el.value = data.settings[key].value;
-                if (valEl) valEl.innerText = parseFloat(data.settings[key].value).toFixed(unit === '%' ? 1 : 0) + ' ' + unit;
+                if (valEl) valEl.innerText = parseFloat(data.settings[key].value).toFixed(0) + ' ' + unit;
             }
         };
 
