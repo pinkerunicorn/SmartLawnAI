@@ -609,8 +609,18 @@ class SmartLawnAI extends IPSModule {
             
             // Textvereinheitlichung für den normalen Leerlauf
             if ($baseStatus === 'Standby (Boden ausreichend feucht)' || 
-                $baseStatus === 'Automatik aktiviert (Überwache Sensoren...)') {
-                $baseStatus = 'Standby - Überwache Sensoren';
+                $baseStatus === 'Automatik aktiviert (überwache Sensoren...)' ||
+                strpos($baseStatus, 'Nächste Prüfung:') !== false ||
+                strpos($baseStatus, 'Standby -') !== false) {
+                
+                $letzteUeberpruefung = (int)$this->GetBuffer('LastPlanCalculation');
+                $naechsteUeberpruefung = $letzteUeberpruefung + (6 * 3600);
+                
+                if ($letzteUeberpruefung === 0 || $naechsteUeberpruefung < time()) {
+                    $baseStatus = 'Nächste Prüfung: In Kürze';
+                } else {
+                    $baseStatus = 'Nächste Prüfung: ' . date('H:i', $naechsteUeberpruefung) . ' Uhr';
+                }
             }
             
             $this->SetSummaryStatus($baseStatus . ' (' . date('H:i') . ')');
