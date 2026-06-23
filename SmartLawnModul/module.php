@@ -4,11 +4,17 @@ class SmartLawnAI extends IPSModule {
     public function Create() {
         parent::Create();
 
+        // Profile registrieren
+        $this->RegisterProfileFloat('SmartLawn.Percentage', 'Drops', '', ' %', 0, 100, 1, 1);
+        $this->RegisterProfileInteger('SmartLawn.Minutes', 'Clock', '', ' Min', 0, 180, 1);
+        $this->RegisterProfileFloat('SmartLawn.MinutesFloat', 'Clock', '', ' Min', 0, 180, 1, 1);
+        $this->RegisterProfileFloat('SmartLawn.Multiplier', 'Graph', '', ' x', 0.1, 5.0, 0.1, 1);
+
         // Globale Defaults (jetzt als Variablen statt Properties)
-        $this->RegisterVariableFloat('DefaultZielFeuchte', 'Globale Bewässerungs-Ziel-Feuchte (%)', '', 10);
-        $this->RegisterVariableFloat('DefaultStartSchwellwert', 'Globale Bewässerungs-Trigger-Feuchte (%)', '', 11);
-        $this->RegisterVariableInteger('SickerpauseMinuten', 'Sickerpause (Minuten)', '', 12);
-        $this->RegisterVariableInteger('GlobalMaxDuration', 'Globale maximale Bewässerungsdauer (Min)', '', 13);
+        $this->RegisterVariableFloat('DefaultZielFeuchte', 'Globale Bewässerungs-Ziel-Feuchte (%)', 'SmartLawn.Percentage', 10);
+        $this->RegisterVariableFloat('DefaultStartSchwellwert', 'Globale Bewässerungs-Trigger-Feuchte (%)', 'SmartLawn.Percentage', 11);
+        $this->RegisterVariableInteger('SickerpauseMinuten', 'Sickerpause (Minuten)', 'SmartLawn.Minutes', 12);
+        $this->RegisterVariableInteger('GlobalMaxDuration', 'Globale maximale Bewässerungsdauer (Min)', 'SmartLawn.Minutes', 13);
 
         // Summenstatus Variable (fürs Webfront)
         $this->RegisterVariableString('SummaryStatus', 'Aktueller Status', '', 0);
@@ -158,10 +164,10 @@ class SmartLawnAI extends IPSModule {
                 $name = isset($zone['GroupName']) && !empty($zone['GroupName']) ? $zone['GroupName'] : 'Zone ' . $sid;
             if (!empty($name)) {
                 $this->RegisterVariableString('Status_' . $sid, 'Status ' . $name, '', 1);
-                $this->RegisterVariableFloat('Effizienz_' . $sid, 'Effizienz ' . $name, '', 2);
-                $this->RegisterVariableFloat('StartFeuchte_' . $sid, 'StartFeuchte ' . $name, '', 3);
-                $this->RegisterVariableFloat('Dauer_' . $sid, 'Dauer ' . $name, '', 4);
-                $this->RegisterVariableFloat('SickerpauseStart_' . $sid, 'SickerpauseStart ' . $name, '', 5);
+                $this->RegisterVariableFloat('Effizienz_' . $sid, 'Effizienz ' . $name, 'SmartLawn.Multiplier', 2);
+                $this->RegisterVariableFloat('StartFeuchte_' . $sid, 'StartFeuchte ' . $name, 'SmartLawn.Percentage', 3);
+                $this->RegisterVariableFloat('Dauer_' . $sid, 'Dauer ' . $name, 'SmartLawn.MinutesFloat', 4);
+                $this->RegisterVariableFloat('SickerpauseStart_' . $sid, 'SickerpauseStart ' . $name, '~UnixTimestamp', 5);
                 $this->RegisterVariableInteger('CurrentSprinklerIndex_' . $sid, 'Aktueller Sprinkler Index ' . $name, '', 6);
                 IPS_SetHidden($this->GetIDForIdent('CurrentSprinklerIndex_' . $sid), true);
 
@@ -794,5 +800,34 @@ class SmartLawnAI extends IPSModule {
         } else {
             IPS_LogMessage('SmartLawnAI', $Topic . ': ' . json_encode($Payload));
         }
+    }
+
+    private function RegisterProfileFloat($Name, $Icon, $Prefix, $Suffix, $MinValue, $MaxValue, $StepSize, $Digits) {
+        if (!IPS_VariableProfileExists($Name)) {
+            IPS_CreateVariableProfile($Name, 2); // 2 = Float
+        } else {
+            $profile = IPS_GetVariableProfile($Name);
+            if ($profile['ProfileType'] != 2) {
+                throw new Exception("Variable profile type does not match for profile " . $Name);
+            }
+        }
+        IPS_SetVariableProfileIcon($Name, $Icon);
+        IPS_SetVariableProfileText($Name, $Prefix, $Suffix);
+        IPS_SetVariableProfileValues($Name, $MinValue, $MaxValue, $StepSize);
+        IPS_SetVariableProfileDigits($Name, $Digits);
+    }
+
+    private function RegisterProfileInteger($Name, $Icon, $Prefix, $Suffix, $MinValue, $MaxValue, $StepSize) {
+        if (!IPS_VariableProfileExists($Name)) {
+            IPS_CreateVariableProfile($Name, 1); // 1 = Integer
+        } else {
+            $profile = IPS_GetVariableProfile($Name);
+            if ($profile['ProfileType'] != 1) {
+                throw new Exception("Variable profile type does not match for profile " . $Name);
+            }
+        }
+        IPS_SetVariableProfileIcon($Name, $Icon);
+        IPS_SetVariableProfileText($Name, $Prefix, $Suffix);
+        IPS_SetVariableProfileValues($Name, $MinValue, $MaxValue, $StepSize);
     }
 }
