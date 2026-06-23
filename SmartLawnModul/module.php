@@ -300,7 +300,7 @@ class SmartLawnAI extends IPSModule {
             'zones' => $zoneData,
             'settings' => [
                 'AutomaticActive' => ['id' => $this->GetIDForIdent('AutomaticActive'), 'value' => @GetValue($this->GetIDForIdent('AutomaticActive'))],
-                'ManualStart' => ['id' => $this->GetIDForIdent('ManualStart'), 'value' => @GetValue($this->GetIDForIdent('ManualStart'))],
+                'ManualStart' => ['id' => $this->GetIDForIdent('ForceStart'), 'value' => @GetValue($this->GetIDForIdent('ForceStart'))],
                 'DefaultStartSchwellwert' => ['id' => $this->GetIDForIdent('DefaultStartSchwellwert'), 'value' => @GetValue($this->GetIDForIdent('DefaultStartSchwellwert'))],
                 'DefaultZielFeuchte' => ['id' => $this->GetIDForIdent('DefaultZielFeuchte'), 'value' => @GetValue($this->GetIDForIdent('DefaultZielFeuchte'))],
                 'GlobalMaxDuration' => ['id' => $this->GetIDForIdent('GlobalMaxDuration'), 'value' => @GetValue($this->GetIDForIdent('GlobalMaxDuration'))],
