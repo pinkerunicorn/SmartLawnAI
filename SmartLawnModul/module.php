@@ -393,8 +393,23 @@ class SmartLawnAI extends IPSModule {
         } else if ($active && !$einVentilIstAktiv && !$anyQueued) {
             // Nur alle 6 Stunden den Bewässerungsbedarf prüfen
             if ($letzteUeberpruefung === 0 || (time() - $letzteUeberpruefung) > (6 * 3600)) {
-                $newCycleTriggered = true;
                 $this->SetBuffer('LastPlanCalculation', (string)time());
+                
+                $needsWater = false;
+                foreach ($zones as $zone) {
+                    $startWert = $defaultStart;
+                    $aktuelleFeuchte = GetValue($zone['SensorID']);
+                    if ($aktuelleFeuchte <= $startWert) {
+                        $needsWater = true;
+                        break;
+                    }
+                }
+                
+                if ($needsWater) {
+                    $newCycleTriggered = true;
+                } else {
+                    $this->LogAndDebug('Planer', 'Reguläre Prüfung: Boden ist ausreichend feucht. Kein Bewässerungszyklus nötig.', 0);
+                }
             }
         }
 
