@@ -29,8 +29,9 @@ body {
     background-image: radial-gradient(circle at top right, rgba(56, 189, 248, 0.1), transparent 40%),
                       radial-gradient(circle at bottom left, rgba(52, 211, 153, 0.05), transparent 40%);
     color: var(--text-main);
-    min-height: 100vh;
-    padding: 10px;
+    padding: 5px;
+    margin: 0;
+    overflow-x: hidden;
 }
 
 .dashboard-container {
@@ -266,7 +267,6 @@ h1 {
     <!-- App Logik -->
     <script>
 let isInitialized = false;
-let wateringIntervals = {};
 
 function handleMessage(dataRaw) {
     let data;
@@ -383,18 +383,28 @@ function updateDashboard(data) {
                 if (nameEl) nameEl.innerText = zone.currentSprinkler ? `Sprinkler: ${zone.currentSprinkler}` : 'Bewässerung';
             }
 
-            if ((zone.status === 'WATERING' || zone.status === 'VERIFYING_START') && zone.wateringStart && zone.duration) {
-                if (!wateringIntervals[zone.id]) {
-                    startWateringProgress(zone.id, zone.wateringStart, zone.duration);
-                } else {
-                    wateringIntervals[zone.id].start = zone.wateringStart;
-                    wateringIntervals[zone.id].duration = zone.duration;
+            if ((zone.status === 'WATERING' || zone.status === 'VERIFYING_START') && zone.duration) {
+                const totalSec = zone.duration * 60;
+                let remSec = zone.remainingSeconds || 0;
+                if (!zone.remainingSeconds && zone.wateringStart) {
+                    const elapsedMs = Date.now() - (zone.wateringStart * 1000);
+                    remSec = Math.max(0, totalSec - Math.floor(elapsedMs / 1000));
                 }
-            } else {
-                if (wateringIntervals[zone.id]) {
-                    clearInterval(wateringIntervals[zone.id].intervalId);
-                    delete wateringIntervals[zone.id];
+                
+                let progress = 0;
+                if (totalSec > 0) {
+                    progress = Math.max(0, Math.min(100, ((totalSec - remSec) / totalSec) * 100));
                 }
+                
+                let remMin = Math.floor(remSec / 60);
+                let secLeft = Math.floor(remSec % 60);
+                let remainingText = remMin + ":" + (secLeft < 10 ? "0" : "") + secLeft + " Min";
+                
+                const bar = document.getElementById(`wateringBar_${zone.id}`);
+                const val = document.getElementById(`wateringTimeVal_${zone.id}`);
+                
+                if (bar) bar.style.width = progress + "%";
+                if (val) val.innerText = remainingText;
             }
             if (zone.moisture !== undefined && zone.moisture !== false) {
                 const percent = Math.min(100, Math.max(0, parseFloat(zone.moisture)));
@@ -420,39 +430,6 @@ function updateDashboard(data) {
             }
         });
     }
-}
-
-function startWateringProgress(zoneId, startTimestamp, durationMinutes) {
-    wateringIntervals[zoneId] = {
-        start: startTimestamp,
-        duration: durationMinutes,
-        intervalId: setInterval(() => {
-            const data = wateringIntervals[zoneId];
-            if (!data) return;
-            
-            const totalMs = data.duration * 60 * 1000;
-            const elapsedMs = Date.now() - (data.start * 1000);
-            
-            let progress = 0;
-            let remainingText = "0:00 Min";
-            
-            if (totalMs > 0) {
-                progress = Math.max(0, Math.min(100, (elapsedMs / totalMs) * 100));
-                let remainingMs = Math.max(0, totalMs - elapsedMs);
-                let remSec = Math.floor(remainingMs / 1000);
-                let remMin = Math.floor(remSec / 60);
-                let secLeft = remSec % 60;
-                remainingText = remMin + ":" + (secLeft < 10 ? "0" : "") + secLeft + " Min";
-            }
-            
-            const bar = document.getElementById(`wateringBar_${zoneId}`);
-            const val = document.getElementById(`wateringTimeVal_${zoneId}`);
-            
-            if (bar) bar.style.width = progress + "%";
-            if (val) val.innerText = remainingText;
-            
-        }, 1000)
-    };
 }
 </script>
 </body>

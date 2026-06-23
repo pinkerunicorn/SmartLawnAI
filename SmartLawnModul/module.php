@@ -256,15 +256,27 @@ class SmartLawnAI extends IPSModule {
         $zones = json_decode($zonesJson, true);
         if (!is_array($zones)) $zones = [];
 
+        $sprinklersJson = $this->ReadPropertyString('Sprinklers');
+        $allSprinklers = json_decode($sprinklersJson, true);
+        if (!is_array($allSprinklers)) $allSprinklers = [];
+
         $zoneData = [];
         foreach ($zones as $zone) {
             $sid = $zone['SensorID'];
             
-            $sprinklers = isset($zone['Sprinklers']) ? $zone['Sprinklers'] : [];
+            $zoneSprinklers = array_filter($allSprinklers, function($s) use ($sid) {
+                return $s['ZoneID'] == $sid;
+            });
+            $zoneSprinklers = array_values($zoneSprinklers);
+
             $currentIndex = (int)@GetValue($this->GetIDForIdent('CurrentSprinklerIndex_' . $sid));
             $currentSprinklerName = '';
-            if (isset($sprinklers[$currentIndex])) {
-                $currentSprinklerName = isset($sprinklers[$currentIndex]['Name']) ? $sprinklers[$currentIndex]['Name'] : 'Sprinkler ' . ($currentIndex + 1);
+            $remainingSeconds = 0;
+            if (isset($zoneSprinklers[$currentIndex])) {
+                $currentSprinklerName = isset($zoneSprinklers[$currentIndex]['Name']) ? $zoneSprinklers[$currentIndex]['Name'] : 'Sprinkler ' . ($currentIndex + 1);
+                if (isset($zoneSprinklers[$currentIndex]['RemainingSecondsID']) && $zoneSprinklers[$currentIndex]['RemainingSecondsID'] > 0) {
+                    $remainingSeconds = (int)@GetValue($zoneSprinklers[$currentIndex]['RemainingSecondsID']);
+                }
             }
 
             $zoneData[] = [
@@ -275,7 +287,8 @@ class SmartLawnAI extends IPSModule {
                 'efficiency' => @GetValue($this->GetIDForIdent('Effizienz_' . $sid)),
                 'duration' => @GetValue($this->GetIDForIdent('Dauer_' . $sid)),
                 'wateringStart' => @GetValue($this->GetIDForIdent('WateringStart_' . $sid)),
-                'currentSprinkler' => $currentSprinklerName
+                'currentSprinkler' => $currentSprinklerName,
+                'remainingSeconds' => $remainingSeconds
             ];
         }
 
@@ -579,6 +592,9 @@ class SmartLawnAI extends IPSModule {
             
             $this->SetSummaryStatus($baseStatus . ' (' . date('H:i') . ')');
         }
+
+        // Live-Update der Visualisierung pushen
+        $this->UpdateVisualizationValue($this->GetFullUpdateMessage());
     }
 
     public function UIRequest(string $Action, string $Payload) {
