@@ -31,6 +31,8 @@ class SmartLawnAI extends IPSModule {
         $this->RegisterPropertyInteger('GlobalHumidityID', 0);
         $this->RegisterPropertyInteger('GlobalIlluminanceID', 0);
         $this->RegisterPropertyInteger('GlobalWeatherForecastID', 0);
+        $this->RegisterPropertyFloat('Latitude', 0.0);
+        $this->RegisterPropertyFloat('Longitude', 0.0);
 
         // Zonen (Hardware)
         $this->RegisterPropertyString('Zones', '[]');
@@ -621,6 +623,23 @@ class SmartLawnAI extends IPSModule {
             $forecastVal = GetValue($forecastID);
             $decoded = json_decode($forecastVal, true);
             $forecast = (json_last_error() === JSON_ERROR_NONE) ? $decoded : $forecastVal;
+        } else {
+            // Optional Open-Meteo Fallback
+            $lat = (float)$this->ReadPropertyFloat('Latitude');
+            $lon = (float)$this->ReadPropertyFloat('Longitude');
+            if ($lat != 0.0 || $lon != 0.0) {
+                $omUrl = "https://api.open-meteo.com/v1/forecast?latitude=" . number_format($lat, 6, '.', '') . "&longitude=" . number_format($lon, 6, '.', '') . "&daily=precipitation_sum,precipitation_probability_max&timezone=auto&forecast_days=3";
+                $omContent = @Sys_GetURLContent($omUrl);
+                if ($omContent !== false) {
+                    $omData = json_decode($omContent, true);
+                    if (isset($omData['daily'])) {
+                        $forecast = $omData['daily'];
+                        $this->LogAndDebug('Planer', 'Open-Meteo Regen-Vorhersage erfolgreich geladen.', 0);
+                    }
+                } else {
+                    $this->LogAndDebug('Planer', 'Fehler beim Abrufen der Open-Meteo Wetterdaten.', 0);
+                }
+            }
         }
 
         $ambientContext = [

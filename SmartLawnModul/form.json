@@ -45,6 +45,26 @@
         },
         {
             "type": "Label",
+            "caption": "Oder: Automatische Wetterdaten über Open-Meteo (Kostenlos, ohne API-Key)"
+        },
+        {
+            "type": "NumberSpinner",
+            "name": "Latitude",
+            "caption": "Breitengrad (Latitude)",
+            "digits": 6,
+            "minimum": -90.0,
+            "maximum": 90.0
+        },
+        {
+            "type": "NumberSpinner",
+            "name": "Longitude",
+            "caption": "Längengrad (Longitude)",
+            "digits": 6,
+            "minimum": -180.0,
+            "maximum": 180.0
+        },
+        {
+            "type": "Label",
             "caption": "Zonen & Hardware-Zuweisung (0 = nutzt globales Default)"
         },
         {
