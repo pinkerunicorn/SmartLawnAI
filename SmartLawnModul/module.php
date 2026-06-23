@@ -187,8 +187,9 @@ class SmartLawnAI extends IPSModule {
                 if (function_exists('IPS_SetVariableCustomPresentation')) { IPS_SetVariableCustomPresentation($this->GetIDForIdent('StartFeuchte_' . $sid), []); }
                 $this->RegisterVariableFloat('Dauer_' . $sid, 'Dauer ' . $name, 'SmartLawn.MinutesFloat', 4);
                 if (function_exists('IPS_SetVariableCustomPresentation')) { IPS_SetVariableCustomPresentation($this->GetIDForIdent('Dauer_' . $sid), []); }
-                $this->RegisterVariableFloat('SickerpauseStart_' . $sid, 'SickerpauseStart ' . $name, '~UnixTimestamp', 5);
-                $this->RegisterVariableInteger('CurrentSprinklerIndex_' . $sid, 'Aktueller Sprinkler Index ' . $name, '', 6);
+                $this->RegisterVariableInteger('SickerpauseStart_' . $sid, 'SickerpauseStart ' . $name, '~UnixTimestamp', 5);
+                $this->RegisterVariableInteger('WateringStart_' . $sid, 'Bewässerungsstart ' . $name, '~UnixTimestamp', 6);
+                $this->RegisterVariableInteger('CurrentSprinklerIndex_' . $sid, 'Aktueller Sprinkler Index ' . $name, '', 7);
                 IPS_SetHidden($this->GetIDForIdent('CurrentSprinklerIndex_' . $sid), true);
 
                 // IP-Symcon benennt bestehende Variablen nicht automatisch um, daher erzwingen wir es hier
@@ -197,6 +198,7 @@ class SmartLawnAI extends IPSModule {
                 IPS_SetName($this->GetIDForIdent('StartFeuchte_' . $sid), 'StartFeuchte ' . $name);
                 IPS_SetName($this->GetIDForIdent('Dauer_' . $sid), 'Dauer ' . $name);
                 IPS_SetName($this->GetIDForIdent('SickerpauseStart_' . $sid), 'SickerpauseStart ' . $name);
+                IPS_SetName($this->GetIDForIdent('WateringStart_' . $sid), 'Bewässerungsstart ' . $name);
                 IPS_SetName($this->GetIDForIdent('CurrentSprinklerIndex_' . $sid), 'Aktueller Sprinkler Index ' . $name);
             }
         }
@@ -255,7 +257,8 @@ class SmartLawnAI extends IPSModule {
                 'status' => @GetValue($this->GetIDForIdent('Status_' . $sid)),
                 'moisture' => @GetValue((int)$sid),
                 'efficiency' => @GetValue($this->GetIDForIdent('Effizienz_' . $sid)),
-                'duration' => @GetValue($this->GetIDForIdent('Dauer_' . $sid))
+                'duration' => @GetValue($this->GetIDForIdent('Dauer_' . $sid)),
+                'wateringStart' => @GetValue($this->GetIDForIdent('WateringStart_' . $sid))
             ];
         }
 
@@ -498,6 +501,7 @@ class SmartLawnAI extends IPSModule {
 
                     if ($ventilOffen && $aktuellerStatus === 'VERIFYING_START') {
                         SetValue($this->GetIDForIdent('Status_' . $zone['SensorID']), 'WATERING');
+                        SetValue($this->GetIDForIdent('WateringStart_' . $zone['SensorID']), time());
                         $this->SetSummaryStatus('Bewässert: ' . $zoneName . ' (' . $currentSprinklerName . ')' . $remainingText);
                     } elseif (!$ventilOffen && $aktuellerStatus === 'WATERING') {
                         IPS_LogMessage('SmartLawnAI', $currentSprinklerName . ' in Zone ' . $zone['SensorID'] . ' ist fertig. Hardware-Status: ' . $hwVal);

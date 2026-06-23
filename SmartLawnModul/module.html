@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
     <meta charset="UTF-8">
@@ -266,6 +266,7 @@ h1 {
     <!-- App Logik -->
     <script>
 let isInitialized = false;
+let wateringIntervals = {};
 
 function handleMessage(dataRaw) {
     let data;
@@ -304,6 +305,16 @@ function initDashboard(data) {
                     </div>
                     <div class="progress-track">
                         <div class="progress-bar" id="progressBar_${zone.id}"></div>
+                    </div>
+                </div>
+
+                <div class="moisture-display" id="wateringContainer_${zone.id}" style="display: none; margin-top: 12px;">
+                    <div class="moisture-label">
+                        <span>Bewässerung</span>
+                        <span class="moisture-value" id="wateringTimeVal_${zone.id}" style="color: var(--accent-blue)">0:00 Min</span>
+                    </div>
+                    <div class="progress-track">
+                        <div class="progress-bar" id="wateringBar_${zone.id}" style="background: linear-gradient(90deg, #38bdf8, #818cf8); width: 0%;"></div>
                     </div>
                 </div>
 
@@ -351,14 +362,33 @@ function updateDashboard(data) {
         data.zones.forEach(zone => {
             if (zone.status !== undefined && zone.status !== false) {
                 const label = document.getElementById(`statusLabel_${zone.id}`);
+                const wContainer = document.getElementById(`wateringContainer_${zone.id}`);
                 if (label) {
                     label.innerText = zone.status;
                     label.classList.remove('watering', 'waiting');
                     if (zone.status === 'WATERING' || zone.status === 'VERIFYING_START') {
                         label.classList.add('watering');
+                        if (wContainer) wContainer.style.display = 'flex';
                     } else if (zone.status === 'WAITING_FOR_RESULT') {
                         label.classList.add('waiting');
+                        if (wContainer) wContainer.style.display = 'none';
+                    } else {
+                        if (wContainer) wContainer.style.display = 'none';
                     }
+                }
+            }
+
+            if ((zone.status === 'WATERING' || zone.status === 'VERIFYING_START') && zone.wateringStart && zone.duration) {
+                if (!wateringIntervals[zone.id]) {
+                    startWateringProgress(zone.id, zone.wateringStart, zone.duration);
+                } else {
+                    wateringIntervals[zone.id].start = zone.wateringStart;
+                    wateringIntervals[zone.id].duration = zone.duration;
+                }
+            } else {
+                if (wateringIntervals[zone.id]) {
+                    clearInterval(wateringIntervals[zone.id].intervalId);
+                    delete wateringIntervals[zone.id];
                 }
             }
             if (zone.moisture !== undefined && zone.moisture !== false) {
@@ -387,6 +417,38 @@ function updateDashboard(data) {
     }
 }
 
+function startWateringProgress(zoneId, startTimestamp, durationMinutes) {
+    wateringIntervals[zoneId] = {
+        start: startTimestamp,
+        duration: durationMinutes,
+        intervalId: setInterval(() => {
+            const data = wateringIntervals[zoneId];
+            if (!data) return;
+            
+            const totalMs = data.duration * 60 * 1000;
+            const elapsedMs = Date.now() - (data.start * 1000);
+            
+            let progress = 0;
+            let remainingText = "0:00 Min";
+            
+            if (totalMs > 0) {
+                progress = Math.max(0, Math.min(100, (elapsedMs / totalMs) * 100));
+                let remainingMs = Math.max(0, totalMs - elapsedMs);
+                let remSec = Math.floor(remainingMs / 1000);
+                let remMin = Math.floor(remSec / 60);
+                let secLeft = remSec % 60;
+                remainingText = remMin + ":" + (secLeft < 10 ? "0" : "") + secLeft + " Min";
+            }
+            
+            const bar = document.getElementById(`wateringBar_${zoneId}`);
+            const val = document.getElementById(`wateringTimeVal_${zoneId}`);
+            
+            if (bar) bar.style.width = progress + "%";
+            if (val) val.innerText = remainingText;
+            
+        }, 1000)
+    };
+}
 </script>
 </body>
 </html>
