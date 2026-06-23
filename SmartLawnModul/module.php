@@ -5,7 +5,7 @@ class SmartLawnAI extends IPSModule {
         parent::Create();
 
         // Globale Defaults (jetzt als Variablen statt Properties)
-        $this->RegisterVariableFloat('DefaultZielFeuchte', 'Globale Ziel-Feuchte (%)', '', 10);
+        $this->RegisterVariableFloat('DefaultZielFeuchte', 'Globale Bewässerungs-Ziel-Feuchte (%)', '', 10);
         $this->RegisterVariableFloat('DefaultStartSchwellwert', 'Globale Bewässerungs-Trigger-Feuchte (%)', '', 11);
         $this->RegisterVariableInteger('SickerpauseMinuten', 'Sickerpause (Minuten)', '', 12);
         $this->RegisterVariableInteger('GlobalMaxDuration', 'Globale maximale Bewässerungsdauer (Min)', '', 13);
@@ -135,12 +135,19 @@ class SmartLawnAI extends IPSModule {
         SetValue($this->GetIDForIdent('ForceStart'), false);
 
         $this->EnableAction('DefaultZielFeuchte');
+        IPS_SetName($this->GetIDForIdent('DefaultZielFeuchte'), 'Globale Bewässerungs-Ziel-Feuchte (%)');
         if (GetValue($this->GetIDForIdent('DefaultZielFeuchte')) == 0) { SetValue($this->GetIDForIdent('DefaultZielFeuchte'), 55.0); }
+        
         $this->EnableAction('DefaultStartSchwellwert');
+        IPS_SetName($this->GetIDForIdent('DefaultStartSchwellwert'), 'Globale Bewässerungs-Trigger-Feuchte (%)');
         if (GetValue($this->GetIDForIdent('DefaultStartSchwellwert')) == 0) { SetValue($this->GetIDForIdent('DefaultStartSchwellwert'), 20.0); }
+        
         $this->EnableAction('SickerpauseMinuten');
+        IPS_SetName($this->GetIDForIdent('SickerpauseMinuten'), 'Sickerpause (Minuten)');
         if (GetValue($this->GetIDForIdent('SickerpauseMinuten')) == 0) { SetValue($this->GetIDForIdent('SickerpauseMinuten'), 15); }
+        
         $this->EnableAction('GlobalMaxDuration');
+        IPS_SetName($this->GetIDForIdent('GlobalMaxDuration'), 'Globale maximale Bewässerungsdauer (Min)');
         if (GetValue($this->GetIDForIdent('GlobalMaxDuration')) == 0) { SetValue($this->GetIDForIdent('GlobalMaxDuration'), 30); }
 
         $zonesJson = $this->ReadPropertyString('Zones');
