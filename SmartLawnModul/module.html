@@ -310,7 +310,7 @@ function initDashboard(data) {
 
                 <div class="moisture-display" id="wateringContainer_${zone.id}" style="display: none; margin-top: 12px;">
                     <div class="moisture-label">
-                        <span>Bewässerung</span>
+                        <span id="wateringNameVal_${zone.id}">Bewässerung</span>
                         <span class="moisture-value" id="wateringTimeVal_${zone.id}" style="color: var(--accent-blue)">0:00 Min</span>
                     </div>
                     <div class="progress-track">
@@ -376,6 +376,11 @@ function updateDashboard(data) {
                         if (wContainer) wContainer.style.display = 'none';
                     }
                 }
+            }
+            
+            if (zone.currentSprinkler !== undefined) {
+                const nameEl = document.getElementById(`wateringNameVal_${zone.id}`);
+                if (nameEl) nameEl.innerText = zone.currentSprinkler ? `Sprinkler: ${zone.currentSprinkler}` : 'Bewässerung';
             }
 
             if ((zone.status === 'WATERING' || zone.status === 'VERIFYING_START') && zone.wateringStart && zone.duration) {
