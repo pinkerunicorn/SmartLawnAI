@@ -620,10 +620,10 @@ class SmartLawnAI extends IPSModule {
             $baseStatus = preg_replace('/ \(\d{2}:\d{2}\)$/', '', $currentStatus);
             
             // Textvereinheitlichung für den normalen Leerlauf
-            if ($baseStatus === 'Standby (Boden ausreichend feucht)' || 
+            if (strpos($baseStatus, 'Standby') !== false || 
                 $baseStatus === 'Automatik aktiviert (überwache Sensoren...)' ||
                 strpos($baseStatus, 'Nächste Prüfung:') !== false ||
-                strpos($baseStatus, 'Standby -') !== false) {
+                empty($baseStatus)) {
                 
                 $letzteUeberpruefung = (int)$this->GetBuffer('LastPlanCalculation');
                 $naechsteUeberpruefung = $letzteUeberpruefung + (6 * 3600);
