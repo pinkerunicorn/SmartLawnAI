@@ -365,7 +365,7 @@ function updateDashboard(data) {
                 if (label) {
                     label.innerText = zone.status;
                     label.classList.remove('watering', 'waiting');
-                    if (zone.status === 'WATERING' || zone.status === 'VERIFYING_START') {
+                    if (zone.status === 'WATERING') {
                         label.classList.add('watering');
                         if (wContainer) wContainer.style.display = 'flex';
                     } else if (zone.status === 'WAITING_FOR_RESULT') {
@@ -382,7 +382,7 @@ function updateDashboard(data) {
                 if (nameEl) nameEl.innerText = zone.currentSprinkler ? `Sprinkler: ${zone.currentSprinkler}` : 'Bewässerung';
             }
 
-            if ((zone.status === 'WATERING' || zone.status === 'VERIFYING_START') && zone.duration) {
+            if ((zone.status === 'WATERING') && zone.duration) {
                 const totalSec = zone.duration * 60;
                 let remSec = zone.remainingSeconds || 0;
                 if (!zone.remainingSeconds && zone.wateringStart) {

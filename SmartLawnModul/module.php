@@ -323,7 +323,7 @@ class SmartLawnAI extends IPSModule {
         $anyQueued = false;
         foreach ($zones as $zone) {
             $status = GetValue($this->GetIDForIdent('Status_' . $zone['SensorID']));
-            if ($status === 'WATERING' || $status === 'VERIFYING_START') {
+            if ($status === 'WATERING') {
                 $einVentilIstAktiv = true;
                 $this->LogAndDebug('Sequencer', 'Ein anderes Ventil blockiert die Sequenz (' . $status . ' bei Zone ' . $zone['SensorID'] . '). Warte...', 0);
             }
@@ -391,7 +391,7 @@ class SmartLawnAI extends IPSModule {
             $einVentilIstAktiv = false;
             foreach ($zones as $zone) {
                 $status = GetValue($this->GetIDForIdent('Status_' . $zone['SensorID']));
-                if ($status === 'WATERING' || $status === 'VERIFYING_START') {
+                if ($status === 'WATERING') {
                     $einVentilIstAktiv = true;
                 }
             }
@@ -463,11 +463,11 @@ class SmartLawnAI extends IPSModule {
                             $this->LogAndDebug('Sequencer', 'Zone ' . $zone['SensorID'] . ' bleibt QUEUED, da ein anderes Ventil aktiv ist.', 0);
                             SetValue($this->GetIDForIdent('Status_' . $zone['SensorID']), 'QUEUED');
                         } else {
-                            $this->LogAndDebug('Sequencer', 'Startbedingung erfüllt. Starte Zone ' . $zone['SensorID'] . ' (VERIFYING_START).', 0);
+                            $this->LogAndDebug('Sequencer', 'Startbedingung erfüllt. Starte Zone ' . $zone['SensorID'] . ' (WATERING).', 0);
                             IPS_LogMessage('SmartLawnAI', 'Bewässerung für Zone ' . $zone['SensorID'] . ' wird gestartet!');
-                            SetValue($this->GetIDForIdent('Status_' . $zone['SensorID']), 'VERIFYING_START');
+                            SetValue($this->GetIDForIdent('Status_' . $zone['SensorID']), 'WATERING');
                             SetValue($this->GetIDForIdent('WateringStart_' . $zone['SensorID']), time());
-                            $this->SetSummaryStatus('Starte Bewässerung: ' . $zoneName . '...');
+                            $this->SetSummaryStatus('Bewässere: ' . $zoneName);
                             
                             // Berechnete Laufzeit aus Variable lesen
                             $berechneteMinuten = (int)GetValue($this->GetIDForIdent('Dauer_' . $zone['SensorID']));
@@ -497,7 +497,6 @@ class SmartLawnAI extends IPSModule {
                     }
                     break;
                     
-                case 'VERIFYING_START':
                 case 'WATERING':
                     // Ventil-Rückkanal von Gardena prüfen
                     $ventilOffen = false;
@@ -533,18 +532,13 @@ class SmartLawnAI extends IPSModule {
                         $remaining = (int)GetValue($currentSprinkler['RemainingSecondsID']);
                     } else {
                         $timerID = $this->GetIDForIdent('ValveSequenceTimer');
-                        $timer = IPS_GetTimer($timerID);
-                        if ($timer['NextRun'] > 0) {
-                            $remaining = max(0, $timer['NextRun'] - time());
+                        if (IPS_GetTimerInterval($timerID) > 0) {
+                            $remaining = max(0, IPS_GetTimerInterval($timerID) - time());
                         }
                     }
                     $remainingText = $remaining > 0 ? ' (noch ' . ceil($remaining / 60) . ' Min)' : '';
 
-                    if ($ventilOffen && $aktuellerStatus === 'VERIFYING_START') {
-                        SetValue($this->GetIDForIdent('Status_' . $zone['SensorID']), 'WATERING');
-                        SetValue($this->GetIDForIdent('WateringStart_' . $zone['SensorID']), time());
-                        $this->SetSummaryStatus('Bewässert: ' . $zoneName . ' (' . $currentSprinklerName . ')' . $remainingText);
-                    } elseif (!$ventilOffen && $aktuellerStatus === 'WATERING') {
+                    if (!$ventilOffen && $aktuellerStatus === 'WATERING') {
                         IPS_LogMessage('SmartLawnAI', $currentSprinklerName . ' in Zone ' . $zone['SensorID'] . ' ist fertig. Hardware-Status: ' . $hwVal);
                         
                         $currentIndex++;
