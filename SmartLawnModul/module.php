@@ -387,17 +387,16 @@ class SmartLawnAI extends IPSModule {
         }
 
         $newCycleTriggered = false;
+        $letzteUeberpruefung = (int)$this->GetBuffer('LastPlanCalculation');
+        
         if ($isManualStart) {
             $newCycleTriggered = true;
-        } else if (!$einVentilIstAktiv && !$anyQueued) {
-            // Prüfen, ob mindestens eine Zone Trockenstress hat
-            foreach ($zones as $zone) {
-                $startWert = $defaultStart;
-                $aktuelleFeuchte = GetValue($zone['SensorID']);
-                if ($active && $aktuelleFeuchte <= $startWert) {
-                    $newCycleTriggered = true;
-                    break;
-                }
+            $this->SetBuffer('LastPlanCalculation', (string)time());
+        } else if ($active && !$einVentilIstAktiv && !$anyQueued) {
+            // Nur alle 6 Stunden den Bewässerungsbedarf prüfen
+            if ($letzteUeberpruefung === 0 || (time() - $letzteUeberpruefung) > (6 * 3600)) {
+                $newCycleTriggered = true;
+                $this->SetBuffer('LastPlanCalculation', (string)time());
             }
         }
 
