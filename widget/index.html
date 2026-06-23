@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartLawn AI Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- IP-Symcon SDK -->
+    <script src="symcon.js"></script>
+    <!-- Vom Modul generierte Konfiguration mit den IPs/Variablen -->
+    <script src="config.js"></script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <header class="glass-panel">
+            <div class="header-content">
+                <h1>SmartLawn AI</h1>
+                <div class="weather-info">
+                    <div class="weather-item">
+                        <span class="weather-icon">🌧️ Heute</span>
+                        <span id="rainToday" class="weather-value">-- mm</span>
+                    </div>
+                    <div class="weather-item">
+                        <span class="weather-icon">🌧️ Morgen</span>
+                        <span id="rainTomorrow" class="weather-value">-- mm</span>
+                    </div>
+                </div>
+            </div>
+            <div class="status-banner" id="statusBanner">
+                <div class="status-indicator" id="statusIndicator"></div>
+                <span id="summaryStatus">Initialisiere System...</span>
+            </div>
+        </header>
+
+        <!-- Zonen Container -->
+        <main class="zones-container" id="zonesContainer">
+            <!-- Zonen werden dynamisch aus config.js generiert -->
+        </main>
+    </div>
+
+    <!-- App Logik -->
+    <script src="app.js"></script>
+</body>
+</html>

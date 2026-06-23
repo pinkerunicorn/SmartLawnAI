@@ -199,8 +199,45 @@ class SmartLawnAI extends IPSModule {
                 IPS_SetName($this->GetIDForIdent('CurrentSprinklerIndex_' . $sid), 'Aktueller Sprinkler Index ' . $name);
             }
         }
+        }
+        
+        $this->UpdateWidgetConfig();
     }
-}
+
+    private function UpdateWidgetConfig() {
+        $widgetDir = __DIR__ . '/../widget';
+        if (!is_dir($widgetDir)) {
+            @mkdir($widgetDir, 0777, true);
+        }
+
+        $zonesJson = $this->ReadPropertyString('Zones');
+        $zones = json_decode($zonesJson, true);
+        if (!is_array($zones)) $zones = [];
+
+        $zoneData = [];
+        foreach ($zones as $zone) {
+            $sid = $zone['SensorID'];
+            $zoneData[] = [
+                'id' => $sid,
+                'name' => isset($zone['GroupName']) && !empty($zone['GroupName']) ? $zone['GroupName'] : ('Zone ' . $sid),
+                'statusVarId' => @$this->GetIDForIdent('Status_' . $sid),
+                'moistureVarId' => (int)$sid,
+                'efficiencyVarId' => @$this->GetIDForIdent('Effizienz_' . $sid),
+                'durationVarId' => @$this->GetIDForIdent('Dauer_' . $sid)
+            ];
+        }
+
+        $config = [
+            'summaryStatusVarId' => @$this->GetIDForIdent('SummaryStatus'),
+            'forecastRainTodayVarId' => @$this->GetIDForIdent('ForecastRainToday'),
+            'forecastRainTomorrowVarId' => @$this->GetIDForIdent('ForecastRainTomorrow'),
+            'forecastLastUpdateVarId' => @$this->GetIDForIdent('ForecastLastUpdate'),
+            'zones' => $zoneData
+        ];
+
+        $jsContent = "const CONFIG = " . json_encode($config, JSON_PRETTY_PRINT) . ";";
+        file_put_contents($widgetDir . '/config.js', $jsContent);
+    }
 
     public function ProcessLogic() {
         $defaultZiel  = GetValue($this->GetIDForIdent('DefaultZielFeuchte'));
