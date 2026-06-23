@@ -460,22 +460,12 @@ class SmartLawnAI extends IPSModule {
                     $sickerpauseSek = GetValue($this->GetIDForIdent('SickerpauseMinuten')) * 60;
                     if ((time() - $sickerStart) > $sickerpauseSek) {
                         
-                        // Thermodynamischen Gesamtverlustfaktor berechnen
-                        $verdunstungsFaktorVPD = ($vpd > 1.2) ? (($vpd - 1.2) * 10 * 0.02) : 0.0;
-                        $verdunstungsFaktorLux = ($lux > 20000) ? (($lux - 20000) / 10000) * 0.015 : 0.0;
-                        $gesamtVerlustFaktor = 1.0 + $verdunstungsFaktorVPD + $verdunstungsFaktorLux;
-
-                        // Lernerfolg auswerten
+                        // Lernerfolg auswerten via Gemini
                         $startFeuchte = (float)GetValue($this->GetIDForIdent('StartFeuchte_' . $zone['SensorID']));
                         $dauer = (int)GetValue($this->GetIDForIdent('Dauer_' . $zone['SensorID']));
                         
-                        $erreichteFeuchte = $aktuelleFeuchte - $startFeuchte;
-                        $korrigiertesErgebnis = $erreichteFeuchte * $gesamtVerlustFaktor;
-                        
-                        // Neuen Effizienzfaktor sichern
                         if ($dauer > 0) {
-                            $neueEffizienz = $korrigiertesErgebnis / $dauer;
-                            SetValue($this->GetIDForIdent('Effizienz_' . $zone['SensorID']), $neueEffizienz);
+                            $this->EvaluateEfficiencyWithGemini($zone['SensorID'], $startFeuchte, $aktuelleFeuchte, $dauer, $vpd, $lux);
                         }
 
                         SetValue($this->GetIDForIdent('Status_' . $zone['SensorID']), 'IDLE');
@@ -635,6 +625,90 @@ class SmartLawnAI extends IPSModule {
         } else {
             $this->LogAndDebug('Weather', 'Fehler beim Abrufen der Open-Meteo Wetterdaten.', 0);
         }
+    }
+
+    private function EvaluateEfficiencyWithGemini($zoneID, $startFeuchte, $aktuelleFeuchte, $dauer, $vpd, $lux) {
+        $apiKey = trim($this->ReadPropertyString('GeminiApiKey'));
+        $model = trim($this->ReadPropertyString('GeminiModel'));
+        if (empty($apiKey)) {
+            $this->LogAndDebug('Weather', 'Kein Gemini API-Key für Effizienz-Lernen konfiguriert.', 0);
+            return;
+        }
+
+        $userPrompt = "Du bist ein Agrar-Analyst. Bewerte den folgenden Bewässerungs-Zyklus:\n";
+        $userPrompt .= "- Zone ID: $zoneID\n";
+        $userPrompt .= "- Dauer der Bewässerung: $dauer Minuten\n";
+        $userPrompt .= "- Bodenfeuchte vor dem Gießen: $startFeuchte %\n";
+        $userPrompt .= "- Bodenfeuchte nach der Sickerpause: $aktuelleFeuchte %\n";
+        $userPrompt .= "- Wetter: Sättigungsdefizit (VPD) = $vpd kPa, Helligkeit = $lux Lux\n";
+        $userPrompt .= "\nBerechne auf Basis dieser Werte einen neuen 'efficiencyPercentPerMinute'-Multiplikator für diese Zone (wie viel Prozent Feuchte bringt 1 Minute Gießen unter diesen Umständen). Ein normaler Wert liegt zwischen 0.5 und 3.0.";
+        
+        $systemInstruction = "Du antwortest ausschließlich im JSON-Format.";
+
+        $url = "https://generativelanguage.googleapis.com/v1beta/models/" . $model . ":generateContent?key=" . $apiKey;
+        $responseSchema = [
+            'type' => 'OBJECT',
+            'properties' => [
+                'newEfficiencyMultiplier' => [
+                    'type' => 'NUMBER',
+                    'description' => 'Der neu berechnete Effizienz-Faktor.'
+                ],
+                'reasoning' => [
+                    'type' => 'STRING',
+                    'description' => 'Agronomische Begründung für diesen Wert.'
+                ]
+            ],
+            'required' => ['newEfficiencyMultiplier', 'reasoning']
+        ];
+
+        $payload = [
+            'system_instruction' => [
+                'parts' => [
+                    ['text' => $systemInstruction]
+                ]
+            ],
+            'contents' => [
+                [
+                    'role' => 'user',
+                    'parts' => [
+                        ['text' => $userPrompt]
+                    ]
+                ]
+            ],
+            'generationConfig' => [
+                'temperature' => 0.1,
+                'responseMimeType' => 'application/json',
+                'responseSchema' => $responseSchema
+            ]
+        ];
+
+        $jsonPayload = json_encode($payload);
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonPayload);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 15);
+        $result = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($httpCode === 200 && $result) {
+            $data = json_decode($result, true);
+            if (isset($data['candidates'][0]['content']['parts'][0]['text'])) {
+                $jsonText = $data['candidates'][0]['content']['parts'][0]['text'];
+                $parsed = json_decode($jsonText, true);
+                if (is_array($parsed) && isset($parsed['newEfficiencyMultiplier'])) {
+                    $neueEffizienz = (float)$parsed['newEfficiencyMultiplier'];
+                    $begruendung = $parsed['reasoning'];
+                    
+                    SetValue($this->GetIDForIdent('Effizienz_' . $zoneID), $neueEffizienz);
+                    IPS_LogMessage('SmartLawnAI', "Gemini Effizienz-Lernen (Zone $zoneID): Der neue Faktor ist {$neueEffizienz}x. Begründung: $begruendung");
+                    return;
+                }
+            }
+        }
+        $this->LogAndDebug('Weather', "Fehler beim Gemini Effizienz-Lernen für Zone $zoneID (HTTP $httpCode).", 0);
     }
 
     private function CalculateAndApplyPlan($zones, $sprinklers, $isManualStart, $vpd, $lux) {
