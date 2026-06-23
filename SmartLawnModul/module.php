@@ -54,9 +54,11 @@ class SmartLawnAI extends IPSModule {
         } else if ($Ident === 'AutomaticActive') {
             SetValue($this->GetIDForIdent($Ident), $Value);
             if (!$Value) {
+                $this->SetTimerInterval('LawnAITimer', 0);
                 $this->resetAllZones(false);
             } else {
-                $this->SetSummaryStatus('Automatik aktiviert (Überwache Sensoren...)');
+                $this->SetTimerInterval('LawnAITimer', 10000);
+                $this->SetSummaryStatus('Automatik aktiviert (überwache Sensoren...)');
             }
         } else if ($Ident === 'ForceStart') {
             if ($Value) {
@@ -137,16 +139,22 @@ class SmartLawnAI extends IPSModule {
 
     public function ApplyChanges() {
         parent::ApplyChanges();
-        
-        // Timer aktivieren (alle 60.000 ms = 1 Minute)
-        $this->SetTimerInterval('LawnAITimer', 60000);
+        // Timer aktivieren (alle 10.000 ms = 10 Sekunden)
+        $this->SetTimerInterval('LawnAITimer', 10000);
 
         $this->RegisterVariableBoolean('AutomaticActive', 'Automatik aktiv', '~Switch', 0);
         $this->EnableAction('AutomaticActive');
         if (!IPS_VariableExists($this->GetIDForIdent('AutomaticActive')) || (GetValue($this->GetIDForIdent('AutomaticActive')) === false && IPS_GetVariable($this->GetIDForIdent('AutomaticActive'))['VariableUpdated'] == 0)) {
             SetValue($this->GetIDForIdent('AutomaticActive'), true); // Default true
+            $this->SetTimerInterval('LawnAITimer', 10000);
+        } else {
+            $active = GetValue($this->GetIDForIdent('AutomaticActive'));
+            if ($active) {
+                $this->SetTimerInterval('LawnAITimer', 10000);
+            } else {
+                $this->SetTimerInterval('LawnAITimer', 0);
+            }
         }
-
         $this->RegisterVariableBoolean('ForceStart', 'Manuell Starten', '~Switch', 0);
         $this->EnableAction('ForceStart');
         SetValue($this->GetIDForIdent('ForceStart'), false);
