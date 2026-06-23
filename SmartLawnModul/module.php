@@ -205,10 +205,16 @@ class SmartLawnAI extends IPSModule {
     }
 
     private function UpdateWidgetConfig() {
-        $widgetDir = __DIR__ . '/../widget';
-        if (!is_dir($widgetDir)) {
-            @mkdir($widgetDir, 0777, true);
+        $userDir = IPS_GetKernelDir() . 'webfront/user/SmartLawnWidget';
+        if (!is_dir($userDir)) {
+            @mkdir($userDir, 0777, true);
         }
+
+        // Kopiere statische Frontend-Dateien aus dem Modul-Repo in den Webserver
+        $sourceDir = __DIR__ . '/../widget';
+        if (file_exists($sourceDir . '/index.html')) @copy($sourceDir . '/index.html', $userDir . '/index.html');
+        if (file_exists($sourceDir . '/style.css')) @copy($sourceDir . '/style.css', $userDir . '/style.css');
+        if (file_exists($sourceDir . '/app.js')) @copy($sourceDir . '/app.js', $userDir . '/app.js');
 
         $zonesJson = $this->ReadPropertyString('Zones');
         $zones = json_decode($zonesJson, true);
@@ -236,7 +242,7 @@ class SmartLawnAI extends IPSModule {
         ];
 
         $jsContent = "const CONFIG = " . json_encode($config, JSON_PRETTY_PRINT) . ";";
-        file_put_contents($widgetDir . '/config.js', $jsContent);
+        file_put_contents($userDir . '/config.js', $jsContent);
     }
 
     public function ProcessLogic() {
