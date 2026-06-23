@@ -79,7 +79,7 @@ function renderZones() {
                     <span>Ziel: ${zone.targetMoisture}%</span>
                 </div>
                 <div class="progress-bar-bg">
-                    <div class="progress-marker-start" style="left: ${markerPosition}%" title="Trockenstress bei ${zone.startMoisture}%"></div>
+                    <div class="progress-marker-start" style="left: ${markerPosition}%" title="Bewässerungs-Trigger bei ${zone.startMoisture}%"></div>
                     <div class="progress-bar-fill" id="moist-bar-${zone.id}" style="width: ${fillPercentage}%"></div>
                 </div>
             </div>

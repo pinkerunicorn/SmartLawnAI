@@ -2,34 +2,6 @@
     "elements": [
         {
             "type": "Label",
-            "caption": "Globale Bewässerungs-Parameter (Defaults)"
-        },
-        {
-            "type": "NumberSpinner",
-            "name": "DefaultZielFeuchte",
-            "caption": "Default Tiefenflutung (Zielwert in %)",
-            "suffix": "%"
-        },
-        {
-            "type": "NumberSpinner",
-            "name": "DefaultStartSchwellwert",
-            "caption": "Default Trockenstress (Startwert in %)",
-            "suffix": "%"
-        },
-        {
-            "type": "NumberSpinner",
-            "name": "SickerpauseMinuten",
-            "caption": "Sickerpause (Wartezeit nach dem Bewässern)",
-            "suffix": "Minuten"
-        },
-        {
-            "type": "NumberSpinner",
-            "name": "GlobalMaxDuration",
-            "caption": "Globale maximale Bewässerungsdauer",
-            "suffix": "Minuten"
-        },
-        {
-            "type": "Label",
             "caption": "Gemini AI Konfiguration"
         },
         {

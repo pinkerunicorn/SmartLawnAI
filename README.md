@@ -8,10 +8,10 @@ Dieses Dokument dient als zentrale Leitlinie für die automatisierte Weiterentwi
 * **Frontend (`/widget`):** Eine reaktive Kachel-Visualisierung basierend auf dem IP-Symcon HTML-SDK (HTML5, CSS3, Vanilla JS). Communication erfolgt asynchron via WebSockets/Meldungen.
 
 ## 2. Das Kern-Regelungskonzept
-Das System verzichtet bewusst auf starre Zeitfenster und arbeitet rein ereignisgesteuert, um agronomischen **Trockenstress** und anschließende **Tiefenflutung** zu realisieren.
+Das System verzichtet bewusst auf starre Zeitfenster und arbeitet rein ereignisgesteuert, um das Gießen erst bei Erreichen der **Bewässerungs-Trigger-Feuchte** zu starten und den Boden bis zur **Ziel-Feuchte** zu sättigen.
 
-1.  **Der Trigger (Trockenstress):** Die Bodenfeuchte sinkt unter einen konfigurierbaren Mindestwert (z. B. 20 %). Erst dann verlässt die Zone den Zustand `IDLE`.
-2.  **Das Ziel (Tiefenflutung):** Ist der Trigger erreicht, berechnet die KI mathematisch die nötige Wassermenge, um den Boden komplett zu sättigen (z. B. auf 55 %). Dies zwingt Pflanzen zu tiefem Wurzelwachstum.
+1.  **Der Trigger (Bewässerungs-Trigger-Feuchte):** Die Bodenfeuchte sinkt unter einen konfigurierbaren Mindestwert (z. B. 20 %). Erst dann verlässt die Zone den Zustand `IDLE`.
+2.  **Das Ziel (Ziel-Feuchte):** Ist der Trigger erreicht, berechnet die KI mathematisch die nötige Wassermenge, um den Boden komplett zu sättigen (z. B. auf 55 %). Dies zwingt Pflanzen zu tiefem Wurzelwachstum.
 3.  **Das Fallback-Design (`form.json`):** Es gibt globale Default-Werte für Start- und Ziel-Feuchte. In der dynamischen Zonen-Liste (`List` vom Typ `Zones`) können diese Werte pro Kreis individuell überschrieben werden. Steht der Wert in der Liste auf `0`, greift automatisch der globale Default.
 
 ## 3. Die State Machine (Zustandsmatrix)
