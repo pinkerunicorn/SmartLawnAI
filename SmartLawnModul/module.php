@@ -455,13 +455,6 @@ class SmartLawnAI extends IPSModule {
                     break;
 
                 case 'WAITING_FOR_RESULT':
-                    if ($einVentilIstAktiv || $anyQueued) {
-                        // Sickerpause verzögern, bis alle anderen Kreise mit der Bewässerung fertig sind
-                        SetValue($this->GetIDForIdent('SickerpauseStart_' . $zone['SensorID']), time());
-                        $this->LogAndDebug('Sequencer', 'Zone ' . $zone['SensorID'] . ' verzögert Sickerpause, da noch andere Ventile aktiv sind.', 0);
-                        break;
-                    }
-
                     $sickerStart = (int)GetValue($this->GetIDForIdent('SickerpauseStart_' . $zone['SensorID']));
                     // Sickerpause in Sekunden abwarten
                     $sickerpauseSek = GetValue($this->GetIDForIdent('SickerpauseMinuten')) * 60;
