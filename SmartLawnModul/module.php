@@ -518,6 +518,15 @@ class SmartLawnAI extends IPSModule {
                             $hwVal .= ' (Kept alive by RemainingSeconds > 0)';
                         }
                     }
+
+                    $wateringStart = (int)GetValue($this->GetIDForIdent('WateringStart_' . $zone['SensorID']));
+                    
+                    // Grace Period: Cloud APIs (z.B. Gardena) brauchen oft bis zu 60 Sekunden zum Synchronisieren.
+                    // Während dieser ersten 90 Sekunden tun wir so, als wäre das Ventil sicher offen, um Verzögerungen im UI zu umgehen und versehentliches Stoppen zu verhindern.
+                    if (!$ventilOffen && $wateringStart > 0 && (time() - $wateringStart) < 90) {
+                        $ventilOffen = true;
+                        $hwVal .= ' (Grace Period Active)';
+                    }
                     
                     $remaining = 0;
                     if (isset($currentSprinkler['RemainingSecondsID']) && $currentSprinkler['RemainingSecondsID'] > 0) {
