@@ -32,6 +32,7 @@ class SmartLawnAI extends IPSModule {
         $this->RegisterPropertyInteger('GlobalIlluminanceID', 0);
         $this->RegisterPropertyFloat('Latitude', 0.0);
         $this->RegisterPropertyFloat('Longitude', 0.0);
+        $this->SetVisualizationType(1);
 
         // Wetter-Variablen
         $this->RegisterVariableFloat('ForecastRainToday', 'Regen Heute', '~Rainfall', 5);
@@ -201,21 +202,46 @@ class SmartLawnAI extends IPSModule {
         }
         }
         
-        $this->UpdateWidgetConfig();
+        $this->RegisterVisuMessages();
     }
 
-    private function UpdateWidgetConfig() {
-        $userDir = IPS_GetKernelDir() . 'webfront/user/SmartLawnWidget';
-        if (!is_dir($userDir)) {
-            @mkdir($userDir, 0777, true);
+    private function RegisterVisuMessages() {
+        $this->RegisterMessage($this->GetIDForIdent('SummaryStatus'), VM_UPDATE);
+        $this->RegisterMessage($this->GetIDForIdent('ForecastRainToday'), VM_UPDATE);
+        $this->RegisterMessage($this->GetIDForIdent('ForecastRainTomorrow'), VM_UPDATE);
+        
+        $zonesJson = $this->ReadPropertyString('Zones');
+        $zones = json_decode($zonesJson, true);
+        if (is_array($zones)) {
+            foreach ($zones as $zone) {
+                $sid = $zone['SensorID'];
+                $this->RegisterMessage((int)$sid, VM_UPDATE);
+                if (@$this->GetIDForIdent('Status_' . $sid)) $this->RegisterMessage($this->GetIDForIdent('Status_' . $sid), VM_UPDATE);
+                if (@$this->GetIDForIdent('Effizienz_' . $sid)) $this->RegisterMessage($this->GetIDForIdent('Effizienz_' . $sid), VM_UPDATE);
+                if (@$this->GetIDForIdent('Dauer_' . $sid)) $this->RegisterMessage($this->GetIDForIdent('Dauer_' . $sid), VM_UPDATE);
+            }
         }
+    }
 
-        // Kopiere statische Frontend-Dateien aus dem Modul-Repo in den Webserver
-        $sourceDir = __DIR__ . '/../widget';
-        if (file_exists($sourceDir . '/index.html')) @copy($sourceDir . '/index.html', $userDir . '/index.html');
-        if (file_exists($sourceDir . '/style.css')) @copy($sourceDir . '/style.css', $userDir . '/style.css');
-        if (file_exists($sourceDir . '/app.js')) @copy($sourceDir . '/app.js', $userDir . '/app.js');
+    public function MessageSink($TimeStamp, $SenderID, $Message, $Data) {
+        if ($Message == VM_UPDATE) {
+            $this->UpdateVisualizationValue($this->GetFullUpdateMessage());
+        }
+    }
 
+    public function GetVisualizationTile() {
+        $initialHandling = '<script>handleMessage(' . json_encode($this->GetFullUpdateMessage()) . ')</script>';
+        
+        $htmlFile = __DIR__ . '/module.html';
+        $moduleHtml = '';
+        if (file_exists($htmlFile)) {
+            $moduleHtml = file_get_contents($htmlFile);
+        }
+        
+        return $moduleHtml . $initialHandling;
+    }
+
+    private function GetFullUpdateMessage() {
         $zonesJson = $this->ReadPropertyString('Zones');
         $zones = json_decode($zonesJson, true);
         if (!is_array($zones)) $zones = [];
@@ -226,23 +252,21 @@ class SmartLawnAI extends IPSModule {
             $zoneData[] = [
                 'id' => $sid,
                 'name' => isset($zone['GroupName']) && !empty($zone['GroupName']) ? $zone['GroupName'] : ('Zone ' . $sid),
-                'statusVarId' => @$this->GetIDForIdent('Status_' . $sid),
-                'moistureVarId' => (int)$sid,
-                'efficiencyVarId' => @$this->GetIDForIdent('Effizienz_' . $sid),
-                'durationVarId' => @$this->GetIDForIdent('Dauer_' . $sid)
+                'status' => @GetValue($this->GetIDForIdent('Status_' . $sid)),
+                'moisture' => @GetValue((int)$sid),
+                'efficiency' => @GetValue($this->GetIDForIdent('Effizienz_' . $sid)),
+                'duration' => @GetValue($this->GetIDForIdent('Dauer_' . $sid))
             ];
         }
 
         $config = [
-            'summaryStatusVarId' => @$this->GetIDForIdent('SummaryStatus'),
-            'forecastRainTodayVarId' => @$this->GetIDForIdent('ForecastRainToday'),
-            'forecastRainTomorrowVarId' => @$this->GetIDForIdent('ForecastRainTomorrow'),
-            'forecastLastUpdateVarId' => @$this->GetIDForIdent('ForecastLastUpdate'),
+            'summaryStatus' => @GetValue($this->GetIDForIdent('SummaryStatus')),
+            'forecastRainToday' => @GetValue($this->GetIDForIdent('ForecastRainToday')),
+            'forecastRainTomorrow' => @GetValue($this->GetIDForIdent('ForecastRainTomorrow')),
             'zones' => $zoneData
         ];
 
-        $jsContent = "const CONFIG = " . json_encode($config, JSON_PRETTY_PRINT) . ";";
-        file_put_contents($userDir . '/config.js', $jsContent);
+        return json_encode($config);
     }
 
     public function ProcessLogic() {
