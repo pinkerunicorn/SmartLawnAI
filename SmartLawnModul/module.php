@@ -297,7 +297,15 @@ class SmartLawnAI extends IPSModule {
             'summaryStatus' => @GetValue($this->GetIDForIdent('SummaryStatus')),
             'forecastRainToday' => @GetValue($this->GetIDForIdent('ForecastRainToday')),
             'forecastRainTomorrow' => @GetValue($this->GetIDForIdent('ForecastRainTomorrow')),
-            'zones' => $zoneData
+            'zones' => $zoneData,
+            'settings' => [
+                'AutomaticActive' => ['id' => $this->GetIDForIdent('AutomaticActive'), 'value' => @GetValue($this->GetIDForIdent('AutomaticActive'))],
+                'ManualStart' => ['id' => $this->GetIDForIdent('ManualStart'), 'value' => @GetValue($this->GetIDForIdent('ManualStart'))],
+                'DefaultStartSchwellwert' => ['id' => $this->GetIDForIdent('DefaultStartSchwellwert'), 'value' => @GetValue($this->GetIDForIdent('DefaultStartSchwellwert'))],
+                'DefaultZielFeuchte' => ['id' => $this->GetIDForIdent('DefaultZielFeuchte'), 'value' => @GetValue($this->GetIDForIdent('DefaultZielFeuchte'))],
+                'GlobalMaxDuration' => ['id' => $this->GetIDForIdent('GlobalMaxDuration'), 'value' => @GetValue($this->GetIDForIdent('GlobalMaxDuration'))],
+                'SickerpauseMinuten' => ['id' => $this->GetIDForIdent('SickerpauseMinuten'), 'value' => @GetValue($this->GetIDForIdent('SickerpauseMinuten'))]
+            ]
         ];
 
         return json_encode($config);

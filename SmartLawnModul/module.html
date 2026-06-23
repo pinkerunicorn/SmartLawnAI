@@ -233,6 +233,119 @@ h1 {
     font-weight: 500;
 }
 
+/* Settings Styles */
+.settings-panel {
+    margin-top: 12px;
+}
+.settings-header {
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 16px;
+    color: var(--text-main);
+}
+.settings-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+.setting-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.setting-label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 15px;
+    color: var(--text-main);
+}
+.setting-icon {
+    font-size: 18px;
+    opacity: 0.8;
+}
+.setting-control {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.setting-value {
+    min-width: 60px;
+    text-align: right;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-main);
+}
+
+/* Toggle Switch */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+}
+.switch input { 
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: rgba(255, 255, 255, 0.1);
+    transition: .4s;
+    border-radius: 24px;
+}
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: var(--text-main);
+    transition: .4s;
+    border-radius: 50%;
+}
+input:checked + .slider {
+    background-color: var(--accent-green);
+}
+input:checked + .slider:before {
+    transform: translateX(20px);
+}
+
+/* Range Slider */
+input[type=range] {
+    -webkit-appearance: none;
+    width: 120px;
+    background: transparent;
+}
+input[type=range]:focus {
+    outline: none;
+}
+input[type=range]::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 6px;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+}
+input[type=range]::-webkit-slider-thumb {
+    height: 16px;
+    width: 16px;
+    border-radius: 50%;
+    background: var(--accent-green);
+    cursor: pointer;
+    -webkit-appearance: none;
+    margin-top: -5px;
+    box-shadow: 0 0 10px rgba(52, 211, 153, 0.4);
+}
+@media (max-width: 400px) {
+    .setting-label { font-size: 13px; }
+    input[type=range] { width: 80px; }
+}
+
 </style>
 </head>
 <body>
@@ -261,6 +374,14 @@ h1 {
         <main class="zones-container" id="zonesContainer">
             <!-- Zonen werden dynamisch aus config.js generiert -->
         </main>
+
+        <!-- Einstellungen Container -->
+        <section class="glass-panel settings-panel">
+            <h2 class="settings-header">Einstellungen</h2>
+            <div class="settings-list" id="settingsContainer">
+                <!-- Settings rendered dynamically -->
+            </div>
+        </section>
     </div>
 
     <!-- App Logik -->
@@ -331,6 +452,58 @@ function initDashboard(data) {
         `;
         container.insertAdjacentHTML('beforeend', cardHtml);
     });
+
+    if (data.settings) {
+        const settingsContainer = document.getElementById('settingsContainer');
+        if (settingsContainer) {
+            settingsContainer.innerHTML = `
+                <!-- Switches -->
+                <div class="setting-row">
+                    <div class="setting-label"><span class="setting-icon">&#x23FB;</span> Automatik aktiv</div>
+                    <label class="switch">
+                        <input type="checkbox" id="setting_AutomaticActive" onchange="requestAction(${data.settings.AutomaticActive.id}, this.checked)">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="setting-row">
+                    <div class="setting-label"><span class="setting-icon">&#x23FB;</span> Manuell Starten</div>
+                    <label class="switch">
+                        <input type="checkbox" id="setting_ManualStart" onchange="requestAction(${data.settings.ManualStart.id}, this.checked)">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <!-- Sliders -->
+                <div class="setting-row">
+                    <div class="setting-label"><span class="setting-icon">&#x1F4A7;</span> Bewässerungs-Trigger-Feuchte</div>
+                    <div class="setting-control">
+                        <input type="range" id="setting_DefaultStartSchwellwert" min="0" max="100" step="0.5" onchange="requestAction(${data.settings.DefaultStartSchwellwert.id}, parseFloat(this.value))" oninput="document.getElementById('val_DefaultStartSchwellwert').innerText = this.value + ' %'">
+                        <span id="val_DefaultStartSchwellwert" class="setting-value">-- %</span>
+                    </div>
+                </div>
+                <div class="setting-row">
+                    <div class="setting-label"><span class="setting-icon">&#x1F4A7;</span> Bewässerungs-Ziel-Feuchte</div>
+                    <div class="setting-control">
+                        <input type="range" id="setting_DefaultZielFeuchte" min="0" max="100" step="0.5" onchange="requestAction(${data.settings.DefaultZielFeuchte.id}, parseFloat(this.value))" oninput="document.getElementById('val_DefaultZielFeuchte').innerText = this.value + ' %'">
+                        <span id="val_DefaultZielFeuchte" class="setting-value">-- %</span>
+                    </div>
+                </div>
+                <div class="setting-row">
+                    <div class="setting-label"><span class="setting-icon">&#x23F2;</span> Maximale Bewässerungsdauer</div>
+                    <div class="setting-control">
+                        <input type="range" id="setting_GlobalMaxDuration" min="1" max="120" step="1" onchange="requestAction(${data.settings.GlobalMaxDuration.id}, parseInt(this.value))" oninput="document.getElementById('val_GlobalMaxDuration').innerText = this.value + ' Min'">
+                        <span id="val_GlobalMaxDuration" class="setting-value">-- Min</span>
+                    </div>
+                </div>
+                <div class="setting-row">
+                    <div class="setting-label"><span class="setting-icon">&#x23F2;</span> Sickerpause</div>
+                    <div class="setting-control">
+                        <input type="range" id="setting_SickerpauseMinuten" min="1" max="120" step="1" onchange="requestAction(${data.settings.SickerpauseMinuten.id}, parseInt(this.value))" oninput="document.getElementById('val_SickerpauseMinuten').innerText = this.value + ' Min'">
+                        <span id="val_SickerpauseMinuten" class="setting-value">-- Min</span>
+                    </div>
+                </div>
+            `;
+        }
+    }
 }
 
 function updateDashboard(data) {
@@ -428,6 +601,30 @@ function updateDashboard(data) {
                 if (durEl) durEl.innerText = parseFloat(zone.duration).toFixed(1) + ' Min';
             }
         });
+    }
+
+    if (data.settings) {
+        const updateSettingBoolean = (key) => {
+            const el = document.getElementById(`setting_${key}`);
+            if (el && document.activeElement !== el) {
+                el.checked = !!data.settings[key].value;
+            }
+        };
+        const updateSettingNumber = (key, unit) => {
+            const el = document.getElementById(`setting_${key}`);
+            const valEl = document.getElementById(`val_${key}`);
+            if (el && document.activeElement !== el) {
+                el.value = data.settings[key].value;
+                if (valEl) valEl.innerText = parseFloat(data.settings[key].value).toFixed(unit === '%' ? 1 : 0) + ' ' + unit;
+            }
+        };
+
+        updateSettingBoolean('AutomaticActive');
+        updateSettingBoolean('ManualStart');
+        updateSettingNumber('DefaultStartSchwellwert', '%');
+        updateSettingNumber('DefaultZielFeuchte', '%');
+        updateSettingNumber('GlobalMaxDuration', 'Min');
+        updateSettingNumber('SickerpauseMinuten', 'Min');
     }
 }
 </script>
