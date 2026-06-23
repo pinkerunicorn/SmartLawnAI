@@ -58,7 +58,8 @@ class SmartLawnAI extends IPSModule {
                 $this->resetAllZones(false);
             } else {
                 $this->SetTimerInterval('LawnAITimer', 1000);
-                $this->SetSummaryStatus('Automatik aktiviert (überwache Sensoren...)');
+                $this->SetBuffer('LastPlanCalculation', '0');
+                $this->ProcessLogic();
             }
         } else if ($Ident === 'ForceStart') {
             if ($Value) {
@@ -635,7 +636,8 @@ class SmartLawnAI extends IPSModule {
                 if (!$newVal) {
                     $this->resetAllZones(false);
                 } else {
-                    $this->SetSummaryStatus('Automatik aktiviert (Überwache Sensoren...)');
+                    $this->SetBuffer('LastPlanCalculation', '0');
+                    $this->ProcessLogic();
                 }
                 break;
             case 'FORCE_START_SEQUENCE':
