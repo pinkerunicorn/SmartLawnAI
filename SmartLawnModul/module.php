@@ -21,6 +21,7 @@ class SmartLawnAI extends IPSModule {
 
         // Summenstatus Variable (fürs Webfront)
         $this->RegisterVariableString('SummaryStatus', 'Aktueller Status', '', 0);
+        $this->RegisterVariableString('LastGeminiResponse', 'Letzte KI-Antwort', '~TextBox', 1);
 
         // Gemini AI Konfiguration
         $this->RegisterPropertyString('GeminiApiKey', '');
@@ -1013,6 +1014,15 @@ class SmartLawnAI extends IPSModule {
             $this->SetSummaryStatus('Fehler: Gemini JSON-Parsing fehlgeschlagen');
             return;
         }
+
+        $reasoningText = date('d.m.Y H:i') . " Uhr:\n";
+        foreach ($planData['irrigationPlan'] as $item) {
+            $zId = isset($item['zoneId']) ? $item['zoneId'] : 'Unbekannt';
+            $dur = isset($item['durationMinutes']) ? $item['durationMinutes'] : 0;
+            $res = isset($item['reasoning']) ? $item['reasoning'] : '-';
+            $reasoningText .= "Zone {$zId} ({$dur} Min): {$res}\n";
+        }
+        SetValue($this->GetIDForIdent('LastGeminiResponse'), trim($reasoningText));
 
         // Apply Gemini calculations
         $planByZone = [];
