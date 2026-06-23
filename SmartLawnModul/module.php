@@ -38,7 +38,6 @@ class SmartLawnAI extends IPSModule {
         // Wetter-Variablen
         $this->RegisterVariableFloat('ForecastRainToday', 'Regen Heute', '~Rainfall', 5);
         $this->RegisterVariableFloat('ForecastRainTomorrow', 'Regen Morgen', '~Rainfall', 6);
-        $this->RegisterVariableInteger('ForecastLastUpdate', 'Letztes Wetter-Update', '~UnixTimestamp', 7);
 
         // Zonen (Hardware)
         $this->RegisterPropertyString('Zones', '[]');
@@ -220,7 +219,6 @@ class SmartLawnAI extends IPSModule {
         $this->RegisterMessage($this->GetIDForIdent('SummaryStatus'), VM_UPDATE);
         $this->RegisterMessage($this->GetIDForIdent('ForecastRainToday'), VM_UPDATE);
         $this->RegisterMessage($this->GetIDForIdent('ForecastRainTomorrow'), VM_UPDATE);
-        $this->RegisterMessage($this->GetIDForIdent('ForecastLastUpdate'), VM_UPDATE);
         
         $this->RegisterMessage($this->GetIDForIdent('AutomaticActive'), VM_UPDATE);
         $this->RegisterMessage($this->GetIDForIdent('ForceStart'), VM_UPDATE);
@@ -306,7 +304,6 @@ class SmartLawnAI extends IPSModule {
             'summaryStatus' => @GetValue($this->GetIDForIdent('SummaryStatus')),
             'forecastRainToday' => @GetValue($this->GetIDForIdent('ForecastRainToday')),
             'forecastRainTomorrow' => @GetValue($this->GetIDForIdent('ForecastRainTomorrow')),
-            'forecastLastUpdate' => @GetValue($this->GetIDForIdent('ForecastLastUpdate')),
             'zones' => $zoneData,
             'settings' => [
                 'AutomaticActive' => ['id' => $this->GetIDForIdent('AutomaticActive'), 'value' => @GetValue($this->GetIDForIdent('AutomaticActive'))],
@@ -757,7 +754,6 @@ class SmartLawnAI extends IPSModule {
                 $sums = $omData['daily']['precipitation_sum'];
                 if (isset($sums[0])) SetValue($this->GetIDForIdent('ForecastRainToday'), (float)$sums[0]);
                 if (isset($sums[1])) SetValue($this->GetIDForIdent('ForecastRainTomorrow'), (float)$sums[1]);
-                SetValue($this->GetIDForIdent('ForecastLastUpdate'), time());
                 $this->LogAndDebug('Weather', 'Open-Meteo Regen-Vorhersage aktualisiert: Heute ' . (float)$sums[0] . 'mm, Morgen ' . (float)$sums[1] . 'mm', 0);
             }
         } else {
