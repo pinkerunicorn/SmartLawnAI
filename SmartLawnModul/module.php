@@ -404,7 +404,7 @@ class SmartLawnAI extends IPSModule {
                             $remaining = max(0, $timer['NextRun'] - time());
                         }
                     }
-                    $remainingText = $remaining > 0 ? ' (noch ' . $remaining . 's)' : '';
+                    $remainingText = $remaining > 0 ? ' (noch ' . ceil($remaining / 60) . ' Min)' : '';
 
                     if ($ventilOffen && $aktuellerStatus === 'VERIFYING_START') {
                         SetValue($this->GetIDForIdent('Status_' . $zone['SensorID']), 'WATERING');
