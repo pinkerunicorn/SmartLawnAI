@@ -36,6 +36,7 @@ class SmartLawnAI extends IPSModule {
         // Wetter-Variablen
         $this->RegisterVariableFloat('ForecastRainToday', 'Regen Heute', '~Rainfall', 5);
         $this->RegisterVariableFloat('ForecastRainTomorrow', 'Regen Morgen', '~Rainfall', 6);
+        $this->RegisterVariableInteger('ForecastLastUpdate', 'Letztes Wetter-Update', '~UnixTimestamp', 7);
 
         // Zonen (Hardware)
         $this->RegisterPropertyString('Zones', '[]');
@@ -620,6 +621,7 @@ class SmartLawnAI extends IPSModule {
                 $sums = $omData['daily']['precipitation_sum'];
                 if (isset($sums[0])) SetValue($this->GetIDForIdent('ForecastRainToday'), (float)$sums[0]);
                 if (isset($sums[1])) SetValue($this->GetIDForIdent('ForecastRainTomorrow'), (float)$sums[1]);
+                SetValue($this->GetIDForIdent('ForecastLastUpdate'), time());
                 $this->LogAndDebug('Weather', 'Open-Meteo Regen-Vorhersage aktualisiert: Heute ' . (float)$sums[0] . 'mm, Morgen ' . (float)$sums[1] . 'mm', 0);
             }
         } else {
