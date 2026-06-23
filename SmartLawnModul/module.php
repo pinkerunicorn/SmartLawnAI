@@ -621,6 +621,14 @@ class SmartLawnAI extends IPSModule {
             $zielWert  = $defaultZiel;
             $startWert = $defaultStart;
             $aktuelleFeuchte = GetValue($sid);
+
+            // ERZWINGE EREIGNISSTEUERUNG:
+            // Zone nur beplanen, wenn manueller Start oder Trigger-Schwellwert erreicht!
+            if (!$isManualStart && $aktuelleFeuchte > $startWert) {
+                $this->LogAndDebug('Planer', 'Zone ' . $sid . ' ignoriert. Feuchte (' . $aktuelleFeuchte . '%) liegt über dem Trigger (' . $startWert . '%).', 0);
+                continue;
+            }
+
             $effizienz = (float)GetValue($this->GetIDForIdent('Effizienz_' . $sid));
             if ($effizienz <= 0) $effizienz = 1.0;
             $maxDuration = GetValue($this->GetIDForIdent('GlobalMaxDuration'));
