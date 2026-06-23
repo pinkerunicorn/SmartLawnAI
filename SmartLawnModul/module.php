@@ -274,7 +274,7 @@ class SmartLawnAI extends IPSModule {
             $currentSprinklerName = '';
             $remainingSeconds = 0;
             if (isset($zoneSprinklers[$currentIndex])) {
-                $currentSprinklerName = isset($zoneSprinklers[$currentIndex]['Name']) ? $zoneSprinklers[$currentIndex]['Name'] : 'Sprinkler ' . ($currentIndex + 1);
+                $currentSprinklerName = isset($zoneSprinklers[$currentIndex]['SprinklerName']) && !empty($zoneSprinklers[$currentIndex]['SprinklerName']) ? $zoneSprinklers[$currentIndex]['SprinklerName'] : 'Sprinkler ' . ($currentIndex + 1);
                 if (isset($zoneSprinklers[$currentIndex]['RemainingSecondsID']) && $zoneSprinklers[$currentIndex]['RemainingSecondsID'] > 0) {
                     $remainingSeconds = (int)@GetValue($zoneSprinklers[$currentIndex]['RemainingSecondsID']);
                 }
@@ -466,6 +466,7 @@ class SmartLawnAI extends IPSModule {
                             $this->LogAndDebug('Sequencer', 'Startbedingung erfüllt. Starte Zone ' . $zone['SensorID'] . ' (VERIFYING_START).', 0);
                             IPS_LogMessage('SmartLawnAI', 'Bewässerung für Zone ' . $zone['SensorID'] . ' wird gestartet!');
                             SetValue($this->GetIDForIdent('Status_' . $zone['SensorID']), 'VERIFYING_START');
+                            SetValue($this->GetIDForIdent('WateringStart_' . $zone['SensorID']), time());
                             $this->SetSummaryStatus('Starte Bewässerung: ' . $zoneName . '...');
                             
                             // Berechnete Laufzeit aus Variable lesen
