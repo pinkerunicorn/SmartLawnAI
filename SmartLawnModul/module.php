@@ -264,8 +264,9 @@ class SmartLawnAI extends IPSModule {
         foreach ($zones as $zone) {
             $sid = $zone['SensorID'];
             
-            $zoneSprinklers = array_filter($allSprinklers, function($s) use ($sid) {
-                return $s['ZoneID'] == $sid;
+            $zoneName = isset($zone['GroupName']) && !empty($zone['GroupName']) ? $zone['GroupName'] : ('Zone ' . $sid);
+            $zoneSprinklers = array_filter($allSprinklers, function($s) use ($zoneName) {
+                return isset($s['ZoneName']) && $s['ZoneName'] === $zoneName;
             });
             $zoneSprinklers = array_values($zoneSprinklers);
 
@@ -281,7 +282,7 @@ class SmartLawnAI extends IPSModule {
 
             $zoneData[] = [
                 'id' => $sid,
-                'name' => isset($zone['GroupName']) && !empty($zone['GroupName']) ? $zone['GroupName'] : ('Zone ' . $sid),
+                'name' => $zoneName,
                 'status' => @GetValue($this->GetIDForIdent('Status_' . $sid)),
                 'moisture' => @GetValue((int)$sid),
                 'efficiency' => @GetValue($this->GetIDForIdent('Effizienz_' . $sid)),
