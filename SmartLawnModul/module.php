@@ -219,6 +219,7 @@ class SmartLawnAI extends IPSModule {
         $this->RegisterMessage($this->GetIDForIdent('SummaryStatus'), VM_UPDATE);
         $this->RegisterMessage($this->GetIDForIdent('ForecastRainToday'), VM_UPDATE);
         $this->RegisterMessage($this->GetIDForIdent('ForecastRainTomorrow'), VM_UPDATE);
+        $this->RegisterMessage($this->GetIDForIdent('ForecastLastUpdate'), VM_UPDATE);
         
         $this->RegisterMessage($this->GetIDForIdent('AutomaticActive'), VM_UPDATE);
         $this->RegisterMessage($this->GetIDForIdent('ForceStart'), VM_UPDATE);
@@ -304,6 +305,7 @@ class SmartLawnAI extends IPSModule {
             'summaryStatus' => @GetValue($this->GetIDForIdent('SummaryStatus')),
             'forecastRainToday' => @GetValue($this->GetIDForIdent('ForecastRainToday')),
             'forecastRainTomorrow' => @GetValue($this->GetIDForIdent('ForecastRainTomorrow')),
+            'forecastLastUpdate' => @GetValue($this->GetIDForIdent('ForecastLastUpdate')),
             'zones' => $zoneData,
             'settings' => [
                 'AutomaticActive' => ['id' => $this->GetIDForIdent('AutomaticActive'), 'value' => @GetValue($this->GetIDForIdent('AutomaticActive'))],
