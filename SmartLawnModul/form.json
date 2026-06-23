@@ -39,13 +39,8 @@
             "caption": "Helligkeitssensor (ID in Lux)"
         },
         {
-            "type": "SelectVariable",
-            "name": "GlobalWeatherForecastID",
-            "caption": "Wettervorhersage-Variable (ID)"
-        },
-        {
             "type": "Label",
-            "caption": "Oder: Automatische Wetterdaten über Open-Meteo (Kostenlos, ohne API-Key)"
+            "caption": "Automatische Wetterdaten über Open-Meteo (Kostenlos, ohne API-Key)"
         },
         {
             "type": "NumberSpinner",

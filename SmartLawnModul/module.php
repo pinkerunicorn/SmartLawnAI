@@ -30,9 +30,12 @@ class SmartLawnAI extends IPSModule {
         $this->RegisterPropertyInteger('GlobalAirTempID', 0);
         $this->RegisterPropertyInteger('GlobalHumidityID', 0);
         $this->RegisterPropertyInteger('GlobalIlluminanceID', 0);
-        $this->RegisterPropertyInteger('GlobalWeatherForecastID', 0);
         $this->RegisterPropertyFloat('Latitude', 0.0);
         $this->RegisterPropertyFloat('Longitude', 0.0);
+
+        // Wetter-Variablen
+        $this->RegisterVariableFloat('ForecastRainToday', 'Regen Heute', '~Rainfall', 5);
+        $this->RegisterVariableFloat('ForecastRainTomorrow', 'Regen Morgen', '~Rainfall', 6);
 
         // Zonen (Hardware)
         $this->RegisterPropertyString('Zones', '[]');
@@ -40,6 +43,7 @@ class SmartLawnAI extends IPSModule {
 
         // Timer für die 60-Sekunden-Taktung
         $this->RegisterTimer('LawnAITimer', 0, 'SLAI_ProcessLogic($_IPS[\'TARGET\']);');
+        $this->RegisterTimer('WeatherTimer', 0, 'SLAI_UpdateWeather($_IPS[\'TARGET\']);');
     }
 
     public function RequestAction($Ident, $Value) {
@@ -239,7 +243,23 @@ class SmartLawnAI extends IPSModule {
         $vpd = $es * (1 - ($rh / 100.0));
 
         // 3. Prüfen, ob ein neuer Bewässerungszyklus gestartet werden muss
-        $automaticActive = GetValue($this->GetIDForIdent('AutomaticActive'));
+        $active = GetValue($this->GetIDForIdent('AutomaticActive'));
+        if ($active) {
+            $this->SetTimerInterval('LawnAITimer', 60000);
+        } else {
+            $this->SetTimerInterval('LawnAITimer', 0);
+        }
+
+        // Wetter-Timer (alle 4 Stunden = 14400000 ms), wenn Koordinaten vorhanden
+        $lat = (float)$this->ReadPropertyFloat('Latitude');
+        $lon = (float)$this->ReadPropertyFloat('Longitude');
+        if ($lat != 0.0 || $lon != 0.0) {
+            $this->SetTimerInterval('WeatherTimer', 14400000);
+            // Direkt einmalig abrufen, falls noch keine Daten vorliegen
+            $this->UpdateWeather();
+        } else {
+            $this->SetTimerInterval('WeatherTimer', 0);
+        }
 
         $isManualStart = ($this->GetBuffer('CalculatePlanPending') === 'true');
         if ($isManualStart) {
@@ -254,7 +274,7 @@ class SmartLawnAI extends IPSModule {
             foreach ($zones as $zone) {
                 $startWert = $defaultStart;
                 $aktuelleFeuchte = GetValue($zone['SensorID']);
-                if ($automaticActive && $aktuelleFeuchte <= $startWert) {
+                if ($active && $aktuelleFeuchte <= $startWert) {
                     $newCycleTriggered = true;
                     break;
                 }
@@ -602,6 +622,28 @@ class SmartLawnAI extends IPSModule {
         }
     }
 
+    public function UpdateWeather() {
+        $lat = (float)$this->ReadPropertyFloat('Latitude');
+        $lon = (float)$this->ReadPropertyFloat('Longitude');
+        if ($lat == 0.0 && $lon == 0.0) {
+            return;
+        }
+
+        $omUrl = "https://api.open-meteo.com/v1/forecast?latitude=" . number_format($lat, 6, '.', '') . "&longitude=" . number_format($lon, 6, '.', '') . "&daily=precipitation_sum&timezone=auto&forecast_days=3";
+        $omContent = @Sys_GetURLContent($omUrl);
+        if ($omContent !== false) {
+            $omData = json_decode($omContent, true);
+            if (isset($omData['daily']) && isset($omData['daily']['precipitation_sum'])) {
+                $sums = $omData['daily']['precipitation_sum'];
+                if (isset($sums[0])) SetValue($this->GetIDForIdent('ForecastRainToday'), (float)$sums[0]);
+                if (isset($sums[1])) SetValue($this->GetIDForIdent('ForecastRainTomorrow'), (float)$sums[1]);
+                $this->LogAndDebug('Weather', 'Open-Meteo Regen-Vorhersage aktualisiert: Heute ' . (float)$sums[0] . 'mm, Morgen ' . (float)$sums[1] . 'mm', 0);
+            }
+        } else {
+            $this->LogAndDebug('Weather', 'Fehler beim Abrufen der Open-Meteo Wetterdaten.', 0);
+        }
+    }
+
     private function CalculateAndApplyPlan($zones, $sprinklers, $isManualStart, $vpd, $lux) {
         $this->SetSummaryStatus('Berechne Bewässerungsplan (Gemini AI)...');
         $apiKey = trim($this->ReadPropertyString('GeminiApiKey'));
@@ -617,31 +659,6 @@ class SmartLawnAI extends IPSModule {
             return;
         }
 
-        $forecastID = $this->ReadPropertyInteger('GlobalWeatherForecastID');
-        $forecast = null;
-        if ($forecastID > 0) {
-            $forecastVal = GetValue($forecastID);
-            $decoded = json_decode($forecastVal, true);
-            $forecast = (json_last_error() === JSON_ERROR_NONE) ? $decoded : $forecastVal;
-        } else {
-            // Optional Open-Meteo Fallback
-            $lat = (float)$this->ReadPropertyFloat('Latitude');
-            $lon = (float)$this->ReadPropertyFloat('Longitude');
-            if ($lat != 0.0 || $lon != 0.0) {
-                $omUrl = "https://api.open-meteo.com/v1/forecast?latitude=" . number_format($lat, 6, '.', '') . "&longitude=" . number_format($lon, 6, '.', '') . "&daily=precipitation_sum,precipitation_probability_max&timezone=auto&forecast_days=3";
-                $omContent = @Sys_GetURLContent($omUrl);
-                if ($omContent !== false) {
-                    $omData = json_decode($omContent, true);
-                    if (isset($omData['daily'])) {
-                        $forecast = $omData['daily'];
-                        $this->LogAndDebug('Planer', 'Open-Meteo Regen-Vorhersage erfolgreich geladen.', 0);
-                    }
-                } else {
-                    $this->LogAndDebug('Planer', 'Fehler beim Abrufen der Open-Meteo Wetterdaten.', 0);
-                }
-            }
-        }
-
         $ambientContext = [
             'airTemperatureCelsius' => ($this->ReadPropertyInteger('GlobalAirTempID') > 0) ? (float)GetValue($this->ReadPropertyInteger('GlobalAirTempID')) : 20.0,
             'relativeHumidityPercent' => ($this->ReadPropertyInteger('GlobalHumidityID') > 0) ? (float)GetValue($this->ReadPropertyInteger('GlobalHumidityID')) : 50.0,
@@ -650,9 +667,10 @@ class SmartLawnAI extends IPSModule {
             'manualStartTriggered' => $isManualStart,
             'timestamp' => time()
         ];
-        if ($forecast !== null) {
-            $ambientContext['weatherForecast'] = $forecast;
-        }
+        
+        $rainToday = GetValue($this->GetIDForIdent('ForecastRainToday'));
+        $rainTomorrow = GetValue($this->GetIDForIdent('ForecastRainTomorrow'));
+        $ambientContext['weatherForecast'] = "Erwartete Regenmenge: Heute $rainToday mm, Morgen $rainTomorrow mm";
 
         $defaultZiel = GetValue($this->GetIDForIdent('DefaultZielFeuchte'));
         $defaultStart = GetValue($this->GetIDForIdent('DefaultStartSchwellwert'));
