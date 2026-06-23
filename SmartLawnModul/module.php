@@ -173,6 +173,7 @@ class SmartLawnAI extends IPSModule {
             if (!empty($name)) {
                 $this->RegisterVariableString('Status_' . $sid, 'Status ' . $name, '', 1);
                 $this->RegisterVariableFloat('Effizienz_' . $sid, 'Effizienz ' . $name, 'SmartLawn.Multiplier', 2);
+                $this->EnableArchive($this->GetIDForIdent('Effizienz_' . $sid));
                 if (function_exists('IPS_SetVariableCustomPresentation')) { IPS_SetVariableCustomPresentation($this->GetIDForIdent('Effizienz_' . $sid), []); }
                 $this->RegisterVariableFloat('StartFeuchte_' . $sid, 'StartFeuchte ' . $name, 'SmartLawn.Percentage', 3);
                 if (function_exists('IPS_SetVariableCustomPresentation')) { IPS_SetVariableCustomPresentation($this->GetIDForIdent('StartFeuchte_' . $sid), []); }
@@ -569,6 +570,19 @@ class SmartLawnAI extends IPSModule {
             }
         }
         return true;
+    }
+
+    private function EnableArchive($variableID) {
+        if ($variableID > 0) {
+            $archiveIDs = IPS_GetInstanceListByModuleID('{43192F0B-135B-4CE7-A0A7-1475603F3060}');
+            if (count($archiveIDs) > 0) {
+                $archiveID = $archiveIDs[0];
+                if (!AC_GetLoggingStatus($archiveID, $variableID)) {
+                    AC_SetLoggingStatus($archiveID, $variableID, true);
+                    IPS_ApplyChanges($archiveID);
+                }
+            }
+        }
     }
 
     private function CalculateAndApplyPlan($zones, $sprinklers, $isManualStart, $vpd, $lux) {
