@@ -18,10 +18,10 @@ trait SmartLawnAI_Helpers {
         if (strpos($longStatus, 'HARDWARE-FEHLER') !== false) return 'Fehler (Hardware)';
         if (strpos($longStatus, 'Fehler:') !== false) return 'Fehler (API)';
         if (strpos($longStatus, 'Bewässert:') !== false) {
-            if (preg_match('/Bewässert: (.*?) \(.*?\) \(noch (\d+) Min\)/', $longStatus, $m)) {
+            if (preg_match('/Bewässert: .*? \((.*?)\) \(noch (\d+) Min\)/', $longStatus, $m)) {
                 return $m[1] . ' (' . $m[2] . ' Min)';
             }
-            if (preg_match('/Bewässert: (.*?) \(/', $longStatus, $m)) {
+            if (preg_match('/Bewässert: .*? \((.*?)\)/', $longStatus, $m)) {
                 return $m[1] . ' läuft';
             }
             return 'Bewässerung läuft';
