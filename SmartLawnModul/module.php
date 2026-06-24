@@ -65,7 +65,6 @@ class SmartLawnAI extends IPSModule {
         
         // NEU: Gemini Retry Timer
         $this->RegisterTimer('GeminiRetryTimer', 0, 'SLAI_ProcessGeminiRetry($_IPS[\'TARGET\']);');
-        $this->RegisterBuffer('GeminiRetryQueue', '[]');
     }
 
     public function RequestAction($Ident, $Value) {
