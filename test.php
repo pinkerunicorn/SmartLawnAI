@@ -1,1 +1,0 @@
-<?php $json = file_get_contents('SmartLawnModul/form.json'); $data = json_decode($json); if (json_last_error() !== JSON_ERROR_NONE) { echo 'JSON Error: ' . json_last_error_msg(); } else { echo 'Valid'; } ?>
