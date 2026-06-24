@@ -33,7 +33,8 @@ class SmartLawnAI extends IPSModule {
 
         // Summenstatus Variable (fürs Webfront)
         $this->RegisterVariableString('SummaryStatus', 'Aktueller Status', '', 0);
-        $this->RegisterVariableString('LastGeminiResponse', 'Letzte KI-Antwort', '~TextBox', 1);
+        $this->RegisterVariableString('VestaboardStatus', 'Kurz-Status (Vestaboard)', '', 1);
+        $this->RegisterVariableString('LastGeminiResponse', 'Letzte KI-Antwort', '~TextBox', 2);
 
         // Gemini AI Konfiguration
         $this->RegisterPropertyString('GeminiApiKey', '');
