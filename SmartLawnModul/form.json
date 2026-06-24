@@ -63,6 +63,13 @@
             "caption": "Zonen & Hardware-Zuweisung (0 = nutzt globales Default)"
         },
         {
+            "type": "NumberSpinner",
+            "name": "HardwareGracePeriod",
+            "caption": "Cloud / Hardware Verzögerung (Grace Period in Sekunden)",
+            "minimum": 0,
+            "maximum": 300
+        },
+        {
             "type": "List",
             "name": "Zones",
             "caption": "Beregnungskreise",
