@@ -1,35 +1,28 @@
 <?php
 
+declare(strict_types=1);
+
 require_once __DIR__ . '/libs/Trait_UI.php';
 require_once __DIR__ . '/libs/Trait_Weather.php';
 require_once __DIR__ . '/libs/Trait_AI.php';
 require_once __DIR__ . '/libs/Trait_Logic.php';
 require_once __DIR__ . '/libs/Trait_Helpers.php';
 
-class SmartLawnAI extends IPSModule {
+class SmartLawnAI extends IPSModuleStrict {
     use SmartLawnAI_UI;
     use SmartLawnAI_Weather;
     use SmartLawnAI_AI;
     use SmartLawnAI_Logic;
     use SmartLawnAI_Helpers;
 
-    public function Create() {
+    public function Create(): void {
         parent::Create();
 
-        // Profile registrieren (Werte-Anzeige ohne Slider -> StepSize = 0)
-        $this->RegisterProfileFloat('SmartLawn.Percentage', 'Drops', '', ' %', 0, 100, 0, 1);
-        $this->RegisterProfileFloat('SmartLawn.MinutesFloat', 'Clock', '', ' Min', 0, 180, 0, 1);
-        $this->RegisterProfileFloat('SmartLawn.Multiplier', 'Graph', '', ' x', 0.1, 5.0, 0, 1);
-
-        // Profile registrieren (Eingabe mit Slider -> StepSize > 0)
-        $this->RegisterProfileFloat('SmartLawn.Percentage.Input', 'Drops', '', ' %', 0, 100, 5, 1);
-        $this->RegisterProfileInteger('SmartLawn.Minutes.Input', 'Clock', '', ' Min', 0, 180, 5);
-
         // Globale Defaults (jetzt als Variablen statt Properties)
-        $this->RegisterVariableFloat('DefaultZielFeuchte', 'Bewässerungs-Ziel-Feuchte', 'SmartLawn.Percentage.Input', 10);
-        $this->RegisterVariableFloat('DefaultStartSchwellwert', 'Bewässerungs-Trigger-Feuchte', 'SmartLawn.Percentage.Input', 11);
-        $this->RegisterVariableInteger('SickerpauseMinuten', 'Sickerpause', 'SmartLawn.Minutes.Input', 12);
-        $this->RegisterVariableInteger('GlobalMaxDuration', 'Maximale Bewässerungsdauer', 'SmartLawn.Minutes.Input', 13);
+        $this->RegisterVariableFloat('DefaultZielFeuchte', 'Bewässerungs-Ziel-Feuchte', '', 10);
+        $this->RegisterVariableFloat('DefaultStartSchwellwert', 'Bewässerungs-Trigger-Feuchte', '', 11);
+        $this->RegisterVariableInteger('SickerpauseMinuten', 'Sickerpause', '', 12);
+        $this->RegisterVariableInteger('GlobalMaxDuration', 'Maximale Bewässerungsdauer', '', 13);
 
         // Summenstatus Variable (fürs Webfront)
         $this->RegisterVariableString('SummaryStatus', 'Aktueller Status', '', 0);
@@ -70,7 +63,7 @@ class SmartLawnAI extends IPSModule {
         $this->RegisterTimer('GeminiRetryTimer', 0, 'SLAI_ProcessGeminiRetry($_IPS[\'TARGET\']);');
     }
 
-    public function RequestAction($Ident, $Value) {
+    public function RequestAction(string $Ident, $Value): void {
         if (in_array($Ident, ['DefaultZielFeuchte', 'DefaultStartSchwellwert', 'SickerpauseMinuten', 'GlobalMaxDuration'])) {
             SetValue($this->GetIDForIdent($Ident), $Value);
         } else if ($Ident === 'AutomaticActive') {
@@ -95,7 +88,7 @@ class SmartLawnAI extends IPSModule {
         }
     }
 
-    public function ApplyChanges() {
+    public function ApplyChanges(): void {
         parent::ApplyChanges();
         // Timer aktivieren (alle 1.000 ms = 1 Sekunde)
         // Status/Trigger Variablen
@@ -121,22 +114,58 @@ class SmartLawnAI extends IPSModule {
         $this->EnableAction('DefaultZielFeuchte');
         IPS_SetName($this->GetIDForIdent('DefaultZielFeuchte'), 'Bewässerungs-Ziel-Feuchte');
         if (GetValue($this->GetIDForIdent('DefaultZielFeuchte')) == 0) { SetValue($this->GetIDForIdent('DefaultZielFeuchte'), 55.0); }
-        if (function_exists('IPS_SetVariableCustomPresentation')) { IPS_SetVariableCustomPresentation($this->GetIDForIdent('DefaultZielFeuchte'), []); }
+        if (function_exists('IPS_SetVariableCustomPresentation')) { 
+            IPS_SetVariableCustomPresentation($this->GetIDForIdent('DefaultZielFeuchte'), [
+                'PRESENTATION' => VARIABLE_PRESENTATION_SLIDER,
+                'ICON' => 'Drops',
+                'SUFFIX' => ' %',
+                'MIN' => 0,
+                'MAX' => 100,
+                'STEP' => 5
+            ]); 
+        }
         
         $this->EnableAction('DefaultStartSchwellwert');
         IPS_SetName($this->GetIDForIdent('DefaultStartSchwellwert'), 'Bewässerungs-Trigger-Feuchte');
         if (GetValue($this->GetIDForIdent('DefaultStartSchwellwert')) == 0) { SetValue($this->GetIDForIdent('DefaultStartSchwellwert'), 20.0); }
-        if (function_exists('IPS_SetVariableCustomPresentation')) { IPS_SetVariableCustomPresentation($this->GetIDForIdent('DefaultStartSchwellwert'), []); }
+        if (function_exists('IPS_SetVariableCustomPresentation')) { 
+            IPS_SetVariableCustomPresentation($this->GetIDForIdent('DefaultStartSchwellwert'), [
+                'PRESENTATION' => VARIABLE_PRESENTATION_SLIDER,
+                'ICON' => 'Drops',
+                'SUFFIX' => ' %',
+                'MIN' => 0,
+                'MAX' => 100,
+                'STEP' => 5
+            ]); 
+        }
         
         $this->EnableAction('SickerpauseMinuten');
         IPS_SetName($this->GetIDForIdent('SickerpauseMinuten'), 'Sickerpause');
         if (GetValue($this->GetIDForIdent('SickerpauseMinuten')) == 0) { SetValue($this->GetIDForIdent('SickerpauseMinuten'), 15); }
-        if (function_exists('IPS_SetVariableCustomPresentation')) { IPS_SetVariableCustomPresentation($this->GetIDForIdent('SickerpauseMinuten'), []); }
+        if (function_exists('IPS_SetVariableCustomPresentation')) { 
+            IPS_SetVariableCustomPresentation($this->GetIDForIdent('SickerpauseMinuten'), [
+                'PRESENTATION' => VARIABLE_PRESENTATION_SLIDER,
+                'ICON' => 'Clock',
+                'SUFFIX' => ' Min',
+                'MIN' => 0,
+                'MAX' => 180,
+                'STEP' => 5
+            ]); 
+        }
         
         $this->EnableAction('GlobalMaxDuration');
         IPS_SetName($this->GetIDForIdent('GlobalMaxDuration'), 'Maximale Bewässerungsdauer');
         if (GetValue($this->GetIDForIdent('GlobalMaxDuration')) == 0) { SetValue($this->GetIDForIdent('GlobalMaxDuration'), 30); }
-        if (function_exists('IPS_SetVariableCustomPresentation')) { IPS_SetVariableCustomPresentation($this->GetIDForIdent('GlobalMaxDuration'), []); }
+        if (function_exists('IPS_SetVariableCustomPresentation')) { 
+            IPS_SetVariableCustomPresentation($this->GetIDForIdent('GlobalMaxDuration'), [
+                'PRESENTATION' => VARIABLE_PRESENTATION_SLIDER,
+                'ICON' => 'Clock',
+                'SUFFIX' => ' Min',
+                'MIN' => 0,
+                'MAX' => 180,
+                'STEP' => 5
+            ]); 
+        }
 
         $zonesJson = $this->ReadPropertyString('Zones');
         $zones = json_decode($zonesJson, true);
@@ -147,13 +176,31 @@ class SmartLawnAI extends IPSModule {
                 $name = isset($zone['GroupName']) && !empty($zone['GroupName']) ? $zone['GroupName'] : 'Zone ' . $sid;
                 if (!empty($name)) {
                     $this->RegisterVariableString('Status_' . $sid, 'Status ' . $name, '', 1);
-                    $this->RegisterVariableFloat('Effizienz_' . $sid, 'Effizienz ' . $name, 'SmartLawn.Multiplier', 2);
+                    $this->RegisterVariableFloat('Effizienz_' . $sid, 'Effizienz ' . $name, '', 2);
                     $this->EnableArchive($this->GetIDForIdent('Effizienz_' . $sid));
-                    if (function_exists('IPS_SetVariableCustomPresentation')) { IPS_SetVariableCustomPresentation($this->GetIDForIdent('Effizienz_' . $sid), []); }
-                    $this->RegisterVariableFloat('StartFeuchte_' . $sid, 'StartFeuchte ' . $name, 'SmartLawn.Percentage', 3);
-                    if (function_exists('IPS_SetVariableCustomPresentation')) { IPS_SetVariableCustomPresentation($this->GetIDForIdent('StartFeuchte_' . $sid), []); }
-                    $this->RegisterVariableFloat('Dauer_' . $sid, 'Dauer ' . $name, 'SmartLawn.MinutesFloat', 4);
-                    if (function_exists('IPS_SetVariableCustomPresentation')) { IPS_SetVariableCustomPresentation($this->GetIDForIdent('Dauer_' . $sid), []); }
+                    if (function_exists('IPS_SetVariableCustomPresentation')) { 
+                        IPS_SetVariableCustomPresentation($this->GetIDForIdent('Effizienz_' . $sid), [
+                            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+                            'ICON' => 'Graph',
+                            'SUFFIX' => ' x'
+                        ]); 
+                    }
+                    $this->RegisterVariableFloat('StartFeuchte_' . $sid, 'StartFeuchte ' . $name, '', 3);
+                    if (function_exists('IPS_SetVariableCustomPresentation')) { 
+                        IPS_SetVariableCustomPresentation($this->GetIDForIdent('StartFeuchte_' . $sid), [
+                            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+                            'ICON' => 'Drops',
+                            'SUFFIX' => ' %'
+                        ]); 
+                    }
+                    $this->RegisterVariableFloat('Dauer_' . $sid, 'Dauer ' . $name, '', 4);
+                    if (function_exists('IPS_SetVariableCustomPresentation')) { 
+                        IPS_SetVariableCustomPresentation($this->GetIDForIdent('Dauer_' . $sid), [
+                            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+                            'ICON' => 'Clock',
+                            'SUFFIX' => ' Min'
+                        ]); 
+                    }
                     if ($hasSoak) {
                         $this->RegisterVariableInteger('SickerpauseStart_' . $sid, 'SickerpauseStart ' . $name, '', 5);
                         $this->RegisterVariableInteger('WateringStart_' . $sid, 'Bewässerungsstart ' . $name, '', 6);
@@ -176,7 +223,7 @@ class SmartLawnAI extends IPSModule {
         $this->RegisterVisuMessages();
     }
 
-    public function MessageSink($TimeStamp, $SenderID, $Message, $Data) {
+    public function MessageSink(int $TimeStamp, int $SenderID, int $Message, array $Data): void {
         if ($Message == VM_UPDATE) {
             $this->UpdateVisualizationValue($this->GetFullUpdateMessage());
         }
