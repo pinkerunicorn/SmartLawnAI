@@ -59,10 +59,12 @@ class SmartLawnAI extends IPSModule {
         // Zonen (Hardware)
         $this->RegisterPropertyString('Zones', '[]');
         $this->RegisterPropertyString('Sprinklers', '[]');
+        
+        // Zeitplan (1=06:00, 2=06+18, 4=06+10+14+18)
+        $this->RegisterPropertyInteger('IrrigationSchedule', 2);
 
-        // Timer für die 60-Sekunden-Taktung
+        // Timer für die 60-Sekunden-Taktung (Zustandsmaschine)
         $this->RegisterTimer('LawnAITimer', 0, 'SLAI_ProcessLogic($_IPS[\'TARGET\']);');
-        $this->RegisterTimer('WeatherTimer', 0, 'SLAI_UpdateWeather($_IPS[\'TARGET\']);');
         
         // NEU: Gemini Retry Timer
         $this->RegisterTimer('GeminiRetryTimer', 0, 'SLAI_ProcessGeminiRetry($_IPS[\'TARGET\']);');
@@ -73,6 +75,8 @@ class SmartLawnAI extends IPSModule {
             SetValue($this->GetIDForIdent($Ident), $Value);
         } else if ($Ident === 'AutomaticActive') {
             SetValue($this->GetIDForIdent($Ident), $Value);
+            $this->MaintainScheduleEvents($Value);
+            
             if (!$Value) {
                 $this->SetTimerInterval('LawnAITimer', 0);
                 $this->resetAllZones(false);
@@ -101,8 +105,10 @@ class SmartLawnAI extends IPSModule {
         if (!IPS_VariableExists($this->GetIDForIdent('AutomaticActive')) || (GetValue($this->GetIDForIdent('AutomaticActive')) === false && IPS_GetVariable($this->GetIDForIdent('AutomaticActive'))['VariableUpdated'] == 0)) {
             SetValue($this->GetIDForIdent('AutomaticActive'), true); // Default true
             $this->SetTimerInterval('LawnAITimer', 1000);
+            $this->MaintainScheduleEvents(true);
         } else {
             $active = GetValue($this->GetIDForIdent('AutomaticActive'));
+            $this->MaintainScheduleEvents($active);
             if ($active) {
                 $this->SetTimerInterval('LawnAITimer', 1000);
             } else {

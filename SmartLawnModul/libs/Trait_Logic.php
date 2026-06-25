@@ -2,6 +2,63 @@
 
 trait SmartLawnAI_Logic {
 
+    public function ScheduledEvaluation() {
+        $active = GetValue($this->GetIDForIdent('AutomaticActive'));
+        if (!$active) return;
+        
+        $zonesJson = $this->ReadPropertyString('Zones');
+        $zones = json_decode($zonesJson, true);
+        if (!is_array($zones) || empty($zones)) return;
+        
+        $sprinklersJson = $this->ReadPropertyString('Sprinklers');
+        $sprinklers = json_decode($sprinklersJson, true);
+        if (!is_array($sprinklers)) $sprinklers = [];
+        
+        // Prüfen, ob bereits ein Ventil aktiv ist
+        foreach ($zones as $zone) {
+            $status = GetValue($this->GetIDForIdent('Status_' . $zone['SensorID']));
+            if ($status === 'WATERING' || $status === 'QUEUED') {
+                $this->LogAndDebug('Planer', 'Zyklusprüfung übersprungen: Ein Ventil ist bereits aktiv oder in Warteschlange.', 0);
+                return;
+            }
+        }
+
+        $defaultStart = GetValue($this->GetIDForIdent('DefaultStartSchwellwert'));
+        $needsWater = false;
+        foreach ($zones as $zone) {
+            $aktuelleFeuchte = GetValue($zone['SensorID']);
+            if ($aktuelleFeuchte <= $defaultStart) {
+                $needsWater = true;
+                break;
+            }
+        }
+
+        if (!$needsWater) {
+            $this->LogAndDebug('Planer', 'Zyklusprüfung: Boden ist ausreichend feucht. Keine Bewässerung nötig.', 0);
+            // Wir setzen den Zeitstempel für das Webfront neu, um zu zeigen, dass wir geprüft haben
+            $this->SetBuffer('LastPlanCalculation', (string)time());
+            $this->ProcessLogic(); // Update Heartbeat
+            return;
+        }
+
+        $this->LogAndDebug('Planer', 'Zyklusprüfung: Boden ist trocken. Hole Wetter und berechne Laufzeiten...', 0);
+        $this->UpdateWeather();
+        
+        $airTempID = $this->ReadPropertyInteger('GlobalAirTempID');
+        $humidityID = $this->ReadPropertyInteger('GlobalHumidityID');
+        $illuminanceID = $this->ReadPropertyInteger('GlobalIlluminanceID');
+        $t = ($airTempID > 0) ? (float)GetValue($airTempID) : 20.0;
+        $rh = ($humidityID > 0) ? (float)GetValue($humidityID) : 50.0;
+        $lux = ($illuminanceID > 0) ? (float)GetValue($illuminanceID) : 0.0;
+        $es = 0.6108 * exp((17.27 * $t) / ($t + 237.3));
+        $vpd = $es * (1 - ($rh / 100.0));
+
+        $this->SetBuffer('LastPlanCalculation', (string)time());
+        $this->CalculateAndApplyPlan($zones, $sprinklers, false, $vpd, $lux);
+        
+        $this->ProcessLogic(); // Update Heartbeat und Starte Zonen-Durchlauf
+    }
+
     public function ProcessLogic() {
         $defaultZiel  = GetValue($this->GetIDForIdent('DefaultZielFeuchte'));
         $defaultStart = GetValue($this->GetIDForIdent('DefaultStartSchwellwert'));
@@ -43,7 +100,7 @@ trait SmartLawnAI_Logic {
         $es = 0.6108 * exp((17.27 * $t) / ($t + 237.3));
         $vpd = $es * (1 - ($rh / 100.0));
 
-        // 3. Prüfen, ob ein neuer Bewässerungszyklus gestartet werden muss
+        // 3. Laufzeit-Steuerung des Timers
         $active = GetValue($this->GetIDForIdent('AutomaticActive'));
         if ($active) {
             $this->SetTimerInterval('LawnAITimer', 60000);
@@ -51,56 +108,17 @@ trait SmartLawnAI_Logic {
             $this->SetTimerInterval('LawnAITimer', 0);
         }
 
-        // Wetter-Timer (alle 4 Stunden = 14400000 ms), wenn Koordinaten vorhanden
-        $lat = (float)$this->ReadPropertyFloat('Latitude');
-        $lon = (float)$this->ReadPropertyFloat('Longitude');
-        if ($lat != 0.0 || $lon != 0.0) {
-            $this->SetTimerInterval('WeatherTimer', 14400000);
-            // Direkt einmalig abrufen, falls noch keine Daten vorliegen
-            $this->UpdateWeather();
-        } else {
-            $this->SetTimerInterval('WeatherTimer', 0);
-        }
-
+        // Manueller Start
         $isManualStart = ($this->GetBuffer('CalculatePlanPending') === 'true');
         if ($isManualStart) {
             $this->SetBuffer('CalculatePlanPending', '');
-        }
-
-        $newCycleTriggered = false;
-        $letzteUeberpruefung = (int)$this->GetBuffer('LastPlanCalculation');
-        
-        if ($isManualStart) {
-            $newCycleTriggered = true;
-            $this->SetBuffer('LastPlanCalculation', (string)time());
-        } else if ($active && !$einVentilIstAktiv && !$anyQueued) {
-            // Nur alle 6 Stunden den Bewässerungsbedarf prüfen
-            if ($letzteUeberpruefung === 0 || (time() - $letzteUeberpruefung) > (6 * 3600)) {
-                $this->SetBuffer('LastPlanCalculation', (string)time());
-                
-                $needsWater = false;
-                foreach ($zones as $zone) {
-                    $startWert = $defaultStart;
-                    $aktuelleFeuchte = GetValue($zone['SensorID']);
-                    if ($aktuelleFeuchte <= $startWert) {
-                        $needsWater = true;
-                        break;
-                    }
-                }
-                
-                if ($needsWater) {
-                    $newCycleTriggered = true;
-                } else {
-                    $this->LogAndDebug('Planer', 'Reguläre Prüfung: Boden ist ausreichend feucht. Kein Bewässerungszyklus nötig.', 0);
-                }
-            }
-        }
-
-        if ($newCycleTriggered) {
-            $this->LogAndDebug('Planer', 'Neuer Bewässerungszyklus initiiert. Berechne Laufzeiten...', 0);
-            $this->CalculateAndApplyPlan($zones, $sprinklers, $isManualStart, $vpd, $lux);
+            $this->LogAndDebug('Planer', 'Neuer Bewässerungszyklus (manuell) initiiert. Berechne Laufzeiten...', 0);
             
-            // Status nach Berechnungsdurchlauf neu einlesen
+            // Wenn keine Koordinaten, UpdateWeather hat keinen Effekt, aber sicherheitshalber aufrufen
+            $this->UpdateWeather();
+            
+            $this->CalculateAndApplyPlan($zones, $sprinklers, true, $vpd, $lux);
+            
             $einVentilIstAktiv = false;
             foreach ($zones as $zone) {
                 $status = GetValue($this->GetIDForIdent('Status_' . $zone['SensorID']));
@@ -310,14 +328,8 @@ trait SmartLawnAI_Logic {
                 strpos($baseStatus, 'Nächste Prüfung:') !== false ||
                 empty($baseStatus)) {
                 
-                $letzteUeberpruefung = (int)$this->GetBuffer('LastPlanCalculation');
-                $naechsteUeberpruefung = $letzteUeberpruefung + (6 * 3600);
-                
-                if ($letzteUeberpruefung === 0 || $naechsteUeberpruefung < time()) {
-                    $baseStatus = 'Nächste Prüfung: In Kürze';
-                } else {
-                    $baseStatus = 'Nächste Prüfung: ' . date('H:i', $naechsteUeberpruefung) . ' Uhr';
-                }
+                $naechsteUeberpruefung = $this->GetNextScheduleTime();
+                $baseStatus = 'Nächste Prüfung: ' . date('H:i', $naechsteUeberpruefung) . ' Uhr';
             }
             
             $this->SetSummaryStatus($baseStatus . ' (' . date('H:i') . ')');
@@ -657,5 +669,30 @@ trait SmartLawnAI_Logic {
             }
         }
         return true;
+    }
+
+    private function GetNextScheduleTime() {
+        $schedule = $this->ReadPropertyInteger('IrrigationSchedule');
+        $now = time();
+        $today = strtotime('today');
+        
+        $times = [];
+        if ($schedule === 1) {
+            $times = [6];
+        } else if ($schedule === 2) {
+            $times = [6, 18];
+        } else if ($schedule === 4) {
+            $times = [6, 10, 14, 18];
+        } else {
+            $times = [6, 18];
+        }
+        
+        foreach ($times as $hour) {
+            $t = $today + ($hour * 3600);
+            if ($t > $now) return $t;
+        }
+        
+        // Next day first time
+        return $today + 86400 + ($times[0] * 3600);
     }
 }

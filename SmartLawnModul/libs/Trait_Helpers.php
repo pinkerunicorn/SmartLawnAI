@@ -93,4 +93,41 @@ trait SmartLawnAI_Helpers {
             }
         }
     }
+
+    private function MaintainScheduleEvents(bool $active) {
+        $schedule = $this->ReadPropertyInteger('IrrigationSchedule');
+        
+        $times = [];
+        if ($schedule === 1) {
+            $times = [6];
+        } else if ($schedule === 2) {
+            $times = [6, 18];
+        } else if ($schedule === 4) {
+            $times = [6, 10, 14, 18];
+        } else {
+            $times = [6, 18];
+        }
+
+        for ($i = 0; $i <= 23; $i++) {
+            $ident = 'SLAI_ScheduleEvent_' . $i;
+            $eid = @$this->GetIDForIdent($ident);
+            
+            if ($active && in_array($i, $times)) {
+                if ($eid === false) {
+                    $eid = IPS_CreateEvent(1); // Zyklisches Event
+                    IPS_SetParent($eid, $this->InstanceID);
+                    IPS_SetName($eid, sprintf('Zeitplan Prüfung (%02d:00)', $i));
+                    IPS_SetIdent($eid, $ident);
+                    IPS_SetEventScript($eid, "SLAI_ScheduledEvaluation(\$_IPS['TARGET']);");
+                    IPS_SetEventCyclic($eid, 0, 0, 0, 0, 0, 0); // Täglich
+                    IPS_SetEventCyclicTimeFrom($eid, $i, 0, 0);
+                }
+                IPS_SetEventActive($eid, true);
+            } else {
+                if ($eid !== false) {
+                    IPS_DeleteEvent($eid);
+                }
+            }
+        }
+    }
 }
