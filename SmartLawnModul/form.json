@@ -30,7 +30,9 @@
             "options": [
                 { "caption": "1x täglich (06:00)", "value": 1 },
                 { "caption": "2x täglich (06:00, 18:00)", "value": 2 },
-                { "caption": "4x täglich (06:00, 10:00, 14:00, 18:00)", "value": 4 }
+                { "caption": "4x täglich (alle 6 Stunden)", "value": 4 },
+                { "caption": "6x täglich (alle 4 Stunden)", "value": 6 },
+                { "caption": "8x täglich (alle 3 Stunden)", "value": 8 }
             ]
         },
         {

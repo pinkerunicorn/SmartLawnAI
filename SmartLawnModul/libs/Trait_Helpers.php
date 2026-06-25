@@ -103,7 +103,11 @@ trait SmartLawnAI_Helpers {
         } else if ($schedule === 2) {
             $times = [6, 18];
         } else if ($schedule === 4) {
-            $times = [6, 10, 14, 18];
+            $times = [0, 6, 12, 18];
+        } else if ($schedule === 6) {
+            $times = [0, 4, 8, 12, 16, 20];
+        } else if ($schedule === 8) {
+            $times = [0, 3, 6, 9, 12, 15, 18, 21];
         } else {
             $times = [6, 18];
         }
