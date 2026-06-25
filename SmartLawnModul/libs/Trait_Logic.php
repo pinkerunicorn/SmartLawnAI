@@ -318,16 +318,20 @@ trait SmartLawnAI_Logic {
         // 5. Heartbeat für die Webfront Anzeige (Zeitstempel aktualisieren)
         $automaticActive = GetValue($this->GetIDForIdent('AutomaticActive'));
         if ($automaticActive) {
+            $einVentilIstAktivOderFehler = false;
+            foreach ($zones as $zone) {
+                $status = GetValue($this->GetIDForIdent('Status_' . $zone['SensorID']));
+                if (in_array($status, ['WATERING', 'QUEUED', 'WAITING_FOR_RESULT', 'HARDWARE_FEHLER'])) {
+                    $einVentilIstAktivOderFehler = true;
+                    break;
+                }
+            }
+
             $currentStatus = GetValue($this->GetIDForIdent('SummaryStatus'));
             // Entferne alten Zeitstempel, falls vorhanden
             $baseStatus = preg_replace('/ \(\d{2}:\d{2}\)$/', '', $currentStatus);
             
-            // Textvereinheitlichung für den normalen Leerlauf
-            if (strpos($baseStatus, 'Standby') !== false || 
-                $baseStatus === 'Automatik aktiviert (überwache Sensoren...)' ||
-                strpos($baseStatus, 'Nächste Prüfung:') !== false ||
-                empty($baseStatus)) {
-                
+            if (!$einVentilIstAktivOderFehler && strpos($baseStatus, 'Berechne') === false && strpos($baseStatus, 'Manueller Start') === false) {
                 $naechsteUeberpruefung = $this->GetNextScheduleTime();
                 $baseStatus = 'Nächste Prüfung: ' . date('H:i', $naechsteUeberpruefung) . ' Uhr';
             }
