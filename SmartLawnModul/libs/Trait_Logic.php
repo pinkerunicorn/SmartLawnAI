@@ -2,7 +2,7 @@
 
 trait SmartLawnAI_Logic {
 
-    public function ScheduledEvaluation() {
+    public function ScheduledEvaluation(): void {
         $active = GetValue($this->GetIDForIdent('AutomaticActive'));
         if (!$active) return;
         
@@ -59,7 +59,7 @@ trait SmartLawnAI_Logic {
         $this->ProcessLogic(); // Update Heartbeat und Starte Zonen-Durchlauf
     }
 
-    public function ProcessLogic() {
+    public function ProcessLogic(): void {
         $defaultZiel  = GetValue($this->GetIDForIdent('DefaultZielFeuchte'));
         $defaultStart = GetValue($this->GetIDForIdent('DefaultStartSchwellwert'));
         

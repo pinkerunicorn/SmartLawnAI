@@ -27,7 +27,7 @@ trait SmartLawnAI_UI {
         }
     }
 
-    public function GetVisualizationTile() {
+    public function GetVisualizationTile(): string {
         $initialHandling = '<script>handleMessage(' . json_encode($this->GetFullUpdateMessage()) . ')</script>';
         
         $htmlFile = __DIR__ . '/../module.html';
@@ -99,7 +99,7 @@ trait SmartLawnAI_UI {
         return json_encode($config);
     }
 
-    public function UIRequest(string $Action, string $Payload) {
+    public function UIRequest(string $Action, string $Payload): void {
         switch ($Action) {
             case 'TOGGLE_AUTOMATIC':
                 $id = $this->GetIDForIdent('AutomaticActive');

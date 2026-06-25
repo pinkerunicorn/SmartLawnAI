@@ -2,7 +2,7 @@
 
 trait SmartLawnAI_Weather {
 
-    public function UpdateWeather() {
+    public function UpdateWeather(): void {
         $lat = (float)$this->ReadPropertyFloat('Latitude');
         $lon = (float)$this->ReadPropertyFloat('Longitude');
         if ($lat == 0.0 && $lon == 0.0) {

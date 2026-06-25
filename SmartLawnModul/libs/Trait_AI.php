@@ -2,7 +2,7 @@
 
 trait SmartLawnAI_AI {
 
-    public function ProcessGeminiRetry() {
+    public function ProcessGeminiRetry(): void {
         $queueStr = $this->GetBuffer('GeminiRetryQueue');
         if (empty($queueStr)) {
             $this->SetTimerInterval('GeminiRetryTimer', 0);
@@ -36,7 +36,7 @@ trait SmartLawnAI_AI {
         );
     }
 
-    public function EvaluateEfficiencyWithGemini($zoneID, $startFeuchte, $aktuelleFeuchte, $dauer, $vpd, $lux, $retryCount = 0) {
+    public function EvaluateEfficiencyWithGemini(int $zoneID, float $startFeuchte, float $aktuelleFeuchte, float $dauer, float $vpd, float $lux, int $retryCount = 0): void {
         $apiKey = trim($this->ReadPropertyString('GeminiApiKey'));
         $model = trim($this->ReadPropertyString('GeminiModel'));
         if (empty($apiKey)) {
