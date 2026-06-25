@@ -34,7 +34,7 @@ class SmartLawnAI extends IPSModule {
         // Summenstatus Variable (fürs Webfront)
         $this->RegisterVariableString('SummaryStatus', 'Aktueller Status', '', 0);
         $this->RegisterVariableString('VestaboardStatus', 'Kurz-Status (Vestaboard)', '', 1);
-        $this->RegisterVariableString('LastGeminiResponse', 'Letzte KI-Antwort', '~TextBox', 2);
+        $this->RegisterVariableString('LastGeminiResponse', 'Letzte KI-Antwort', '', 2);
 
         // Gemini AI Konfiguration
         $this->RegisterPropertyString('GeminiApiKey', '');
@@ -52,9 +52,9 @@ class SmartLawnAI extends IPSModule {
         
         $this->SetVisualizationType(1);
 
-        // Wetter-Variablen
-        $this->RegisterVariableFloat('ForecastRainToday', 'Regen Heute', '~Rainfall', 5);
-        $this->RegisterVariableFloat('ForecastRainTomorrow', 'Regen Morgen', '~Rainfall', 6);
+        // Wetter/Regen
+        $this->RegisterVariableFloat('ForecastRainToday', 'Regen Heute', '', 5);
+        $this->RegisterVariableFloat('ForecastRainTomorrow', 'Regen Morgen', '', 6);
 
         // Zonen (Hardware)
         $this->RegisterPropertyString('Zones', '[]');
@@ -98,9 +98,8 @@ class SmartLawnAI extends IPSModule {
     public function ApplyChanges() {
         parent::ApplyChanges();
         // Timer aktivieren (alle 1.000 ms = 1 Sekunde)
-        $this->SetTimerInterval('LawnAITimer', 1000);
-
-        $this->RegisterVariableBoolean('AutomaticActive', 'Automatik aktiv', '~Switch', 0);
+        // Status/Trigger Variablen
+        $this->RegisterVariableBoolean('AutomaticActive', 'Automatik aktiv', '', 0);
         $this->EnableAction('AutomaticActive');
         if (!IPS_VariableExists($this->GetIDForIdent('AutomaticActive')) || (GetValue($this->GetIDForIdent('AutomaticActive')) === false && IPS_GetVariable($this->GetIDForIdent('AutomaticActive'))['VariableUpdated'] == 0)) {
             SetValue($this->GetIDForIdent('AutomaticActive'), true); // Default true
@@ -115,7 +114,7 @@ class SmartLawnAI extends IPSModule {
                 $this->SetTimerInterval('LawnAITimer', 0);
             }
         }
-        $this->RegisterVariableBoolean('ForceStart', 'Manuell Starten', '~Switch', 0);
+        $this->RegisterVariableBoolean('ForceStart', 'Manuell Starten', '', 0);
         $this->EnableAction('ForceStart');
         SetValue($this->GetIDForIdent('ForceStart'), false);
 
@@ -144,6 +143,7 @@ class SmartLawnAI extends IPSModule {
         if (is_array($zones)) {
             foreach ($zones as $zone) {
                 $sid = $zone['SensorID'];
+                $hasSoak = isset($zone['SoakEnabled']) ? $zone['SoakEnabled'] : false;
                 $name = isset($zone['GroupName']) && !empty($zone['GroupName']) ? $zone['GroupName'] : 'Zone ' . $sid;
                 if (!empty($name)) {
                     $this->RegisterVariableString('Status_' . $sid, 'Status ' . $name, '', 1);
@@ -154,8 +154,10 @@ class SmartLawnAI extends IPSModule {
                     if (function_exists('IPS_SetVariableCustomPresentation')) { IPS_SetVariableCustomPresentation($this->GetIDForIdent('StartFeuchte_' . $sid), []); }
                     $this->RegisterVariableFloat('Dauer_' . $sid, 'Dauer ' . $name, 'SmartLawn.MinutesFloat', 4);
                     if (function_exists('IPS_SetVariableCustomPresentation')) { IPS_SetVariableCustomPresentation($this->GetIDForIdent('Dauer_' . $sid), []); }
-                    $this->RegisterVariableInteger('SickerpauseStart_' . $sid, 'SickerpauseStart ' . $name, '~UnixTimestamp', 5);
-                    $this->RegisterVariableInteger('WateringStart_' . $sid, 'Bewässerungsstart ' . $name, '~UnixTimestamp', 6);
+                    if ($hasSoak) {
+                        $this->RegisterVariableInteger('SickerpauseStart_' . $sid, 'SickerpauseStart ' . $name, '', 5);
+                        $this->RegisterVariableInteger('WateringStart_' . $sid, 'Bewässerungsstart ' . $name, '', 6);
+                    }
                     $this->RegisterVariableInteger('CurrentSprinklerIndex_' . $sid, 'Aktueller Sprinkler Index ' . $name, '', 7);
                     IPS_SetHidden($this->GetIDForIdent('CurrentSprinklerIndex_' . $sid), true);
 
