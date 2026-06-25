@@ -3,6 +3,7 @@
     "name": "SmartLawn AI",
     "type": 3,
     "vendor": "Florian Graßinger",
+    "url": "https://github.com/pinkerunicorn/SmartLawnAI",
     "aliases": ["SmartLawnAI"],
     "parentRequirements": [],
     "childRequirements": [],
