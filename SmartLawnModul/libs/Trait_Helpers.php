@@ -32,7 +32,13 @@ trait SmartLawnAI_Helpers {
         if (strpos($longStatus, 'Sickerpause:') !== false) {
             return str_replace('Sickerpause: ', 'Pause ', $longStatus);
         }
-        if (strpos($longStatus, 'Standby') !== false || strpos($longStatus, 'Nächste Prüfung:') !== false) {
+        if (strpos($longStatus, 'Nächste Prüfung: In Kürze') !== false) {
+            return 'Prüfung in Kürze';
+        }
+        if (preg_match('/Nächste Prüfung: (\d{2}:\d{2})/', $longStatus, $m)) {
+            return 'Prüfung ' . $m[1];
+        }
+        if (strpos($longStatus, 'Standby') !== false) {
             return 'Standby';
         }
         if (strpos($longStatus, 'Berechne') !== false) return 'KI rechnet';

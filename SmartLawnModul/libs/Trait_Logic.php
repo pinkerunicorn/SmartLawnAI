@@ -336,7 +336,7 @@ trait SmartLawnAI_Logic {
                 $baseStatus = 'Nächste Prüfung: ' . date('H:i', $naechsteUeberpruefung) . ' Uhr';
             }
             
-            $this->SetSummaryStatus($baseStatus . ' (' . date('H:i') . ')');
+            $this->SetSummaryStatus($baseStatus);
         }
 
         // Live-Update der Visualisierung pushen
