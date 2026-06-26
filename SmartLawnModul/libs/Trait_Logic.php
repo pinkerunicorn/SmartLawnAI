@@ -479,20 +479,33 @@ trait SmartLawnAI_Logic {
         $this->LogAndDebug('Planer', 'Gemini Anfrage gesendet (Modell: ' . $model . ')...', 0);
         $this->LogAndDebug('Planer Prompt', $userPrompt, 0);
 
-        $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Content-Type: application/json'
-        ]);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 45);
+        $script = '
+            $ch = curl_init("' . $url . '");
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, ' . var_export(json_encode($payload), true) . ');
+            curl_setopt($ch, CURLOPT_HTTPHEADER, ["Content-Type: application/json"]);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 45);
+            
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $curlErr = curl_error($ch);
+            curl_close($ch);
+            
+            SLAI_ProcessGeminiPlanResponse(' . $this->InstanceID . ', $response, $httpCode, $curlErr, ' . ($isManualStart ? 'true' : 'false') . ');
+        ';
+        IPS_RunScriptText($script);
+    }
 
-        $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $curlErr = curl_error($ch);
-        curl_close($ch);
+    public function ProcessGeminiPlanResponse($response, int $httpCode, string $curlErr, bool $isManualStart): void {
+        $zonesJson = $this->ReadPropertyString('Zones');
+        $zones = json_decode($zonesJson, true);
+        if (!is_array($zones)) $zones = [];
+        
+        $sprinklersJson = $this->ReadPropertyString('Sprinklers');
+        $sprinklers = json_decode($sprinklersJson, true);
+        if (!is_array($sprinklers)) $sprinklers = [];
 
         if ($response === false || $httpCode !== 200) {
             $this->LogAndDebug('Planer Fehler', 'Gemini API call failed. HTTP Code: ' . $httpCode . ', Curl-Fehler: ' . $curlErr . ', Response: ' . $response, 0);

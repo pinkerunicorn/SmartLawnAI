@@ -105,15 +105,35 @@ trait SmartLawnAI_AI {
         ];
 
         $jsonPayload = json_encode($payload);
-        $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonPayload);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 15);
-        $result = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
+        
+        $script = '
+            $ch = curl_init("' . $url . '");
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, ' . var_export($jsonPayload, true) . ');
+            curl_setopt($ch, CURLOPT_HTTPHEADER, ["Content-Type: application/json"]);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 15);
+            $result = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+            
+            SLAI_ProcessGeminiResponse(' . $this->InstanceID . ', $result, $httpCode, ' . $zoneID . ', ' . $startFeuchte . ', ' . $aktuelleFeuchte . ', ' . $dauer . ', ' . $vpd . ', ' . $lux . ', ' . $retryCount . ');
+        ';
+        IPS_RunScriptText($script);
+    }
+
+    public function ProcessGeminiResponse($result, int $httpCode, int $zoneID, float $startFeuchte, float $aktuelleFeuchte, float $dauer, float $vpd, float $lux, int $retryCount): void {
+        $zoneName = 'Zone ' . $zoneID;
+        $zonesJson = $this->ReadPropertyString('Zones');
+        $zones = json_decode($zonesJson, true);
+        if (is_array($zones)) {
+            foreach ($zones as $z) {
+                if ($z['SensorID'] == $zoneID && !empty($z['GroupName'])) {
+                    $zoneName = $z['GroupName'];
+                    break;
+                }
+            }
+        }
 
         if ($httpCode === 200 && $result) {
             $data = json_decode($result, true);
@@ -150,7 +170,6 @@ trait SmartLawnAI_AI {
             ];
             
             $this->SetBuffer('GeminiRetryQueue', json_encode($queue));
-            // Starte Timer für Retry (in 5 Minuten = 300000 ms)
             $this->SetTimerInterval('GeminiRetryTimer', 300000);
         } else {
             $this->LogAndDebug('Weather', "Gemini Effizienz-Lernen für Zone $zoneID nach 3 Versuchen endgültig fehlgeschlagen (HTTP $httpCode).", 0);
