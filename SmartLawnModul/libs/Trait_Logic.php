@@ -172,7 +172,6 @@ trait SmartLawnAI_Logic {
             if ($hardwareFehler) {
                 IPS_LogMessage('SmartLawnAI', 'HARDWARE_FEHLER für Zone ' . $zone['SensorID'] . '! ' . $fehlerhafterSprinklerName . ' meldet einen Defekt.');
                 $this->SetValue('Status_' . $zone['SensorID'], 'HARDWARE_FEHLER');
-                $this->SetSummaryStatus('HARDWARE-FEHLER: ' . $zoneName . ' (' . $fehlerhafterSprinklerName . ')');
                 continue; 
             }
 
@@ -198,7 +197,6 @@ trait SmartLawnAI_Logic {
                             IPS_LogMessage('SmartLawnAI', 'Bewässerung für Zone ' . $zone['SensorID'] . ' wird gestartet!');
                             $this->SetValue('Status_' . $zone['SensorID'], 'WATERING');
                             $this->SetValue('WateringStart_' . $zone['SensorID'], time());
-                            $this->SetSummaryStatus('Bewässere: ' . $zoneName);
                             
                             // Berechnete Laufzeit aus Variable lesen
                             $berechneteMinuten = (int)GetValue($this->GetIDForIdent('Dauer_' . $zone['SensorID']));
@@ -286,11 +284,7 @@ trait SmartLawnAI_Logic {
                             $this->SetValue('Status_' . $zone['SensorID'], 'WAITING_FOR_RESULT');
                             $this->SetValue('SickerpauseStart_' . $zone['SensorID'], time());
                             $this->LogAndDebug('Sequencer', 'Alle Sprinkler fertig. Sickerpause gestartet.', 0);
-                            $this->SetSummaryStatus('Sickerpause: ' . $zoneName);
                         }
-                    } elseif ($aktuellerStatus === 'WATERING') {
-                        // Aktualisiere den Text mit der verbleibenden Zeit während der Bewässerung
-                        $this->SetSummaryStatus('Bewässert: ' . $zoneName . ' (' . $currentSprinklerName . ')' . $remainingText);
                     }
                     break;
 
@@ -309,7 +303,6 @@ trait SmartLawnAI_Logic {
                         }
 
                         $this->SetValue('Status_' . $zone['SensorID'], 'IDLE');
-                        $this->SetSummaryStatus('Standby (Bewässerung abgeschlossen)');
                     }
                     break;
             }
@@ -318,25 +311,62 @@ trait SmartLawnAI_Logic {
         // 5. Heartbeat für die Webfront Anzeige (Zeitstempel aktualisieren)
         $automaticActive = GetValue($this->GetIDForIdent('AutomaticActive'));
         if ($automaticActive) {
-            $einVentilIstAktivOderFehler = false;
+            $currentStatus = GetValue($this->GetIDForIdent('SummaryStatus'));
+            $baseStatus = preg_replace('/ \(\d{2}:\d{2}\)$/', '', $currentStatus);
+
+            $hwZone = null;
+            $waterZone = null;
+            $sickerZone = null;
+            $queuedZone = null;
+            
             foreach ($zones as $zone) {
                 $status = GetValue($this->GetIDForIdent('Status_' . $zone['SensorID']));
-                if (in_array($status, ['WATERING', 'QUEUED', 'WAITING_FOR_RESULT', 'HARDWARE_FEHLER'])) {
-                    $einVentilIstAktivOderFehler = true;
-                    break;
-                }
+                if ($status === 'HARDWARE_FEHLER') $hwZone = $zone;
+                elseif ($status === 'WATERING') $waterZone = $zone;
+                elseif ($status === 'WAITING_FOR_RESULT') $sickerZone = $zone;
+                elseif ($status === 'QUEUED') $queuedZone = $zone;
             }
 
-            $currentStatus = GetValue($this->GetIDForIdent('SummaryStatus'));
-            // Entferne alten Zeitstempel, falls vorhanden
-            $baseStatus = preg_replace('/ \(\d{2}:\d{2}\)$/', '', $currentStatus);
-            
-            if (!$einVentilIstAktivOderFehler && strpos($baseStatus, 'Berechne') === false && strpos($baseStatus, 'Manueller Start') === false) {
+            $einVentilIstAktivOderFehler = ($hwZone || $waterZone || $sickerZone || $queuedZone);
+
+            if ($hwZone) {
+                $zoneName = isset($hwZone['GroupName']) && !empty($hwZone['GroupName']) ? $hwZone['GroupName'] : 'Zone ' . $hwZone['SensorID'];
+                $baseStatus = 'HARDWARE-FEHLER: ' . $zoneName;
+            } elseif ($waterZone) {
+                $zoneName = isset($waterZone['GroupName']) && !empty($waterZone['GroupName']) ? $waterZone['GroupName'] : 'Zone ' . $waterZone['SensorID'];
+                
+                $zSprinklers = [];
+                foreach ($sprinklers as $s) {
+                    if ($s['ZoneName'] === $zoneName) $zSprinklers[] = $s;
+                }
+                $cIdx = (int)GetValue($this->GetIDForIdent('CurrentSprinklerIndex_' . $waterZone['SensorID']));
+                if (!isset($zSprinklers[$cIdx])) $cIdx = 0;
+                
+                $remainingText = '';
+                $cName = 'Sprinkler';
+                if (isset($zSprinklers[$cIdx])) {
+                    $cSpr = $zSprinklers[$cIdx];
+                    $cName = isset($cSpr['SprinklerName']) && !empty($cSpr['SprinklerName']) ? $cSpr['SprinklerName'] : 'Sprinkler ' . $cSpr['ValveID'];
+                    
+                    $rem = 0;
+                    if (isset($cSpr['RemainingSecondsID']) && $cSpr['RemainingSecondsID'] > 0) {
+                        $rem = (int)GetValue($cSpr['RemainingSecondsID']);
+                    } else {
+                        $tID = $this->GetIDForIdent('ValveSequenceTimer');
+                        if (IPS_GetTimerInterval($tID) > 0) $rem = max(0, IPS_GetTimerInterval($tID) - time());
+                    }
+                    if ($rem > 0) $remainingText = ' (noch ' . ceil($rem / 60) . ' Min)';
+                }
+                $baseStatus = 'Bewässert: ' . $zoneName . ' (' . $cName . ')' . $remainingText;
+            } elseif ($sickerZone) {
+                $zoneName = isset($sickerZone['GroupName']) && !empty($sickerZone['GroupName']) ? $sickerZone['GroupName'] : 'Zone ' . $sickerZone['SensorID'];
+                $baseStatus = 'Sickerpause: ' . $zoneName;
+            } elseif (!$einVentilIstAktivOderFehler && strpos($baseStatus, 'Berechne') === false && strpos($baseStatus, 'Manueller Start') === false) {
                 $naechsteUeberpruefung = $this->GetNextScheduleTime();
                 $baseStatus = 'Nächste Prüfung: ' . date('H:i', $naechsteUeberpruefung) . ' Uhr';
             }
             
-            $this->SetSummaryStatus($baseStatus);
+            $this->SetSummaryStatus($baseStatus . ' (' . date('H:i') . ')');
         }
 
         // Live-Update der Visualisierung pushen
