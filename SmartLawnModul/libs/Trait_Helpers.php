@@ -113,4 +113,46 @@ trait SmartLawnAI_Helpers {
             }
         }
     }
+
+    public function AddIrrigationLogEntry(string $zoneName, float $dauer, float $startFeuchte, float $endFeuchte, float $vpd, float $lux, string $aiResult) {
+        $logVarID = @$this->GetIDForIdent('IrrigationLog');
+        if ($logVarID === false) return;
+
+        $currentLog = GetValue($logVarID);
+        
+        $date = date('d.m.Y H:i');
+        
+        // Neues Styling passend zu IP-Symcon 8/9
+        $newEntry = "<div style='margin-bottom: 10px; padding: 10px; border-left: 4px solid #4CAF50; background: rgba(76, 175, 80, 0.1); border-radius: 4px;'>";
+        $newEntry .= "<div style='font-weight: bold; font-size: 1.1em; margin-bottom: 5px;'>{$zoneName} <span style='font-weight: normal; font-size: 0.8em; color: #888; float: right;'>{$date}</span></div>";
+        
+        $newEntry .= "<div style='display: grid; grid-template-columns: 1fr 1fr; gap: 5px; font-size: 0.9em;'>";
+        $newEntry .= "<div><span style='color: #888;'>Dauer:</span> {$dauer} Min</div>";
+        $newEntry .= "<div><span style='color: #888;'>VPD:</span> " . number_format($vpd, 2) . " kPa</div>";
+        $newEntry .= "<div><span style='color: #888;'>Feuchte:</span> {$startFeuchte}% &rarr; {$endFeuchte}%</div>";
+        $newEntry .= "<div><span style='color: #888;'>Licht:</span> {$lux} Lux</div>";
+        $newEntry .= "</div>";
+        
+        if (!empty($aiResult)) {
+            $newEntry .= "<div style='margin-top: 8px; font-size: 0.85em; font-style: italic; color: #aaa; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 5px;'>";
+            $newEntry .= "🤖 {$aiResult}";
+            $newEntry .= "</div>";
+        }
+        $newEntry .= "</div>";
+
+        // Füge neuen Eintrag oben an
+        $updatedLog = $newEntry . $currentLog;
+        
+        // Log-Größe begrenzen (z.B. auf die letzten 20 Einträge)
+        // Wir zählen die <div> Wrapper
+        $entries = explode("<div style='margin-bottom: 10px;", $updatedLog);
+        if (count($entries) > 21) { // 21 weil explode ein leeres erstes Element erzeugt
+            $updatedLog = "";
+            for ($i = 1; $i <= 20; $i++) {
+                $updatedLog .= "<div style='margin-bottom: 10px;" . $entries[$i];
+            }
+        }
+
+        SetValue($logVarID, $updatedLog);
+    }
 }

@@ -28,6 +28,8 @@ class SmartLawnAI extends IPSModuleStrict {
         $this->RegisterVariableString('SummaryStatus', 'Aktueller Status', '', 0);
         $this->RegisterVariableString('VestaboardStatus', 'Kurz-Status (Vestaboard)', '', 1);
         $this->RegisterVariableString('LastGeminiResponse', 'Letzte KI-Antwort', '', 2);
+        $this->RegisterVariableString('IrrigationLog', 'Bewässerungs-Log', '~HTMLBox', 3);
+
 
         // Gemini AI Konfiguration
         $this->RegisterPropertyString('GeminiApiKey', '');
@@ -201,10 +203,9 @@ class SmartLawnAI extends IPSModuleStrict {
                             'SUFFIX' => ' Min'
                         ]); 
                     }
-                    if ($hasSoak) {
-                        $this->RegisterVariableInteger('SickerpauseStart_' . $sid, 'SickerpauseStart ' . $name, '', 5);
-                        $this->RegisterVariableInteger('WateringStart_' . $sid, 'Bewässerungsstart ' . $name, '', 6);
-                    }
+                    $this->RegisterVariableInteger('SickerpauseStart_' . $sid, 'SickerpauseStart ' . $name, '', 5);
+                    $this->RegisterVariableInteger('WateringStart_' . $sid, 'Bewässerungsstart ' . $name, '', 6);
+                    
                     $this->RegisterVariableInteger('CurrentSprinklerIndex_' . $sid, 'Aktueller Sprinkler Index ' . $name, '', 7);
                     IPS_SetHidden($this->GetIDForIdent('CurrentSprinklerIndex_' . $sid), true);
 
