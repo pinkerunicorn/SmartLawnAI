@@ -144,7 +144,7 @@ trait SmartLawnAI_AI {
                     $neueEffizienz = (float)$parsed['newEfficiencyMultiplier'];
                     $begruendung = $parsed['reasoning'];
                     
-                    $this->SetValue($this->GetIDForIdent('Effizienz_' . $zoneID), $neueEffizienz);
+                    $this->SetValue('Effizienz_' . $zoneID, $neueEffizienz);
                     IPS_LogMessage('SmartLawnAI', "Gemini Effizienz-Lernen (Zone $zoneID): Der neue Faktor ist {$neueEffizienz}x. Begründung: $begruendung");
                     $this->AddIrrigationLogEntry($zoneName, $dauer, $startFeuchte, $aktuelleFeuchte, $vpd, $lux, "Neue Effizienz: {$neueEffizienz}x - {$begruendung}");
                     return;
