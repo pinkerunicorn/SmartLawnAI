@@ -268,7 +268,13 @@ trait SmartLawnAI_Logic {
                             $remaining = max(0, ($dMin * 60) - (time() - $wStart));
                         }
                     }
-                    $remainingText = $remaining > 0 ? ' (noch ' . ceil($remaining / 60) . ' Min)' : '';
+                    if ($remaining > 0) {
+                        $m = floor($remaining / 60);
+                        $s = $remaining % 60;
+                        $remainingText = ' (noch ' . $m . ':' . str_pad((string)$s, 2, '0', STR_PAD_LEFT) . ' Min)';
+                    } else {
+                        $remainingText = '';
+                    }
 
                     if (!$ventilOffen && $aktuellerStatus === 'WATERING') {
                         IPS_LogMessage('SmartLawnAI', $currentSprinklerName . ' in Zone ' . $zone['SensorID'] . ' ist fertig. Hardware-Status: ' . $hwVal);
@@ -359,7 +365,11 @@ trait SmartLawnAI_Logic {
                             $rem = max(0, ($dMin * 60) - (time() - $wStart));
                         }
                     }
-                    if ($rem > 0) $remainingText = ' (noch ' . ceil($rem / 60) . ' Min)';
+                    if ($rem > 0) {
+                        $m = floor($rem / 60);
+                        $s = $rem % 60;
+                        $remainingText = ' (noch ' . $m . ':' . str_pad((string)$s, 2, '0', STR_PAD_LEFT) . ' Min)';
+                    }
                 }
                 $baseStatus = 'Bewässert: ' . $zoneName . ' (' . $cName . ')' . $remainingText;
             } elseif ($sickerZone) {
@@ -371,6 +381,13 @@ trait SmartLawnAI_Logic {
             }
             
             $this->SetSummaryStatus($baseStatus . ' (' . date('H:i') . ')');
+
+            // Timer-Intervall auf 10s verkürzen, wenn Aktion läuft, sonst 60s
+            if ($einVentilIstAktivOderFehler) {
+                $this->SetTimerInterval('LawnAITimer', 10000);
+            } else {
+                $this->SetTimerInterval('LawnAITimer', 60000);
+            }
         }
 
         // Live-Update der Visualisierung pushen
