@@ -28,7 +28,7 @@ class SmartLawnAI extends IPSModuleStrict {
         $this->RegisterVariableString('SummaryStatus', 'Aktueller Status', '', 0);
         $this->RegisterVariableString('VestaboardStatus', 'Kurz-Status (Vestaboard)', '', 1);
         $this->RegisterVariableString('LastGeminiResponse', 'Letzte KI-Antwort', '', 2);
-        $this->RegisterVariableString('IrrigationLog', 'Bewässerungs-Log', '~HTMLBox', 3);
+        $this->RegisterVariableString('IrrigationLog', 'Bewässerungs-Log', '', 3);
 
 
         // Gemini AI Konfiguration
@@ -166,6 +166,13 @@ class SmartLawnAI extends IPSModuleStrict {
                 'MIN' => 0,
                 'MAX' => 180,
                 'STEP' => 5
+            ]); 
+        }
+
+        if (function_exists('IPS_SetVariableCustomPresentation')) { 
+            IPS_SetVariableCustomPresentation($this->GetIDForIdent('IrrigationLog'), [
+                'PRESENTATION' => VARIABLE_PRESENTATION_HTML,
+                'ICON' => 'Information'
             ]); 
         }
 
