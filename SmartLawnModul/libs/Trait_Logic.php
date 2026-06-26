@@ -498,7 +498,7 @@ trait SmartLawnAI_Logic {
         IPS_RunScriptText($script);
     }
 
-    public function ProcessGeminiPlanResponse($response, int $httpCode, string $curlErr, bool $isManualStart): void {
+    public function ProcessGeminiPlanResponse(string $response, int $httpCode, string $curlErr, bool $isManualStart): void {
         $zonesJson = $this->ReadPropertyString('Zones');
         $zones = json_decode($zonesJson, true);
         if (!is_array($zones)) $zones = [];

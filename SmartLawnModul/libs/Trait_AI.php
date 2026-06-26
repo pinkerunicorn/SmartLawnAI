@@ -122,7 +122,7 @@ trait SmartLawnAI_AI {
         IPS_RunScriptText($script);
     }
 
-    public function ProcessGeminiResponse($result, int $httpCode, int $zoneID, float $startFeuchte, float $aktuelleFeuchte, float $dauer, float $vpd, float $lux, int $retryCount): void {
+    public function ProcessGeminiResponse(string $result, int $httpCode, int $zoneID, float $startFeuchte, float $aktuelleFeuchte, float $dauer, float $vpd, float $lux, int $retryCount): void {
         $zoneName = 'Zone ' . $zoneID;
         $zonesJson = $this->ReadPropertyString('Zones');
         $zones = json_decode($zonesJson, true);
