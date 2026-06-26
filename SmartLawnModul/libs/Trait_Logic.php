@@ -262,9 +262,10 @@ trait SmartLawnAI_Logic {
                     if (isset($currentSprinkler['RemainingSecondsID']) && $currentSprinkler['RemainingSecondsID'] > 0) {
                         $remaining = (int)GetValue($currentSprinkler['RemainingSecondsID']);
                     } else {
-                        $timerID = $this->GetIDForIdent('ValveSequenceTimer');
-                        if (IPS_GetTimerInterval($timerID) > 0) {
-                            $remaining = max(0, IPS_GetTimerInterval($timerID) - time());
+                        $wStart = (int)GetValue($this->GetIDForIdent('WateringStart_' . $zone['SensorID']));
+                        $dMin = (int)GetValue($this->GetIDForIdent('Dauer_' . $zone['SensorID']));
+                        if ($wStart > 0 && $dMin > 0) {
+                            $remaining = max(0, ($dMin * 60) - (time() - $wStart));
                         }
                     }
                     $remainingText = $remaining > 0 ? ' (noch ' . ceil($remaining / 60) . ' Min)' : '';
@@ -352,8 +353,11 @@ trait SmartLawnAI_Logic {
                     if (isset($cSpr['RemainingSecondsID']) && $cSpr['RemainingSecondsID'] > 0) {
                         $rem = (int)GetValue($cSpr['RemainingSecondsID']);
                     } else {
-                        $tID = $this->GetIDForIdent('ValveSequenceTimer');
-                        if (IPS_GetTimerInterval($tID) > 0) $rem = max(0, IPS_GetTimerInterval($tID) - time());
+                        $wStart = (int)GetValue($this->GetIDForIdent('WateringStart_' . $waterZone['SensorID']));
+                        $dMin = (int)GetValue($this->GetIDForIdent('Dauer_' . $waterZone['SensorID']));
+                        if ($wStart > 0 && $dMin > 0) {
+                            $rem = max(0, ($dMin * 60) - (time() - $wStart));
+                        }
                     }
                     if ($rem > 0) $remainingText = ' (noch ' . ceil($rem / 60) . ' Min)';
                 }
