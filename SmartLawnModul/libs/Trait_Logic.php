@@ -198,6 +198,7 @@ trait SmartLawnAI_Logic {
                             IPS_LogMessage('SmartLawnAI', 'Bewässerung für Zone ' . $zone['SensorID'] . ' wird gestartet!');
                             $this->SetValue('Status_' . $zone['SensorID'], 'WATERING');
                             $this->SetValue('WateringStart_' . $zone['SensorID'], time());
+                            $this->SetValue('CurrentSprinklerIndex_' . $zone['SensorID'], $currentIndex);
                             
                             $zoneName = isset($zone['GroupName']) && !empty($zone['GroupName']) ? $zone['GroupName'] : 'Zone ' . $zone['SensorID'];
                             $this->AddLogEvent("{$zoneName}: Starte Bewässerung", "Sprinkler: {$currentSprinklerName}", '#2196F3');
@@ -271,11 +272,11 @@ trait SmartLawnAI_Logic {
                     
                     // Grace Period
                     $gracePeriod = $this->ReadPropertyInteger('HardwareGracePeriod');
-                    if ($gracePeriod <= 0) $gracePeriod = 90;
+                    if ($gracePeriod < 90) $gracePeriod = 90; // MINDESTENS 90 Sekunden! Cloud-APIs sind langsam.
                     
                     if (!$ventilOffen && $wateringStart > 0 && (time() - $wateringStart) < $gracePeriod) {
                         $ventilOffen = true;
-                        $hwVal .= ' (Grace Period Active: ' . $gracePeriod . 's)';
+                        $hwVal .= ' (Grace Period Active: ' . (time() - $wateringStart) . '/' . $gracePeriod . 's)';
                     }
                     
                     $remaining = 0;
