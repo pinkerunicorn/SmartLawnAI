@@ -376,8 +376,15 @@ trait SmartLawnAI_Logic {
                 $zoneName = isset($sickerZone['GroupName']) && !empty($sickerZone['GroupName']) ? $sickerZone['GroupName'] : 'Zone ' . $sickerZone['SensorID'];
                 $baseStatus = 'Sickerpause: ' . $zoneName;
             } elseif (!$einVentilIstAktivOderFehler && strpos($baseStatus, 'Berechne') === false && strpos($baseStatus, 'Manueller Start') === false) {
-                $naechsteUeberpruefung = $this->GetNextScheduleTime();
-                $baseStatus = 'Nächste Prüfung: ' . date('H:i', $naechsteUeberpruefung) . ' Uhr';
+                $baseStatus = 'Bereit';
+                
+                $splitterID = $this->ReadPropertyInteger('GardenaSplitterID');
+                if ($splitterID > 0 && IPS_InstanceExists($splitterID)) {
+                    $splitterStatus = IPS_GetInstance($splitterID)['InstanceStatus'];
+                    if ($splitterStatus >= 200) {
+                        $baseStatus = '⚠️ Gardena Cloud Verbindung getrennt';
+                    }
+                }
             }
             
             $this->SetSummaryStatus($baseStatus . ' (' . date('H:i') . ')');
