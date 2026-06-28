@@ -108,33 +108,27 @@ trait SmartLawnAI_Helpers {
         }
     }
 
-    public function AddLogEvent(string $title, string $details = '', string $color = '#4CAF50') {
+    public function AddLogEvent(string $title, string $details = '') {
         $logVarID = $this->GetIDForIdent('IrrigationLog');
         $currentLog = GetValue($logVarID);
         // Platzhalter entfernen
-        $currentLog = str_replace("<div style='padding: 10px; color: #888; font-style: italic;'>Noch keine Bew&auml;sserungsvorg&auml;nge protokolliert.</div>", "", $currentLog);
+        $currentLog = str_replace("Noch keine Bewässerungsvorgänge protokolliert.", "", $currentLog);
         
-        $date = date('H:i'); // Nur Uhrzeit, Datum wäre zu lang für jeden Schritt
+        $date = date('H:i'); 
         
-        // Timeline-Event Styling
-        $newEntry = "<div style='margin-bottom: 5px; padding: 5px 10px; border-left: 3px solid {$color}; background: rgba(255, 255, 255, 0.05); font-size: 0.9em; display: flex; align-items: flex-start;'>";
-        $newEntry .= "<div style='color: #888; margin-right: 10px; min-width: 40px; padding-top: 2px;'>{$date}</div>";
-        $newEntry .= "<div><div style='font-weight: bold;'>{$title}</div>";
+        // Plain Text Formatting
+        $newEntry = "[{$date}] {$title}";
         if (!empty($details)) {
-            $newEntry .= "<div style='color: #aaa; font-size: 0.9em; margin-top: 2px;'>{$details}</div>";
+            $newEntry .= " - {$details}";
         }
-        $newEntry .= "</div></div>";
-
-        // Füge neuen Eintrag oben an
-        $updatedLog = $newEntry . $currentLog;
+        
+        // HTML Tags vom alten Log entfernen (falls vorhanden) und neuen Eintrag anfügen
+        $updatedLog = trim($newEntry . "\n" . strip_tags($currentLog));
         
         // Log-Größe begrenzen auf die letzten 50 Einträge
-        $entries = explode("<div style='margin-bottom: 5px;", $updatedLog);
-        if (count($entries) > 51) { // 51 weil explode ein leeres erstes Element erzeugt
-            $updatedLog = "";
-            for ($i = 1; $i <= 50; $i++) {
-                $updatedLog .= "<div style='margin-bottom: 5px;" . $entries[$i];
-            }
+        $entries = explode("\n", $updatedLog);
+        if (count($entries) > 50) {
+            $updatedLog = implode("\n", array_slice($entries, 0, 50));
         }
 
         $this->SetValue('IrrigationLog', $updatedLog);

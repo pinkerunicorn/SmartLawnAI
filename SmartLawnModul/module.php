@@ -182,7 +182,7 @@ class SmartLawnAI extends IPSModuleStrict {
         }
 
         if (GetValue($this->GetIDForIdent('IrrigationLog')) === '') {
-            $this->SetValue('IrrigationLog', "<div style='padding: 10px; color: #888; font-style: italic;'>Noch keine Bew&auml;sserungsvorg&auml;nge protokolliert.</div>");
+            $this->SetValue('IrrigationLog', "Noch keine Bewässerungsvorgänge protokolliert.");
         }
 
         $zonesJson = $this->ReadPropertyString('Zones');
