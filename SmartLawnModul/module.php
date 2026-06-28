@@ -170,10 +170,15 @@ class SmartLawnAI extends IPSModuleStrict {
         }
 
         if (function_exists('IPS_SetVariableCustomPresentation')) { 
+            $presHTML = defined('VARIABLE_PRESENTATION_HTMLBOX') ? VARIABLE_PRESENTATION_HTMLBOX : (defined('VARIABLE_PRESENTATION_HTML') ? VARIABLE_PRESENTATION_HTML : 6);
             IPS_SetVariableCustomPresentation($this->GetIDForIdent('IrrigationLog'), [
-                'PRESENTATION' => VARIABLE_PRESENTATION_HTML,
+                'PRESENTATION' => $presHTML,
                 'ICON' => 'Information'
             ]); 
+        }
+
+        if (GetValue($this->GetIDForIdent('IrrigationLog')) === '') {
+            SetValue($this->GetIDForIdent('IrrigationLog'), "<div style='padding: 10px; color: #888; font-style: italic;'>Noch keine Bew&auml;sserungsvorg&auml;nge protokolliert.</div>");
         }
 
         $zonesJson = $this->ReadPropertyString('Zones');
