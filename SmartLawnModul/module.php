@@ -176,9 +176,7 @@ class SmartLawnAI extends IPSModuleStrict {
         }
 
         if (function_exists('IPS_SetVariableCustomPresentation')) { 
-            IPS_SetVariableCustomPresentation($this->GetIDForIdent('IrrigationLog'), [
-                'ICON' => 'Information'
-            ]); 
+            // Removed presentation for IrrigationLog per user request
         }
 
         if (GetValue($this->GetIDForIdent('IrrigationLog')) === '') {
