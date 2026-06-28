@@ -214,7 +214,7 @@ trait SmartLawnAI_Logic {
                             $res = $this->ResolveSprinklerObject((int)@$currentSprinkler['ValveID']);
                             // Gardena Hardware-Watchdog: Dauer setzen
                             if ($res['DurationID'] > 0) {
-                                @RequestAction($res['DurationID'], $berechneteMinuten);
+                                @RequestAction($res['DurationID'], $berechneteMinuten * 60);
                                 IPS_Sleep(500); 
                             }
 
@@ -246,9 +246,14 @@ trait SmartLawnAI_Logic {
                     $res = $this->ResolveSprinklerObject((int)@$currentSprinkler['ValveID']);
                     
                     if ($res['ActivityID'] > 0) {
-                        $act = strtoupper((string)GetValue($res['ActivityID']));
+                        $v = GetValue($res['ActivityID']);
+                        if (is_int($v) || is_float($v)) {
+                            $act = strtoupper((string)GetValueFormatted($res['ActivityID']));
+                        } else {
+                            $act = strtoupper((string)$v);
+                        }
                         $hwVal = $act;
-                        $ventilOffen = in_array($act, ['MANUAL_WATERING', 'AUTOMATIC_WATERING', 'WATERING', 'OPEN', 'GEÖFFNET', 'BEWÄSSERUNG']);
+                        $ventilOffen = (strpos($act, 'WATERING') !== false || strpos($act, 'BEWÄSSERUNG') !== false || strpos($act, 'OPEN') !== false || strpos($act, 'GEÖFFNET') !== false || $act === '1' || $v == 1 || $v == 2 || $v == 3);
                     }
                     elseif ($res['HardwareStatusID'] > 0) {
                         $hwVal = strtoupper((string)GetValue($res['HardwareStatusID']));
