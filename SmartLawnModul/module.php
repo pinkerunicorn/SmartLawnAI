@@ -67,9 +67,9 @@ class SmartLawnAI extends IPSModuleStrict {
 
     public function RequestAction(string $Ident, $Value): void {
         if (in_array($Ident, ['DefaultZielFeuchte', 'DefaultStartSchwellwert', 'SickerpauseMinuten', 'GlobalMaxDuration'])) {
-            SetValue($this->GetIDForIdent($Ident), $Value);
+            $this->SetValue($Ident, $Value);
         } else if ($Ident === 'AutomaticActive') {
-            SetValue($this->GetIDForIdent($Ident), $Value);
+            $this->SetValue($Ident, $Value);
             $this->MaintainScheduleEvents($Value);
             
             if (!$Value) {
@@ -82,10 +82,10 @@ class SmartLawnAI extends IPSModuleStrict {
             }
         } else if ($Ident === 'ForceStart') {
             if ($Value) {
-                SetValue($this->GetIDForIdent($Ident), true);
+                $this->SetValue($Ident, true);
                 $this->triggerManualStart();
                 IPS_Sleep(500);
-                SetValue($this->GetIDForIdent($Ident), false);
+                $this->SetValue($Ident, false);
             }
         }
     }
@@ -97,7 +97,7 @@ class SmartLawnAI extends IPSModuleStrict {
         $this->RegisterVariableBoolean('AutomaticActive', 'Automatik aktiv', '', 0);
         $this->EnableAction('AutomaticActive');
         if (!IPS_VariableExists($this->GetIDForIdent('AutomaticActive')) || (GetValue($this->GetIDForIdent('AutomaticActive')) === false && IPS_GetVariable($this->GetIDForIdent('AutomaticActive'))['VariableUpdated'] == 0)) {
-            SetValue($this->GetIDForIdent('AutomaticActive'), true); // Default true
+            $this->SetValue('AutomaticActive', true); // Default true
             $this->SetTimerInterval('LawnAITimer', 1000);
             $this->MaintainScheduleEvents(true);
         } else {
@@ -111,11 +111,11 @@ class SmartLawnAI extends IPSModuleStrict {
         }
         $this->RegisterVariableBoolean('ForceStart', 'Manuell Starten', '', 0);
         $this->EnableAction('ForceStart');
-        SetValue($this->GetIDForIdent('ForceStart'), false);
+        $this->SetValue('ForceStart', false);
 
         $this->EnableAction('DefaultZielFeuchte');
         IPS_SetName($this->GetIDForIdent('DefaultZielFeuchte'), 'Bewässerungs-Ziel-Feuchte');
-        if (GetValue($this->GetIDForIdent('DefaultZielFeuchte')) == 0) { SetValue($this->GetIDForIdent('DefaultZielFeuchte'), 55.0); }
+        if (GetValue($this->GetIDForIdent('DefaultZielFeuchte')) == 0) { $this->SetValue('DefaultZielFeuchte', 55.0); }
         if (function_exists('IPS_SetVariableCustomPresentation')) { 
             IPS_SetVariableCustomPresentation($this->GetIDForIdent('DefaultZielFeuchte'), [
                 'PRESENTATION' => VARIABLE_PRESENTATION_SLIDER,
@@ -129,7 +129,7 @@ class SmartLawnAI extends IPSModuleStrict {
         
         $this->EnableAction('DefaultStartSchwellwert');
         IPS_SetName($this->GetIDForIdent('DefaultStartSchwellwert'), 'Bewässerungs-Trigger-Feuchte');
-        if (GetValue($this->GetIDForIdent('DefaultStartSchwellwert')) == 0) { SetValue($this->GetIDForIdent('DefaultStartSchwellwert'), 20.0); }
+        if (GetValue($this->GetIDForIdent('DefaultStartSchwellwert')) == 0) { $this->SetValue('DefaultStartSchwellwert', 20.0); }
         if (function_exists('IPS_SetVariableCustomPresentation')) { 
             IPS_SetVariableCustomPresentation($this->GetIDForIdent('DefaultStartSchwellwert'), [
                 'PRESENTATION' => VARIABLE_PRESENTATION_SLIDER,
@@ -143,7 +143,7 @@ class SmartLawnAI extends IPSModuleStrict {
         
         $this->EnableAction('SickerpauseMinuten');
         IPS_SetName($this->GetIDForIdent('SickerpauseMinuten'), 'Sickerpause');
-        if (GetValue($this->GetIDForIdent('SickerpauseMinuten')) == 0) { SetValue($this->GetIDForIdent('SickerpauseMinuten'), 15); }
+        if (GetValue($this->GetIDForIdent('SickerpauseMinuten')) == 0) { $this->SetValue('SickerpauseMinuten', 15); }
         if (function_exists('IPS_SetVariableCustomPresentation')) { 
             IPS_SetVariableCustomPresentation($this->GetIDForIdent('SickerpauseMinuten'), [
                 'PRESENTATION' => VARIABLE_PRESENTATION_SLIDER,
@@ -157,7 +157,7 @@ class SmartLawnAI extends IPSModuleStrict {
         
         $this->EnableAction('GlobalMaxDuration');
         IPS_SetName($this->GetIDForIdent('GlobalMaxDuration'), 'Maximale Bewässerungsdauer');
-        if (GetValue($this->GetIDForIdent('GlobalMaxDuration')) == 0) { SetValue($this->GetIDForIdent('GlobalMaxDuration'), 30); }
+        if (GetValue($this->GetIDForIdent('GlobalMaxDuration')) == 0) { $this->SetValue('GlobalMaxDuration', 30); }
         if (function_exists('IPS_SetVariableCustomPresentation')) { 
             IPS_SetVariableCustomPresentation($this->GetIDForIdent('GlobalMaxDuration'), [
                 'PRESENTATION' => VARIABLE_PRESENTATION_SLIDER,
@@ -176,7 +176,7 @@ class SmartLawnAI extends IPSModuleStrict {
         }
 
         if (GetValue($this->GetIDForIdent('IrrigationLog')) === '') {
-            SetValue($this->GetIDForIdent('IrrigationLog'), "<div style='padding: 10px; color: #888; font-style: italic;'>Noch keine Bew&auml;sserungsvorg&auml;nge protokolliert.</div>");
+            $this->SetValue('IrrigationLog', "<div style='padding: 10px; color: #888; font-style: italic;'>Noch keine Bew&auml;sserungsvorg&auml;nge protokolliert.</div>");
         }
 
         $zonesJson = $this->ReadPropertyString('Zones');

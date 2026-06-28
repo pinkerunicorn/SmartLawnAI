@@ -104,7 +104,7 @@ trait SmartLawnAI_UI {
             case 'TOGGLE_AUTOMATIC':
                 $id = $this->GetIDForIdent('AutomaticActive');
                 $newVal = !GetValue($id);
-                SetValue($id, $newVal);
+                $this->SetValue('AutomaticActive', $newVal);
                 if (!$newVal) {
                     $this->resetAllZones(false);
                 } else {

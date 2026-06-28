@@ -5,12 +5,12 @@ trait SmartLawnAI_Helpers {
     private function SetSummaryStatus(string $status) {
         $id = @$this->GetIDForIdent('SummaryStatus');
         if ($id > 0) {
-            SetValue($id, $status);
+            $this->SetValue('SummaryStatus', $status);
         }
         
         $vID = @$this->GetIDForIdent('VestaboardStatus');
         if ($vID > 0) {
-            SetValue($vID, $this->GetShortStatus($status));
+            $this->SetValue('VestaboardStatus', $this->GetShortStatus($status));
         }
     }
 
@@ -115,10 +115,10 @@ trait SmartLawnAI_Helpers {
     }
 
     public function AddIrrigationLogEntry(string $zoneName, float $dauer, float $startFeuchte, float $endFeuchte, float $vpd, float $lux, string $aiResult) {
-        $logVarID = @$this->GetIDForIdent('IrrigationLog');
-        if ($logVarID === false) return;
-
+        $logVarID = $this->GetIDForIdent('IrrigationLog');
         $currentLog = GetValue($logVarID);
+        // Platzhalter entfernen
+        $currentLog = str_replace("<div style='padding: 10px; color: #888; font-style: italic;'>Noch keine Bew&auml;sserungsvorg&auml;nge protokolliert.</div>", "", $currentLog);
         
         $date = date('d.m.Y H:i');
         
@@ -153,6 +153,6 @@ trait SmartLawnAI_Helpers {
             }
         }
 
-        SetValue($logVarID, $updatedLog);
+        $this->SetValue('IrrigationLog', $updatedLog);
     }
 }
