@@ -167,7 +167,7 @@ trait SmartLawnAI_Helpers {
                 $obj = IPS_GetObject($child);
                 $ident = strtolower($obj['ObjectIdent']);
                 
-                if ($ident === 'action') $res['ValveID'] = $child;
+                if (in_array($ident, ['action', 'valvecontrol', 'control'])) $res['ValveID'] = $child;
                 elseif (in_array($ident, ['state', 'status'])) $res['HardwareStatusID'] = $child;
                 elseif ($res['HardwareStatusID'] === 0 && in_array($ident, ['lasterror', 'errorcode'])) $res['HardwareStatusID'] = $child;
                 elseif ($ident === 'duration') $res['DurationID'] = $child;
