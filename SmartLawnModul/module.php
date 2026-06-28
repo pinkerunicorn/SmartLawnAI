@@ -172,7 +172,7 @@ class SmartLawnAI extends IPSModuleStrict {
 
         $splitterID = $this->ReadPropertyInteger('GardenaSplitterID');
         if ($splitterID > 0 && IPS_InstanceExists($splitterID)) {
-            $this->RegisterMessage($splitterID, IM_CHANGE);
+            $this->RegisterMessage($splitterID, IM_CHANGESTATUS);
         }
 
         if (function_exists('IPS_SetVariableCustomPresentation')) { 
@@ -243,7 +243,7 @@ class SmartLawnAI extends IPSModuleStrict {
     public function MessageSink(int $TimeStamp, int $SenderID, int $Message, array $Data): void {
         if ($Message == VM_UPDATE) {
             $this->UpdateVisualizationValue($this->GetFullUpdateMessage());
-        } else if ($Message == IM_CHANGE) {
+        } else if ($Message == IM_CHANGESTATUS) {
             $splitterID = $this->ReadPropertyInteger('GardenaSplitterID');
             if ($SenderID == $splitterID) {
                 $status = $Data[0]; // Neuer Instanz-Status
