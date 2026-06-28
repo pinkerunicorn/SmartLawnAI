@@ -44,6 +44,7 @@ class SmartLawnAI extends IPSModuleStrict {
         
         // NEU: Hardware Grace Period konfigurierbar
         $this->RegisterPropertyInteger('HardwareGracePeriod', 90);
+        $this->RegisterPropertyInteger('GardenaSplitterID', 0);
         
         $this->SetVisualizationType(1);
 
@@ -169,6 +170,11 @@ class SmartLawnAI extends IPSModuleStrict {
             ]); 
         }
 
+        $splitterID = $this->ReadPropertyInteger('GardenaSplitterID');
+        if ($splitterID > 0 && IPS_InstanceExists($splitterID)) {
+            $this->RegisterMessage($splitterID, IM_CHANGE);
+        }
+
         if (function_exists('IPS_SetVariableCustomPresentation')) { 
             IPS_SetVariableCustomPresentation($this->GetIDForIdent('IrrigationLog'), [
                 'ICON' => 'Information'
@@ -237,6 +243,18 @@ class SmartLawnAI extends IPSModuleStrict {
     public function MessageSink(int $TimeStamp, int $SenderID, int $Message, array $Data): void {
         if ($Message == VM_UPDATE) {
             $this->UpdateVisualizationValue($this->GetFullUpdateMessage());
+        } else if ($Message == IM_CHANGE) {
+            $splitterID = $this->ReadPropertyInteger('GardenaSplitterID');
+            if ($SenderID == $splitterID) {
+                $status = $Data[0]; // Neuer Instanz-Status
+                if ($status >= 200) {
+                    $this->LogAndDebug('Gardena', "Gardena Splitter Verbindungsfehler! (Status: $status)", 0);
+                    $this->SetSummaryStatus('⚠️ Gardena Cloud Verbindung getrennt');
+                } else if ($status == 102) {
+                    $this->LogAndDebug('Gardena', 'Gardena Splitter Verbindung wiederhergestellt.', 0);
+                    $this->SetSummaryStatus('Bereit');
+                }
+            }
         }
     }
 }

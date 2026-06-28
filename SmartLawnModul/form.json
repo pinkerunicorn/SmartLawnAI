@@ -79,6 +79,11 @@
             "caption": "Zonen & Hardware-Zuweisung (0 = nutzt globales Default)"
         },
         {
+            "type": "SelectInstance",
+            "name": "GardenaSplitterID",
+            "caption": "Gardena Cloud Splitter / IO (für Verbindungs-Überwachung)"
+        },
+        {
             "type": "NumberSpinner",
             "name": "HardwareGracePeriod",
             "caption": "Cloud / Hardware Verzögerung (Grace Period in Sekunden)",
