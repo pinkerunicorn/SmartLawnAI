@@ -215,7 +215,6 @@ trait SmartLawnAI_Logic {
                             // Gardena Hardware-Watchdog: Dauer setzen
                             if ($res['DurationID'] > 0) {
                                 @RequestAction($res['DurationID'], $berechneteMinuten);
-                                IPS_Sleep(500); 
                             }
 
                             // Start-Befehl senden (Gardena spezifisch)
