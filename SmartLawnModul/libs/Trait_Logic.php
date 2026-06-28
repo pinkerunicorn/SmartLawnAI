@@ -221,7 +221,7 @@ trait SmartLawnAI_Logic {
                             // Start-Befehl senden (Gardena spezifisch)
                             if ($res['ValveID'] > 0) {
                                 if (IPS_VariableExists($res['ValveID']) && strtolower(IPS_GetObject($res['ValveID'])['ObjectIdent']) === 'action') {
-                                    @RequestAction($res['ValveID'], 'START_SECONDS_TO_OVERRIDE');
+                                    @RequestAction($res['ValveID'], 1); // 1 = START_SECONDS_TO_OVERRIDE
                                 } else {
                                     @RequestAction($res['ValveID'], true);
                                 }
@@ -256,8 +256,7 @@ trait SmartLawnAI_Logic {
                     } else {
                         if ($res['ValveID'] > 0 && IPS_VariableExists($res['ValveID'])) {
                             $v = GetValue($res['ValveID']);
-                            $hwVal = (string)$v;
-                            $ventilOffen = ($v && $v !== 'STOP_UNTIL_NEXT_TASK' && $v !== 'CLOSED');
+                            $ventilOffen = ($v == 1 || $v === true); // 1 = START_SECONDS_TO_OVERRIDE
                         }
                     }
                     
@@ -731,7 +730,7 @@ trait SmartLawnAI_Logic {
                 $res = $this->ResolveSprinklerObject((int)@$s['ValveID']);
                 if ($res['ValveID'] > 0) {
                     if (IPS_VariableExists($res['ValveID']) && strtolower(IPS_GetObject($res['ValveID'])['ObjectIdent']) === 'action') {
-                        @RequestAction($res['ValveID'], 'STOP_UNTIL_NEXT_TASK');
+                        @RequestAction($res['ValveID'], 0); // 0 = STOP_UNTIL_NEXT_TASK
                     } else {
                         @RequestAction($res['ValveID'], false);
                     }
