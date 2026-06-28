@@ -108,42 +108,32 @@ trait SmartLawnAI_Helpers {
         }
     }
 
-    public function AddIrrigationLogEntry(string $zoneName, float $dauer, float $startFeuchte, float $endFeuchte, float $vpd, float $lux, string $aiResult) {
+    public function AddLogEvent(string $title, string $details = '', string $color = '#4CAF50') {
         $logVarID = $this->GetIDForIdent('IrrigationLog');
         $currentLog = GetValue($logVarID);
         // Platzhalter entfernen
         $currentLog = str_replace("<div style='padding: 10px; color: #888; font-style: italic;'>Noch keine Bew&auml;sserungsvorg&auml;nge protokolliert.</div>", "", $currentLog);
         
-        $date = date('d.m.Y H:i');
+        $date = date('H:i'); // Nur Uhrzeit, Datum wäre zu lang für jeden Schritt
         
-        // Neues Styling passend zu IP-Symcon 8/9
-        $newEntry = "<div style='margin-bottom: 10px; padding: 10px; border-left: 4px solid #4CAF50; background: rgba(76, 175, 80, 0.1); border-radius: 4px;'>";
-        $newEntry .= "<div style='font-weight: bold; font-size: 1.1em; margin-bottom: 5px;'>{$zoneName} <span style='font-weight: normal; font-size: 0.8em; color: #888; float: right;'>{$date}</span></div>";
-        
-        $newEntry .= "<div style='display: grid; grid-template-columns: 1fr 1fr; gap: 5px; font-size: 0.9em;'>";
-        $newEntry .= "<div><span style='color: #888;'>Dauer:</span> {$dauer} Min</div>";
-        $newEntry .= "<div><span style='color: #888;'>VPD:</span> " . number_format($vpd, 2) . " kPa</div>";
-        $newEntry .= "<div><span style='color: #888;'>Feuchte:</span> {$startFeuchte}% &rarr; {$endFeuchte}%</div>";
-        $newEntry .= "<div><span style='color: #888;'>Licht:</span> {$lux} Lux</div>";
-        $newEntry .= "</div>";
-        
-        if (!empty($aiResult)) {
-            $newEntry .= "<div style='margin-top: 8px; font-size: 0.85em; font-style: italic; color: #aaa; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 5px;'>";
-            $newEntry .= "🤖 {$aiResult}";
-            $newEntry .= "</div>";
+        // Timeline-Event Styling
+        $newEntry = "<div style='margin-bottom: 5px; padding: 5px 10px; border-left: 3px solid {$color}; background: rgba(255, 255, 255, 0.05); font-size: 0.9em; display: flex; align-items: flex-start;'>";
+        $newEntry .= "<div style='color: #888; margin-right: 10px; min-width: 40px; padding-top: 2px;'>{$date}</div>";
+        $newEntry .= "<div><div style='font-weight: bold;'>{$title}</div>";
+        if (!empty($details)) {
+            $newEntry .= "<div style='color: #aaa; font-size: 0.9em; margin-top: 2px;'>{$details}</div>";
         }
-        $newEntry .= "</div>";
+        $newEntry .= "</div></div>";
 
         // Füge neuen Eintrag oben an
         $updatedLog = $newEntry . $currentLog;
         
-        // Log-Größe begrenzen (z.B. auf die letzten 20 Einträge)
-        // Wir zählen die <div> Wrapper
-        $entries = explode("<div style='margin-bottom: 10px;", $updatedLog);
-        if (count($entries) > 21) { // 21 weil explode ein leeres erstes Element erzeugt
+        // Log-Größe begrenzen auf die letzten 50 Einträge
+        $entries = explode("<div style='margin-bottom: 5px;", $updatedLog);
+        if (count($entries) > 51) { // 51 weil explode ein leeres erstes Element erzeugt
             $updatedLog = "";
-            for ($i = 1; $i <= 20; $i++) {
-                $updatedLog .= "<div style='margin-bottom: 10px;" . $entries[$i];
+            for ($i = 1; $i <= 50; $i++) {
+                $updatedLog .= "<div style='margin-bottom: 5px;" . $entries[$i];
             }
         }
 

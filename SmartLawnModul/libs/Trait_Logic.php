@@ -199,6 +199,9 @@ trait SmartLawnAI_Logic {
                             $this->SetValue('Status_' . $zone['SensorID'], 'WATERING');
                             $this->SetValue('WateringStart_' . $zone['SensorID'], time());
                             
+                            $zoneName = isset($zone['GroupName']) && !empty($zone['GroupName']) ? $zone['GroupName'] : 'Zone ' . $zone['SensorID'];
+                            $this->AddLogEvent("{$zoneName}: Starte Bewässerung", "Sprinkler: {$currentSprinklerName}", '#2196F3');
+                            
                             // Berechnete Laufzeit aus Variable lesen
                             $berechneteMinuten = (int)GetValue($this->GetIDForIdent('Dauer_' . $zone['SensorID']));
                             if ($berechneteMinuten <= 0) {
@@ -302,12 +305,20 @@ trait SmartLawnAI_Logic {
                             $this->SetValue('CurrentSprinklerIndex_' . $zone['SensorID'],  $currentIndex);
                             $this->SetValue('Status_' . $zone['SensorID'], 'QUEUED');
                             $this->LogAndDebug('Sequencer', 'Sprinkler gewechselt. Nächster Index: ' . $currentIndex, 0);
+                            
+                            $nextSprinklerName = isset($zoneSprinklers[$currentIndex]['SprinklerName']) && !empty($zoneSprinklers[$currentIndex]['SprinklerName']) ? $zoneSprinklers[$currentIndex]['SprinklerName'] : 'Sprinkler ' . ($currentIndex + 1);
+                            $zoneName = isset($zone['GroupName']) && !empty($zone['GroupName']) ? $zone['GroupName'] : 'Zone ' . $zone['SensorID'];
+                            $this->AddLogEvent("{$zoneName}: Sprinklerwechsel", "Nächster Sprinkler: {$nextSprinklerName}", '#2196F3');
                         } else {
                             // Alle Sprinkler der Zone fertig
                             $this->SetValue('CurrentSprinklerIndex_' . $zone['SensorID'],  0); // Reset
                             $this->SetValue('Status_' . $zone['SensorID'], 'WAITING_FOR_RESULT');
                             $this->SetValue('SickerpauseStart_' . $zone['SensorID'], time());
                             $this->LogAndDebug('Sequencer', 'Alle Sprinkler fertig. Sickerpause gestartet.', 0);
+                            
+                            $zoneName = isset($zone['GroupName']) && !empty($zone['GroupName']) ? $zone['GroupName'] : 'Zone ' . $zone['SensorID'];
+                            $sickerpauseMin = GetValue($this->GetIDForIdent('SickerpauseMinuten'));
+                            $this->AddLogEvent("{$zoneName}: Sickerpause", "Warte {$sickerpauseMin} Minuten auf Sensormessung", '#FF9800');
                         }
                     }
                     break;
@@ -655,6 +666,8 @@ trait SmartLawnAI_Logic {
                 if ($duration > 0) {
                     $this->SetValue('Status_' . $sid, 'QUEUED');
                     $this->LogAndDebug('Planer', 'Zone ' . $sid . ' eingereiht (Gemini): ' . $duration . ' Minuten. Begründung: ' . $reasoning, 0);
+                    $zoneName = isset($zone['GroupName']) && !empty($zone['GroupName']) ? $zone['GroupName'] : 'Zone ' . $sid;
+                    $this->AddLogEvent("{$zoneName}: Plan berechnet", "Dauer: {$duration} Min. Grund: {$reasoning}", '#673AB7');
                 } else {
                     $this->SetValue('Status_' . $sid, 'IDLE');
                     $this->LogAndDebug('Planer', 'Zone ' . $sid . ' nicht eingereiht (Gemini Dauer = 0). Begründung: ' . $reasoning, 0);
@@ -687,6 +700,7 @@ trait SmartLawnAI_Logic {
         if (!$queueForStart) {
             IPS_LogMessage('SmartLawnAI', 'Automatik deaktiviert! Alle Ventile werden gestoppt und Zonen zurückgesetzt.');
             $this->SetSummaryStatus('Automatik deaktiviert (Zonen gestoppt)');
+            $this->AddLogEvent("System: Abbruch", "Automatik deaktiviert, alle Ventile gestoppt.", '#F44336');
         }
 
         $zonesJson = $this->ReadPropertyString('Zones');

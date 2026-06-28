@@ -53,7 +53,7 @@ trait SmartLawnAI_AI {
         $model = trim($this->ReadPropertyString('GeminiModel'));
         if (empty($apiKey)) {
             $this->LogAndDebug('Weather', 'Kein Gemini API-Key für Effizienz-Lernen konfiguriert.', 0);
-            $this->AddIrrigationLogEntry($zoneName, $dauer, $startFeuchte, $aktuelleFeuchte, $vpd, $lux, 'Keine KI konfiguriert');
+            $this->AddLogEvent("{$zoneName}: Abschluss (ohne KI)", "Dauer: {$dauer} Min | VPD: " . number_format($vpd, 2) . " kPa | Feuchte: {$startFeuchte}% -> {$aktuelleFeuchte}%");
             return;
         }
 
@@ -146,7 +146,7 @@ trait SmartLawnAI_AI {
                     
                     $this->SetValue('Effizienz_' . $zoneID, $neueEffizienz);
                     IPS_LogMessage('SmartLawnAI', "Gemini Effizienz-Lernen (Zone $zoneID): Der neue Faktor ist {$neueEffizienz}x. Begründung: $begruendung");
-                    $this->AddIrrigationLogEntry($zoneName, $dauer, $startFeuchte, $aktuelleFeuchte, $vpd, $lux, "Neue Effizienz: {$neueEffizienz}x - {$begruendung}");
+                    $this->AddLogEvent("{$zoneName}: KI-Lernen erfolgreich", "Neue Effizienz: {$neueEffizienz}x. Grund: {$begruendung}", '#9C27B0');
                     return;
                 }
             }
@@ -174,7 +174,7 @@ trait SmartLawnAI_AI {
         } else {
             $this->LogAndDebug('Weather', "Gemini Effizienz-Lernen für Zone $zoneID nach 3 Versuchen endgültig fehlgeschlagen (HTTP $httpCode).", 0);
             IPS_LogMessage('SmartLawnAI', "Gemini Effizienz-Lernen für Zone $zoneID endgültig fehlgeschlagen.");
-            $this->AddIrrigationLogEntry($zoneName, $dauer, $startFeuchte, $aktuelleFeuchte, $vpd, $lux, 'KI-Auswertung fehlgeschlagen');
+            $this->AddLogEvent("{$zoneName}: KI-Lernen fehlgeschlagen", "HTTP Fehler $httpCode", '#F44336');
         }
     }
 }
