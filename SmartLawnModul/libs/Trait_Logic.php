@@ -667,10 +667,6 @@ trait SmartLawnAI_Logic {
                 $zonePlan = $planByZone[$sid];
                 $duration = isset($zonePlan['durationMinutes']) ? (int)$zonePlan['durationMinutes'] : 0;
                 
-                if ($duration <= 0 && $isManualStart) {
-                    $duration = 5; // Minimaler Fallback für manuellen Start, damit der User Feedback hat
-                    $this->LogAndDebug('Planer', 'Zone ' . $sid . ': Gemini meldet 0 Minuten. Da manueller Start, setze Fallback auf 5 Minuten.', 0);
-                }
                 
                 if ($duration <= 0) {
                     $this->SetValue('Status_' . $sid, 'IDLE');
