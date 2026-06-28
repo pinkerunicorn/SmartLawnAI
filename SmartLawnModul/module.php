@@ -33,7 +33,7 @@ class SmartLawnAI extends IPSModuleStrict {
 
         // Gemini AI Konfiguration
         $this->RegisterPropertyString('GeminiApiKey', '');
-        $this->RegisterPropertyString('GeminiModel', 'gemini-1.5-flash');
+        $this->RegisterPropertyString('GeminiModel', 'gemini-3.5-flash');
 
         // Globale Sensoren (Thermodynamik & Boden)
         $this->RegisterPropertyInteger('GlobalAirTempID', 0);
