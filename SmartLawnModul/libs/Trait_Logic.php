@@ -157,8 +157,9 @@ trait SmartLawnAI_Logic {
             $hardwareFehler = false;
             $fehlerhafterSprinklerName = '';
             foreach ($zoneSprinklers as $s) {
-                if (isset($s['HardwareStatusID']) && $s['HardwareStatusID'] > 0) {
-                    $hwStatus = GetValue($s['HardwareStatusID']);
+                $res = $this->ResolveSprinklerObject((int)@$s['ValveID']);
+                if ($res['HardwareStatusID'] > 0) {
+                    $hwStatus = GetValue($res['HardwareStatusID']);
                     $hwStr = strtoupper((string)$hwStatus);
                     if (in_array($hwStr, ['ERROR', 'WARNING', 'OFFLINE', 'DEFECT', 'FAULT'])) {
                         $sName = isset($s['SprinklerName']) && !empty($s['SprinklerName']) ? $s['SprinklerName'] : 'Sprinkler ' . $s['ValveID'];
@@ -206,14 +207,21 @@ trait SmartLawnAI_Logic {
                                 continue 2;
                             }
 
+                            $res = $this->ResolveSprinklerObject((int)@$currentSprinkler['ValveID']);
                             // Gardena Hardware-Watchdog: Dauer setzen
-                            if ($currentSprinkler['DurationID'] > 0) {
-                                @RequestAction($currentSprinkler['DurationID'], $berechneteMinuten);
+                            if ($res['DurationID'] > 0) {
+                                @RequestAction($res['DurationID'], $berechneteMinuten);
                                 IPS_Sleep(500); 
                             }
 
                             // Start-Befehl senden (Gardena spezifisch)
-                            @RequestAction($currentSprinkler['ValveID'], 'START_SECONDS_TO_OVERRIDE');
+                            if ($res['ValveID'] > 0) {
+                                if (IPS_VariableExists($res['ValveID']) && strtolower(IPS_GetObject($res['ValveID'])['ObjectIdent']) === 'action') {
+                                    @RequestAction($res['ValveID'], 'START_SECONDS_TO_OVERRIDE');
+                                } else {
+                                    @RequestAction($res['ValveID'], true);
+                                }
+                            }
                             
                             // Zwischenspeichern für den Lern-Algorithmus später
                             $this->SetValue('StartFeuchte_' . $zone['SensorID'], $aktuelleFeuchte);
@@ -230,18 +238,27 @@ trait SmartLawnAI_Logic {
                     // Ventil-Rückkanal von Gardena prüfen
                     $ventilOffen = false;
                     $hwVal = 'UNKNOWN';
-                    if (isset($currentSprinkler['HardwareStatusID']) && $currentSprinkler['HardwareStatusID'] > 0) {
-                        $hwVal = strtoupper((string)GetValue($currentSprinkler['HardwareStatusID']));
-                        $ventilOffen = in_array($hwVal, ['MANUAL_WATERING', 'AUTOMATIC_WATERING', 'WATERING', 'OPEN']);
+                    $res = $this->ResolveSprinklerObject((int)@$currentSprinkler['ValveID']);
+                    
+                    if ($res['ActivityID'] > 0) {
+                        $act = strtoupper((string)GetValue($res['ActivityID']));
+                        $hwVal = $act;
+                        $ventilOffen = in_array($act, ['MANUAL_WATERING', 'AUTOMATIC_WATERING', 'WATERING', 'OPEN', 'GEÖFFNET', 'BEWÄSSERUNG']);
+                    }
+                    elseif ($res['HardwareStatusID'] > 0) {
+                        $hwVal = strtoupper((string)GetValue($res['HardwareStatusID']));
+                        $ventilOffen = in_array($hwVal, ['MANUAL_WATERING', 'AUTOMATIC_WATERING', 'WATERING', 'OPEN', 'GEÖFFNET', 'BEWÄSSERUNG']);
                     } else {
-                        $v = GetValue($currentSprinkler['ValveID']);
-                        $hwVal = (string)$v;
-                        $ventilOffen = ($v && $v !== 'STOP_UNTIL_NEXT_TASK' && $v !== 'CLOSED');
+                        if ($res['ValveID'] > 0 && IPS_VariableExists($res['ValveID'])) {
+                            $v = GetValue($res['ValveID']);
+                            $hwVal = (string)$v;
+                            $ventilOffen = ($v && $v !== 'STOP_UNTIL_NEXT_TASK' && $v !== 'CLOSED');
+                        }
                     }
                     
                     // Fallback: Wenn Sekunden noch > 0 sind, läuft es definitiv noch!
-                    if (!$ventilOffen && isset($currentSprinkler['RemainingSecondsID']) && $currentSprinkler['RemainingSecondsID'] > 0) {
-                        if ((int)GetValue($currentSprinkler['RemainingSecondsID']) > 0) {
+                    if (!$ventilOffen && $res['RemainingSecondsID'] > 0) {
+                        if ((int)GetValue($res['RemainingSecondsID']) > 0) {
                             $ventilOffen = true;
                             $hwVal .= ' (Kept alive by RemainingSeconds > 0)';
                         }
@@ -259,8 +276,8 @@ trait SmartLawnAI_Logic {
                     }
                     
                     $remaining = 0;
-                    if (isset($currentSprinkler['RemainingSecondsID']) && $currentSprinkler['RemainingSecondsID'] > 0) {
-                        $remaining = (int)GetValue($currentSprinkler['RemainingSecondsID']);
+                    if ($res['RemainingSecondsID'] > 0) {
+                        $remaining = (int)GetValue($res['RemainingSecondsID']);
                     } else {
                         $wStart = (int)GetValue($this->GetIDForIdent('WateringStart_' . $zone['SensorID']));
                         $dMin = (int)GetValue($this->GetIDForIdent('Dauer_' . $zone['SensorID']));
@@ -678,8 +695,13 @@ trait SmartLawnAI_Logic {
         $sprinklers = json_decode($sprinklersJson, true);
         if (is_array($sprinklers)) {
             foreach ($sprinklers as $s) {
-                if (isset($s['ValveID']) && $s['ValveID'] > 0) {
-                    @RequestAction($s['ValveID'], 'STOP_UNTIL_NEXT_TASK');
+                $res = $this->ResolveSprinklerObject((int)@$s['ValveID']);
+                if ($res['ValveID'] > 0) {
+                    if (IPS_VariableExists($res['ValveID']) && strtolower(IPS_GetObject($res['ValveID'])['ObjectIdent']) === 'action') {
+                        @RequestAction($res['ValveID'], 'STOP_UNTIL_NEXT_TASK');
+                    } else {
+                        @RequestAction($res['ValveID'], false);
+                    }
                 }
             }
         }
@@ -688,10 +710,7 @@ trait SmartLawnAI_Logic {
             foreach ($zones as $zone) {
                 $sid = $zone['SensorID'];
                 
-                // 1. Physisches Ventil stoppen (sicherheitshalber)
-                if (isset($zone['ValveID']) && $zone['ValveID'] > 0) {
-                    @RequestAction($zone['ValveID'], 'STOP_UNTIL_NEXT_TASK');
-                }
+                // Gelöscht: Physisches Ventil der Zone stoppen (gab es nie)
 
                 $statusId = @$this->GetIDForIdent('Status_' . $sid);
                 if ($statusId > 0) {
@@ -734,8 +753,9 @@ trait SmartLawnAI_Logic {
         $zoneName = isset($zone['GroupName']) && !empty($zone['GroupName']) ? $zone['GroupName'] : 'Zone ' . $zone['SensorID'];
         foreach ($sprinklers as $s) {
             if ($s['ZoneName'] === $zoneName) {
-                if (isset($s['HardwareStatusID']) && $s['HardwareStatusID'] > 0) {
-                    $hwStatus = GetValue($s['HardwareStatusID']);
+                $res = $this->ResolveSprinklerObject((int)@$s['ValveID']);
+                if ($res['HardwareStatusID'] > 0) {
+                    $hwStatus = GetValue($res['HardwareStatusID']);
                     $hwStr = strtoupper((string)$hwStatus);
                     if (in_array($hwStr, ['ERROR', 'WARNING', 'OFFLINE', 'DEFECT', 'FAULT'])) {
                         return false;

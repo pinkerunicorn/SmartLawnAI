@@ -138,32 +138,11 @@
                     "edit": { "type": "ValidationTextBox" }
                 },
                 {
-                    "caption": "Ventil-Aktor",
+                    "caption": "Ventil (Instanz/Variable)",
                     "name": "ValveID",
-                    "width": "120px",
+                    "width": "250px",
                     "add": 0,
-                    "edit": { "type": "SelectVariable" }
-                },
-                {
-                    "caption": "Gardena Status",
-                    "name": "HardwareStatusID",
-                    "width": "120px",
-                    "add": 0,
-                    "edit": { "type": "SelectVariable" }
-                },
-                {
-                    "caption": "Gardena Dauer",
-                    "name": "DurationID",
-                    "width": "120px",
-                    "add": 0,
-                    "edit": { "type": "SelectVariable" }
-                },
-                {
-                    "caption": "Verbl. Sekunden",
-                    "name": "RemainingSecondsID",
-                    "width": "120px",
-                    "add": 0,
-                    "edit": { "type": "SelectVariable" }
+                    "edit": { "type": "SelectObject" }
                 }
             ]
         }

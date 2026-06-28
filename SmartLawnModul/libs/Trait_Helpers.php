@@ -149,4 +149,38 @@ trait SmartLawnAI_Helpers {
 
         $this->SetValue('IrrigationLog', $updatedLog);
     }
+
+    public function ResolveSprinklerObject(int $objectId): array {
+        $res = [
+            'ValveID' => 0,
+            'HardwareStatusID' => 0,
+            'DurationID' => 0,
+            'RemainingSecondsID' => 0,
+            'ActivityID' => 0
+        ];
+
+        if ($objectId <= 0) return $res;
+
+        if (IPS_VariableExists($objectId)) {
+            $res['ValveID'] = $objectId;
+            return $res;
+        }
+
+        if (IPS_InstanceExists($objectId)) {
+            $children = IPS_GetChildrenIDs($objectId);
+            foreach ($children as $child) {
+                if (!IPS_VariableExists($child)) continue;
+                $obj = IPS_GetObject($child);
+                $ident = strtolower($obj['ObjectIdent']);
+                
+                if ($ident === 'action') $res['ValveID'] = $child;
+                elseif (in_array($ident, ['state', 'status'])) $res['HardwareStatusID'] = $child;
+                elseif ($res['HardwareStatusID'] === 0 && in_array($ident, ['lasterror', 'errorcode'])) $res['HardwareStatusID'] = $child;
+                elseif ($ident === 'duration') $res['DurationID'] = $child;
+                elseif (in_array($ident, ['remaining', 'remainingtime'])) $res['RemainingSecondsID'] = $child;
+                elseif ($ident === 'activity') $res['ActivityID'] = $child;
+            }
+        }
+        return $res;
+    }
 }
