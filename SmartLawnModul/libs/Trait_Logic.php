@@ -331,6 +331,7 @@ trait SmartLawnAI_Logic {
                             $this->AddLogEvent("{$zoneName}: Sickerpause", "Warte {$sickerpauseMin} Minuten auf Sensormessung", '#FF9800');
                         }
                     }
+                        }
                     break;
 
                 case 'WAITING_FOR_RESULT':
