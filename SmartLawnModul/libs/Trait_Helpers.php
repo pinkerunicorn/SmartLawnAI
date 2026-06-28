@@ -108,29 +108,39 @@ trait SmartLawnAI_Helpers {
         }
     }
 
-    public function AddLogEvent(string $title, string $details = '') {
+    public function AddLogEvent(string $title, string $details = '', string $color = '#2196F3') {
         $logVarID = $this->GetIDForIdent('IrrigationLog');
         $currentLog = GetValue($logVarID);
-        // Platzhalter entfernen
-        $currentLog = str_replace("Noch keine Bewässerungsvorgänge protokolliert.", "", $currentLog);
         
-        $date = date('H:i'); 
-        
-        // Plain Text Formatting
-        $newEntry = "[{$date}] {$title}";
-        if (!empty($details)) {
-            $newEntry .= " - {$details}";
+        // Alten Plaintext bereinigen, wenn kein HTML-Tag vorhanden
+        if (strpos($currentLog, 'sl-log-entry') === false) {
+            $currentLog = '';
         }
         
-        // HTML Tags vom alten Log entfernen (falls vorhanden) und neuen Eintrag anfügen
-        $updatedLog = trim($newEntry . "\n" . strip_tags($currentLog));
+        $dateStr = date('d.m.Y');
+        $timeStr = date('H:i:s'); 
         
-        // Log-Größe begrenzen auf die letzten 50 Einträge
-        $entries = explode("\n", $updatedLog);
-        if (count($entries) > 50) {
-            $updatedLog = implode("\n", array_slice($entries, 0, 50));
+        $newEntry = '
+        <div class="sl-log-entry" style="margin-bottom: 8px; padding: 10px; background: rgba(128, 128, 128, 0.1); border-left: 4px solid '.$color.'; border-radius: 4px; font-family: sans-serif;">
+            <div style="font-size: 11px; opacity: 0.6; margin-bottom: 4px;">'.$dateStr.' &middot; '.$timeStr.' Uhr</div>
+            <div style="font-weight: 600; font-size: 14px; margin-bottom: 3px;">'.$title.'</div>
+            <div style="font-size: 13px; opacity: 0.8; line-height: 1.4;">'.$details.'</div>
+        </div>';
+        
+        // Log-Größe begrenzen auf die letzten 30 Einträge (Split am Marker)
+        $entries = explode('<div class="sl-log-entry"', $currentLog);
+        $entries = array_filter($entries, function($e) { return trim($e) !== ''; });
+        
+        $htmlEntries = [];
+        $htmlEntries[] = $newEntry;
+        $count = 1;
+        foreach ($entries as $e) {
+            if ($count >= 30) break;
+            $htmlEntries[] = '<div class="sl-log-entry"' . $e;
+            $count++;
         }
-
+        
+        $updatedLog = implode("", $htmlEntries);
         $this->SetValue('IrrigationLog', $updatedLog);
     }
 
