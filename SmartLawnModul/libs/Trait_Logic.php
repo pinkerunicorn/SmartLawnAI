@@ -421,7 +421,13 @@ trait SmartLawnAI_Logic {
                 $zoneName = isset($sickerZone['GroupName']) && !empty($sickerZone['GroupName']) ? $sickerZone['GroupName'] : 'Zone ' . $sickerZone['SensorID'];
                 $baseStatus = 'Sickerpause: ' . $zoneName;
             } elseif (!$einVentilIstAktivOderFehler && strpos($baseStatus, 'Berechne') === false && strpos($baseStatus, 'Manueller Start') === false) {
-                $baseStatus = 'Bereit';
+                $nextTime = $this->GetNextScheduleTime();
+                if ($nextTime > 0) {
+                    $dayStr = (date('Y-m-d', $nextTime) === date('Y-m-d')) ? 'heute' : 'morgen';
+                    $baseStatus = 'Bereit (Nächste Ausführung: ' . $dayStr . ' um ' . date('H:i', $nextTime) . ' Uhr)';
+                } else {
+                    $baseStatus = 'Bereit';
+                }
                 
                 $splitterID = $this->ReadPropertyInteger('GardenaSplitterID');
                 if ($splitterID > 0 && IPS_InstanceExists($splitterID)) {
@@ -432,7 +438,7 @@ trait SmartLawnAI_Logic {
                 }
             }
             
-            $this->SetSummaryStatus($baseStatus . ' (' . date('H:i') . ')');
+            $this->SetSummaryStatus($baseStatus);
 
             // Timer-Intervall auf 10s verkürzen, wenn Aktion läuft, sonst 60s
             if ($einVentilIstAktivOderFehler) {
