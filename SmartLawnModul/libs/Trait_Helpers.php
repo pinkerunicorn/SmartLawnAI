@@ -144,6 +144,17 @@ trait SmartLawnAI_Helpers {
         $this->SetValue('IrrigationLog', $updatedLog);
     }
 
+    public function SafeRequestAction(int $variableID, $value): bool {
+        if (!IPS_VariableExists($variableID)) return false;
+        try {
+            return @RequestAction($variableID, $value);
+        } catch (\Throwable $e) {
+            $this->LogAndDebug('SafeRequestAction', 'Fehler beim Senden an ID ' . $variableID . ': ' . $e->getMessage(), 0);
+            IPS_LogMessage('SmartLawnAI', 'Sende-Fehler an ID ' . $variableID . ': ' . $e->getMessage());
+            return false;
+        }
+    }
+
     public function ResolveSprinklerObject(int $objectId): array {
         $res = [
             'ValveID' => 0,

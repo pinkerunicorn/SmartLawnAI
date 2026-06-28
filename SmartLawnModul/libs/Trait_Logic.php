@@ -214,15 +214,15 @@ trait SmartLawnAI_Logic {
                             $res = $this->ResolveSprinklerObject((int)@$currentSprinkler['ValveID']);
                             // Gardena Hardware-Watchdog: Dauer setzen
                             if ($res['DurationID'] > 0) {
-                                @RequestAction($res['DurationID'], $berechneteMinuten);
+                                $this->SafeRequestAction($res['DurationID'], $berechneteMinuten);
                             }
 
                             // Start-Befehl senden (Gardena spezifisch)
                             if ($res['ValveID'] > 0) {
                                 if (IPS_VariableExists($res['ValveID']) && in_array(strtolower(IPS_GetObject($res['ValveID'])['ObjectIdent']), ['action', 'valvecontrol', 'control'])) {
-                                    @RequestAction($res['ValveID'], 'START_SECONDS_TO_OVERRIDE');
+                                    $this->SafeRequestAction($res['ValveID'], 'START_SECONDS_TO_OVERRIDE');
                                 } else {
-                                    @RequestAction($res['ValveID'], true);
+                                    $this->SafeRequestAction($res['ValveID'], true);
                                 }
                             }
                             
@@ -734,9 +734,9 @@ trait SmartLawnAI_Logic {
                 $res = $this->ResolveSprinklerObject((int)@$s['ValveID']);
                 if ($res['ValveID'] > 0) {
                     if (IPS_VariableExists($s['ValveID']) && in_array(strtolower(IPS_GetObject($s['ValveID'])['ObjectIdent']), ['action', 'valvecontrol', 'control'])) {
-                        @RequestAction($s['ValveID'], 'STOP_UNTIL_NEXT_TASK');
+                        $this->SafeRequestAction($s['ValveID'], 'STOP_UNTIL_NEXT_TASK');
                     } else {
-                        @RequestAction($res['ValveID'], false);
+                        $this->SafeRequestAction($res['ValveID'], false);
                     }
                 }
             }
