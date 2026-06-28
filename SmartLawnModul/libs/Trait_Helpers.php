@@ -169,8 +169,19 @@ trait SmartLawnAI_Helpers {
                 
                 if (in_array($ident, ['action', 'valvecontrol', 'control'])) $res['ValveID'] = $child;
                 elseif (in_array($ident, ['state', 'status'])) $res['HardwareStatusID'] = $child;
-                elseif ($res['HardwareStatusID'] === 0 && in_array($ident, ['lasterror', 'errorcode'])) $res['HardwareStatusID'] = $child;
-                elseif ($ident === 'duration') $res['DurationID'] = $child;
+                elseif ($res['HardwareStatusID'] === 0 && in_array($ident, ['lasterror', 'errorcode', 'lasterrorcode'])) $res['HardwareStatusID'] = $child;
+                elseif (in_array($ident, ['duration', 'valveduration'])) {
+                    if ($ident === 'valveduration') {
+                        if ($res['DurationID'] !== 0) {
+                            $res['RemainingSecondsID'] = $res['DurationID'];
+                        }
+                        $res['DurationID'] = $child;
+                    } elseif ($res['DurationID'] === 0) {
+                        $res['DurationID'] = $child; 
+                    } else {
+                        $res['RemainingSecondsID'] = $child; 
+                    }
+                }
                 elseif (in_array($ident, ['remaining', 'remainingtime'])) $res['RemainingSecondsID'] = $child;
                 elseif ($ident === 'activity') $res['ActivityID'] = $child;
             }
