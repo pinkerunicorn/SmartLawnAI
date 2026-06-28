@@ -146,5 +146,22 @@
                 }
             ]
         }
+    ],
+    "actions": [
+        {
+            "type": "RowLayout",
+            "items": [
+                {
+                    "type": "Button",
+                    "caption": "Test: Start Ventil 25027 (5 Min)",
+                    "onClick": "echo 'Sende Start-Befehl...'; SLAI_RunTestCommand($id, 25027, 'START');"
+                },
+                {
+                    "type": "Button",
+                    "caption": "Test: Stop Ventil 25027",
+                    "onClick": "echo 'Sende Stop-Befehl...'; SLAI_RunTestCommand($id, 25027, 'STOP');"
+                }
+            ]
+        }
     ]
 }

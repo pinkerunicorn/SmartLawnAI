@@ -255,4 +255,22 @@ class SmartLawnAI extends IPSModuleStrict {
             }
         }
     }
+
+    public function RunTestCommand(int $valveID, string $command): void {
+        $res = $this->ResolveSprinklerObject($valveID);
+        if ($command === 'START') {
+            if ($res['DurationID'] > 0) {
+                @RequestAction($res['DurationID'], 5); // 5 Minuten
+            }
+            if ($res['ValveID'] > 0) {
+                @RequestAction($res['ValveID'], 'START_SECONDS_TO_OVERRIDE');
+            }
+            echo "START Befehl (5 Min) gesendet an " . $valveID . " (DurationID: " . $res['DurationID'] . ", ActionID: " . $res['ValveID'] . ")\n";
+        } elseif ($command === 'STOP') {
+            if ($res['ValveID'] > 0) {
+                @RequestAction($res['ValveID'], 'STOP_UNTIL_NEXT_TASK');
+            }
+            echo "STOP Befehl gesendet an " . $valveID . "\n";
+        }
+    }
 }
