@@ -95,7 +95,7 @@ class SmartLawnAI extends IPSModuleStrict {
         parent::ApplyChanges();
         // Timer aktivieren (alle 1.000 ms = 1 Sekunde)
         // Status/Trigger Variablen
-        $this->RegisterVariableBoolean('AutomaticActive', '⚙️ Automatik aktiv', 'SmartLawn.AutoMode', 0);
+        $this->RegisterVariableBoolean('AutomaticActive', '⚙️ Automatik aktiv', '~Switch', 0);
         $this->EnableAction('AutomaticActive');
         if (!IPS_VariableExists($this->GetIDForIdent('AutomaticActive')) || (GetValue($this->GetIDForIdent('AutomaticActive')) === false && IPS_GetVariable($this->GetIDForIdent('AutomaticActive'))['VariableUpdated'] == 0)) {
             $this->SetValue('AutomaticActive', true); // Default true
@@ -110,7 +110,7 @@ class SmartLawnAI extends IPSModuleStrict {
                 $this->SetTimerInterval('LawnAITimer', 0);
             }
         }
-        $this->RegisterVariableBoolean('ForceStart', '▶️ Manuell Starten', 'SmartLawn.ForceStart', 0);
+        $this->RegisterVariableBoolean('ForceStart', '▶️ Manuell Starten', '~Switch', 0);
         $this->EnableAction('ForceStart');
         $this->SetValue('ForceStart', false);
 
