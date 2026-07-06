@@ -35,6 +35,7 @@ trait SmartLawnAI_Logic {
 
         if (!$needsWater) {
             $this->LogAndDebug('Planer', 'Zyklusprüfung: Boden ist ausreichend feucht. Keine Bewässerung nötig.', 0);
+            $this->AddLogEvent("Zyklusprüfung", "Boden ist ausreichend feucht. Keine Bewässerung nötig.", '#4CAF50');
             // Wir setzen den Zeitstempel für das Webfront neu, um zu zeigen, dass wir geprüft haben
             $this->SetBuffer('LastPlanCalculation', (string)time());
             $this->ProcessLogic(); // Update Heartbeat
@@ -42,6 +43,7 @@ trait SmartLawnAI_Logic {
         }
 
         $this->LogAndDebug('Planer', 'Zyklusprüfung: Boden ist trocken. Hole Wetter und berechne Laufzeiten...', 0);
+        $this->AddLogEvent("Zyklusprüfung", "Boden lokal trocken. Hole Wetter und frage KI...", '#9E9E9E');
         $this->UpdateWeather();
         
         $airTempID = $this->ReadPropertyInteger('GlobalAirTempID');
@@ -475,6 +477,7 @@ trait SmartLawnAI_Logic {
             $this->LogAndDebug('Planer', 'Kein Gemini API-Schlüssel konfiguriert. Abbruch.', 0);
             IPS_LogMessage('SmartVillaKunterbunt', 'SmartLawnAI: ' . 'Kein Gemini API-Schlüssel konfiguriert. Bewässerungsplan kann nicht berechnet werden.');
             $this->SetSummaryStatus('Fehler: Kein Gemini API-Schlüssel');
+            $this->AddLogEvent("API Fehler", "Kein Gemini API-Schlüssel konfiguriert.", '#F44336');
             return;
         }
 
@@ -511,6 +514,8 @@ trait SmartLawnAI_Logic {
             // Zone nur beplanen, wenn manueller Start oder Trigger-Schwellwert erreicht!
             if (!$isManualStart && $aktuelleFeuchte > $startWert) {
                 $this->LogAndDebug('Planer', 'Zone ' . $sid . ' ignoriert. Feuchte (' . $aktuelleFeuchte . '%) liegt über dem Trigger (' . $startWert . '%).', 0);
+                $zoneName = isset($zone['GroupName']) && !empty($zone['GroupName']) ? $zone['GroupName'] : 'Zone ' . $sid;
+                $this->AddLogEvent("{$zoneName}: Ignoriert", "Feuchte ({$aktuelleFeuchte}%) > Start-Wert ({$startWert}%)", '#4CAF50');
                 continue;
             }
 
@@ -631,6 +636,7 @@ trait SmartLawnAI_Logic {
             $this->LogAndDebug('Planer Fehler', 'Gemini API call failed. HTTP Code: ' . $httpCode . ', Curl-Fehler: ' . $curlErr . ', Response: ' . $response, 0);
             IPS_LogMessage('SmartVillaKunterbunt', 'SmartLawnAI: ' . 'Gemini API-Aufruf fehlgeschlagen (HTTP ' . $httpCode . '). Curl-Fehler: ' . $curlErr . ' | Details: ' . $response);
             $this->SetSummaryStatus('Fehler: Gemini API (HTTP ' . $httpCode . ')');
+            $this->AddLogEvent("API Fehler", "Gemini API-Aufruf fehlgeschlagen (HTTP {$httpCode})", '#F44336');
             return;
         }
 
@@ -638,6 +644,7 @@ trait SmartLawnAI_Logic {
         if (json_last_error() !== JSON_ERROR_NONE || !isset($result['candidates'][0]['content']['parts'][0]['text'])) {
             $this->LogAndDebug('Planer Fehler', 'Ungültiges API-Response-Format.', 0);
             $this->SetSummaryStatus('Fehler: Ungültige API-Antwort');
+            $this->AddLogEvent("API Fehler", "Ungültige API-Antwort erhalten.", '#F44336');
             return;
         }
 
@@ -678,11 +685,9 @@ trait SmartLawnAI_Logic {
                 $zonePlan = $planByZone[$sid];
                 $duration = isset($zonePlan['durationMinutes']) ? (int)$zonePlan['durationMinutes'] : 0;
                 
-                
                 if ($duration <= 0) {
-                    $this->SetValue('Status_' . $sid, 'IDLE');
-                    $this->SetValue('Dauer_' . $sid, 0);
-                    continue;
+                    // This will be handled in the $duration > 0 check below, so don't continue here
+                    // just let it fall through so the reasoning can be logged.
                 }
 
                 $reasoning = $zonePlan['reasoning'];
@@ -693,14 +698,16 @@ trait SmartLawnAI_Logic {
                 }
 
                 $this->SetValue('Dauer_' . $sid, $duration);
+                $zoneName = isset($zone['GroupName']) && !empty($zone['GroupName']) ? $zone['GroupName'] : 'Zone ' . $sid;
+                
                 if ($duration > 0) {
                     $this->SetValue('Status_' . $sid, 'QUEUED');
                     $this->LogAndDebug('Planer', 'Zone ' . $sid . ' eingereiht (Gemini): ' . $duration . ' Minuten. Begründung: ' . $reasoning, 0);
-                    $zoneName = isset($zone['GroupName']) && !empty($zone['GroupName']) ? $zone['GroupName'] : 'Zone ' . $sid;
                     $this->AddLogEvent("{$zoneName}: Plan berechnet", "Dauer: {$duration} Min. Grund: {$reasoning}", '#673AB7');
                 } else {
                     $this->SetValue('Status_' . $sid, 'IDLE');
                     $this->LogAndDebug('Planer', 'Zone ' . $sid . ' nicht eingereiht (Gemini Dauer = 0). Begründung: ' . $reasoning, 0);
+                    $this->AddLogEvent("{$zoneName}: Ausgesetzt", "KI Dauer: 0 Min. Grund: {$reasoning}", '#9E9E9E');
                 }
             } else {
                 $this->SetValue('Status_' . $sid, 'IDLE');
