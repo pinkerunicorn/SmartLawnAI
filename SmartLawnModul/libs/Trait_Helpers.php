@@ -26,10 +26,19 @@ trait SmartLawnAI_Helpers {
             }
             return 'Bewässerung läuft';
         }
+        if (strpos($longStatus, 'Wartet auf Ventil:') !== false) {
+            if (preg_match('/Wartet auf Ventil: (.*?) \(/', $longStatus, $m)) {
+                return 'Wartet: ' . $m[1];
+            }
+            return 'Wartet auf Ventil';
+        }
         if (strpos($longStatus, 'Bewässere:') !== false) {
             return str_replace('Bewässere: ', '', $longStatus) . ' startet';
         }
         if (strpos($longStatus, 'Sickerpause:') !== false) {
+            if (preg_match('/Sickerpause: (.*)/', $longStatus, $m)) {
+                return 'Pause ' . $m[1];
+            }
             return str_replace('Sickerpause: ', 'Pause ', $longStatus);
         }
         if (strpos($longStatus, 'Standby') !== false) {
@@ -39,6 +48,12 @@ trait SmartLawnAI_Helpers {
         if (strpos($longStatus, 'Plan berechnet') !== false) return 'Plan fertig';
         if (strpos($longStatus, 'Automatik') !== false) return 'Automatik Aus';
         if (strpos($longStatus, 'Manueller Start') !== false) return 'Start angefragt';
+        
+        if (strpos($longStatus, 'Bereit (Nächste Ausführung:') !== false) {
+            if (preg_match('/Nächste Ausführung: (.*?) um (.*?) Uhr/', $longStatus, $m)) {
+                return 'Nächster Start: ' . $m[1] . ' ' . $m[2];
+            }
+        }
         
         return 'Bereit';
     }
