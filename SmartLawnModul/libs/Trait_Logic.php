@@ -795,7 +795,8 @@ trait SmartLawnAI_Logic {
     private function triggerManualStart(): void {
         $this->SetSummaryStatus('Manueller Start angefordert...');
         $this->LogAndDebug('ManualStart', 'Manueller Start angefordert. Setze Zonen zurück...', 0);
-        $this->resetAllZones(false); // Stoppe alle aktiven Ventile und setze Zustand auf IDLE
+        $this->AddLogEvent("System: Manueller Start", "Bewässerung wird sofort gestartet...", '#2196F3');
+        $this->resetAllZones(true); // Nutze true, damit es nicht als Abbruch geloggt wird, aber setze Status später richtig
         $this->SetBuffer('CalculatePlanPending', 'true');
         $this->ProcessLogic();
     }

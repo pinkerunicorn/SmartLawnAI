@@ -79,6 +79,7 @@ class SmartLawnAI extends IPSModuleStrict {
             } else {
                 $this->SetTimerInterval('LawnAITimer', 1000);
                 $this->SetBuffer('LastPlanCalculation', '0');
+                $this->AddLogEvent("System: Bereit", "Automatik aktiviert. Zeitpläne aktiv.", '#4CAF50');
                 $this->ProcessLogic();
             }
         } else if ($Ident === 'ForceStart') {
