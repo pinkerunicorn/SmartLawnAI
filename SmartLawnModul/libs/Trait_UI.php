@@ -2,7 +2,7 @@
 
 trait SmartLawnAI_UI {
 
-    private function RegisterVisuMessages() {
+    private function RegisterVisuMessages(): void {
         $this->RegisterMessage($this->GetIDForIdent('SummaryStatus'), VM_UPDATE);
         $this->RegisterMessage($this->GetIDForIdent('ForecastRainToday'), VM_UPDATE);
         $this->RegisterMessage($this->GetIDForIdent('ForecastRainTomorrow'), VM_UPDATE);
@@ -39,7 +39,7 @@ trait SmartLawnAI_UI {
         return $moduleHtml . $initialHandling;
     }
 
-    private function GetFullUpdateMessage() {
+    private function GetFullUpdateMessage(): string {
         $zonesJson = $this->ReadPropertyString('Zones');
         $zones = json_decode($zonesJson, true);
         if (!is_array($zones)) $zones = [];

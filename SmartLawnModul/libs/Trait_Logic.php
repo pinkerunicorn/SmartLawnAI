@@ -463,7 +463,7 @@ trait SmartLawnAI_Logic {
         $this->UpdateVisualizationValue($this->GetFullUpdateMessage());
     }
 
-    private function CalculateAndApplyPlan($zones, $sprinklers, $isManualStart, $vpd, $lux) {
+    private function CalculateAndApplyPlan(array $zones, array $sprinklers, bool $isManualStart, float $vpd, float $lux): void {
         $this->SetSummaryStatus('Berechne Bewässerungsplan (Gemini AI)...');
         $apiKey = trim($this->ReadPropertyString('GeminiApiKey'));
         $model = $this->ReadPropertyString('GeminiModel');
@@ -723,7 +723,7 @@ trait SmartLawnAI_Logic {
         }
     }
 
-    private function resetAllZones(bool $queueForStart) {
+    private function resetAllZones(bool $queueForStart): void {
         $actionName = $queueForStart ? 'ManualStart (Hard Reset)' : 'Automatik Off (Hard Stop)';
         $this->LogAndDebug('Reset', $actionName . ' aufgerufen', 0);
         
@@ -785,7 +785,7 @@ trait SmartLawnAI_Logic {
         }
     }
 
-    private function triggerManualStart() {
+    private function triggerManualStart(): void {
         $this->SetSummaryStatus('Manueller Start angefordert...');
         $this->LogAndDebug('ManualStart', 'Manueller Start angefordert. Setze Zonen zurück...', 0);
         $this->resetAllZones(false); // Stoppe alle aktiven Ventile und setze Zustand auf IDLE
@@ -793,7 +793,7 @@ trait SmartLawnAI_Logic {
         $this->ProcessLogic();
     }
 
-    private function isZoneHardwareOk($zone, $sprinklers) {
+    private function isZoneHardwareOk(array $zone, array $sprinklers): bool {
         $zoneName = isset($zone['GroupName']) && !empty($zone['GroupName']) ? $zone['GroupName'] : 'Zone ' . $zone['SensorID'];
         foreach ($sprinklers as $s) {
             if ($s['ZoneName'] === $zoneName) {
@@ -810,7 +810,7 @@ trait SmartLawnAI_Logic {
         return true;
     }
 
-    private function GetNextScheduleTime() {
+    private function GetNextScheduleTime(): int {
         $schedule = $this->ReadPropertyInteger('IrrigationSchedule');
         $now = time();
         $today = strtotime('today');

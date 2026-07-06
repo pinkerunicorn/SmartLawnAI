@@ -2,7 +2,7 @@
 
 trait SmartLawnAI_Helpers {
 
-    private function SetSummaryStatus(string $status) {
+    private function SetSummaryStatus(string $status): void {
         $id = @$this->GetIDForIdent('SummaryStatus');
         if ($id > 0) {
             $this->SetValue('SummaryStatus', $status);
@@ -43,7 +43,7 @@ trait SmartLawnAI_Helpers {
         return 'Bereit';
     }
 
-    private function LogAndDebug($Topic, $Payload, $Format = 0) {
+    private function LogAndDebug(string $Topic, string $Payload, int $Format = 0): void {
         $this->SendDebug($Topic, $Payload, $Format);
         if (is_scalar($Payload)) {
             IPS_LogMessage('SmartVillaKunterbunt', 'SmartLawnAI: ' . $Topic . ': ' . $Payload);
@@ -54,7 +54,7 @@ trait SmartLawnAI_Helpers {
 
 
 
-    private function EnableArchive($variableID) {
+    private function EnableArchive(int $variableID): void {
         if ($variableID > 0) {
             $archiveIDs = IPS_GetInstanceListByModuleID('{43192F0B-135B-4CE7-A0A7-1475603F3060}');
             if (count($archiveIDs) > 0) {
@@ -67,7 +67,7 @@ trait SmartLawnAI_Helpers {
         }
     }
 
-    private function MaintainScheduleEvents(bool $active) {
+    private function MaintainScheduleEvents(bool $active): void {
         $schedule = $this->ReadPropertyInteger('IrrigationSchedule');
         
         $times = [];
