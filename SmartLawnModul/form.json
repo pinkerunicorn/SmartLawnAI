@@ -102,14 +102,14 @@
                 {
                     "caption": "Gruppen-Name",
                     "name": "GroupName",
-                    "width": "150px",
+                    "width": "auto",
                     "add": "",
                     "edit": { "type": "ValidationTextBox" }
                 },
                 {
                     "caption": "Feuchte-Sensor",
                     "name": "SensorID",
-                    "width": "120px",
+                    "width": "auto",
                     "add": 0,
                     "edit": { "type": "SelectVariable" }
                 }
@@ -127,21 +127,21 @@
                 {
                     "caption": "Zu Kreis (Name)",
                     "name": "ZoneName",
-                    "width": "150px",
+                    "width": "auto",
                     "add": "",
                     "edit": { "type": "ValidationTextBox" }
                 },
                 {
                     "caption": "Sprinkler Name",
                     "name": "SprinklerName",
-                    "width": "150px",
+                    "width": "auto",
                     "add": "",
                     "edit": { "type": "ValidationTextBox" }
                 },
                 {
                     "caption": "Ventil (Instanz/Variable)",
                     "name": "ValveID",
-                    "width": "250px",
+                    "width": "auto",
                     "add": 0,
                     "edit": { "type": "SelectObject" }
                 }
