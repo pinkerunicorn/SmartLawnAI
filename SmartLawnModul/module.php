@@ -30,6 +30,10 @@ class SmartLawnAI extends IPSModuleStrict {
         $this->RegisterVariableString('LastGeminiResponse', '🧠 Letzte KI-Antwort', '', 2);
         $this->RegisterVariableString('IrrigationLog', '📝 Bewässerungs-Log', '', 3);
 
+        // Status/Trigger Variablen
+        $this->RegisterVariableBoolean('AutomaticActive', '⚙️ Automatik aktiv', '', 0);
+        $this->RegisterVariableBoolean('ForceStart', '▶️ Manuell Starten', '', 0);
+
 
         // Gemini AI Konfiguration
         $this->RegisterPropertyString('GeminiApiKey', '');
@@ -96,8 +100,13 @@ class SmartLawnAI extends IPSModuleStrict {
         parent::ApplyChanges();
         // Timer aktivieren (alle 1.000 ms = 1 Sekunde)
         // Status/Trigger Variablen
-        $this->RegisterVariableBoolean('AutomaticActive', '⚙️ Automatik aktiv', '~Switch', 0);
         $this->EnableAction('AutomaticActive');
+        if (function_exists('IPS_SetVariableCustomPresentation')) { 
+            IPS_SetVariableCustomPresentation($this->GetIDForIdent('AutomaticActive'), [
+                'PRESENTATION' => VARIABLE_PRESENTATION_SWITCH,
+                'ICON' => 'Gear'
+            ]); 
+        }
         if (!IPS_VariableExists($this->GetIDForIdent('AutomaticActive')) || (GetValue($this->GetIDForIdent('AutomaticActive')) === false && IPS_GetVariable($this->GetIDForIdent('AutomaticActive'))['VariableUpdated'] == 0)) {
             $this->SetValue('AutomaticActive', true); // Default true
             $this->SetTimerInterval('LawnAITimer', 1000);
@@ -111,8 +120,13 @@ class SmartLawnAI extends IPSModuleStrict {
                 $this->SetTimerInterval('LawnAITimer', 0);
             }
         }
-        $this->RegisterVariableBoolean('ForceStart', '▶️ Manuell Starten', '~Switch', 0);
         $this->EnableAction('ForceStart');
+        if (function_exists('IPS_SetVariableCustomPresentation')) { 
+            IPS_SetVariableCustomPresentation($this->GetIDForIdent('ForceStart'), [
+                'PRESENTATION' => VARIABLE_PRESENTATION_SWITCH,
+                'ICON' => 'Play'
+            ]); 
+        }
         $this->SetValue('ForceStart', false);
 
         $this->EnableAction('DefaultZielFeuchte');
