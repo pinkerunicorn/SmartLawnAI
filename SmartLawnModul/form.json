@@ -97,6 +97,7 @@
             "rowCount": 5,
             "add": true,
             "delete": true,
+            "changeOrder": true,
             "columns": [
                 {
                     "caption": "Gruppen-Name",
@@ -121,7 +122,7 @@
             "rowCount": 10,
             "add": true,
             "delete": true,
-            "sort": false,
+            "changeOrder": true,
             "columns": [
                 {
                     "caption": "Zu Kreis (Name)",
