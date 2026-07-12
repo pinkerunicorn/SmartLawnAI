@@ -288,4 +288,19 @@ class SmartLawnAI extends IPSModuleStrict {
             echo "STOP Befehl gesendet an " . $valveID . "\n";
         }
     }
+    
+    public function SetHouseMode(int $mode): void {
+        // 0=Anwesenheit, 1=Abwesenheit, 2=Urlaub, 3=Party, 4=Heimkino, 5=Schlafen, 6=Putzen
+        if ($mode == 3) {
+            // Party Mode -> Turn off automatic watering to prevent wet guests
+            if ($this->GetValue('AutomaticActive')) {
+                $this->RequestAction('AutomaticActive', false);
+                $this->LogAndDebug('SmartLawnAI', 'Party-Modus aktiv: Bewässerungsautomatik pausiert.', 0);
+            }
+        } else {
+            // We do not automatically turn it back on, because we don't know if the user manually turned it off before.
+            // But we could log that it's no longer blocked by Party Mode.
+            $this->LogAndDebug('SmartLawnAI', "Hausmodus gewechselt auf $mode. (Bewässerung bleibt aus, falls sie zuvor im Party-Modus deaktiviert wurde).", 0);
+        }
+    }
 }
