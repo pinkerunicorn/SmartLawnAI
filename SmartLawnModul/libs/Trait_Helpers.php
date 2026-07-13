@@ -159,7 +159,7 @@ trait SmartLawnAI_Helpers {
         $this->SetValue('IrrigationLog', $updatedLog);
     }
 
-    public function SafeRequestAction(int $variableID, $value): bool {
+    protected function SafeRequestAction(int $variableID, $value): bool {
         if (!IPS_VariableExists($variableID)) return false;
         try {
             return @RequestAction($variableID, $value);
