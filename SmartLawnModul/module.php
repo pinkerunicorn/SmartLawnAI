@@ -103,8 +103,8 @@ class SmartLawnAI extends IPSModuleStrict {
         $this->EnableAction('AutomaticActive');
          
         IPS_SetVariableCustomPresentation($this->GetIDForIdent('AutomaticActive'), [
-            'PRESENTATION' => VARIABLE_PRESENTATION_SWITCH,
-            'ICON' => 'Gear'
+            'Presentation' => VARIABLE_PRESENTATION_SWITCH,
+            'Icon' => 'Gear'
         ]);
         if (!IPS_VariableExists($this->GetIDForIdent('AutomaticActive')) || (GetValue($this->GetIDForIdent('AutomaticActive')) === false && IPS_GetVariable($this->GetIDForIdent('AutomaticActive'))['VariableUpdated'] == 0)) {
             $this->SetValue('AutomaticActive', true); // Default true
@@ -122,8 +122,8 @@ class SmartLawnAI extends IPSModuleStrict {
         $this->EnableAction('ForceStart');
          
         IPS_SetVariableCustomPresentation($this->GetIDForIdent('ForceStart'), [
-            'PRESENTATION' => VARIABLE_PRESENTATION_SWITCH,
-            'ICON' => 'Play'
+            'Presentation' => VARIABLE_PRESENTATION_SWITCH,
+            'Icon' => 'Play'
         ]);
         $this->SetValue('ForceStart', false);
 
@@ -132,12 +132,12 @@ class SmartLawnAI extends IPSModuleStrict {
         if (GetValue($this->GetIDForIdent('DefaultZielFeuchte')) == 0) { $this->SetValue('DefaultZielFeuchte', 55.0); }
          
         IPS_SetVariableCustomPresentation($this->GetIDForIdent('DefaultZielFeuchte'), [
-            'PRESENTATION' => VARIABLE_PRESENTATION_SLIDER,
-            'ICON' => 'Drops',
-            'SUFFIX' => ' %',
-            'MIN' => 0,
-            'MAX' => 100,
-            'STEP' => 5
+            'Presentation' => VARIABLE_PRESENTATION_SLIDER,
+            'Icon' => 'Drops',
+            'Suffix' => ' %',
+            'Min' => 0,
+            'Max' => 100,
+            'Step' => 5
         ]);
         
         $this->EnableAction('DefaultStartSchwellwert');
@@ -145,12 +145,12 @@ class SmartLawnAI extends IPSModuleStrict {
         if (GetValue($this->GetIDForIdent('DefaultStartSchwellwert')) == 0) { $this->SetValue('DefaultStartSchwellwert', 20.0); }
          
         IPS_SetVariableCustomPresentation($this->GetIDForIdent('DefaultStartSchwellwert'), [
-            'PRESENTATION' => VARIABLE_PRESENTATION_SLIDER,
-            'ICON' => 'Drops',
-            'SUFFIX' => ' %',
-            'MIN' => 0,
-            'MAX' => 100,
-            'STEP' => 5
+            'Presentation' => VARIABLE_PRESENTATION_SLIDER,
+            'Icon' => 'Drops',
+            'Suffix' => ' %',
+            'Min' => 0,
+            'Max' => 100,
+            'Step' => 5
         ]);
         
         $this->EnableAction('SickerpauseMinuten');
@@ -158,12 +158,12 @@ class SmartLawnAI extends IPSModuleStrict {
         if (GetValue($this->GetIDForIdent('SickerpauseMinuten')) == 0) { $this->SetValue('SickerpauseMinuten', 15); }
          
         IPS_SetVariableCustomPresentation($this->GetIDForIdent('SickerpauseMinuten'), [
-            'PRESENTATION' => VARIABLE_PRESENTATION_SLIDER,
-            'ICON' => 'Clock',
-            'SUFFIX' => ' Min',
-            'MIN' => 0,
-            'MAX' => 180,
-            'STEP' => 5
+            'Presentation' => VARIABLE_PRESENTATION_SLIDER,
+            'Icon' => 'Clock',
+            'Suffix' => ' Min',
+            'Min' => 0,
+            'Max' => 180,
+            'Step' => 5
         ]);
         
         $this->EnableAction('GlobalMaxDuration');
@@ -171,12 +171,12 @@ class SmartLawnAI extends IPSModuleStrict {
         if (GetValue($this->GetIDForIdent('GlobalMaxDuration')) == 0) { $this->SetValue('GlobalMaxDuration', 30); }
          
         IPS_SetVariableCustomPresentation($this->GetIDForIdent('GlobalMaxDuration'), [
-            'PRESENTATION' => VARIABLE_PRESENTATION_SLIDER,
-            'ICON' => 'Clock',
-            'SUFFIX' => ' Min',
-            'MIN' => 0,
-            'MAX' => 180,
-            'STEP' => 5
+            'Presentation' => VARIABLE_PRESENTATION_SLIDER,
+            'Icon' => 'Clock',
+            'Suffix' => ' Min',
+            'Min' => 0,
+            'Max' => 180,
+            'Step' => 5
         ]);
 
         $splitterID = $this->ReadPropertyInteger('GardenaSplitterID');
@@ -204,23 +204,23 @@ class SmartLawnAI extends IPSModuleStrict {
                     $this->EnableArchive($this->GetIDForIdent('Effizienz_' . $sid));
                      
                     IPS_SetVariableCustomPresentation($this->GetIDForIdent('Effizienz_' . $sid), [
-                        'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-                        'ICON' => 'Graph',
-                        'SUFFIX' => ' x'
+                        'Presentation' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+                        'Icon' => 'Graph',
+                        'Suffix' => ' x'
                     ]);
                     $this->RegisterVariableFloat('StartFeuchte_' . $sid, '💧 StartFeuchte ' . $name, '', 3);
                      
                     IPS_SetVariableCustomPresentation($this->GetIDForIdent('StartFeuchte_' . $sid), [
-                        'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-                        'ICON' => 'Drops',
-                        'SUFFIX' => ' %'
+                        'Presentation' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+                        'Icon' => 'Drops',
+                        'Suffix' => ' %'
                     ]);
                     $this->RegisterVariableFloat('Dauer_' . $sid, '⏱️ Dauer ' . $name, '', 4);
                      
                     IPS_SetVariableCustomPresentation($this->GetIDForIdent('Dauer_' . $sid), [
-                        'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-                        'ICON' => 'Clock',
-                        'SUFFIX' => ' Min'
+                        'Presentation' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+                        'Icon' => 'Clock',
+                        'Suffix' => ' Min'
                     ]);
                     $this->RegisterVariableInteger('SickerpauseStart_' . $sid, '⏳ SickerpauseStart ' . $name, '', 5);
                     $this->RegisterVariableInteger('WateringStart_' . $sid, '🚿 Bewässerungsstart ' . $name, '', 6);
