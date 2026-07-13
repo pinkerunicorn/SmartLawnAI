@@ -293,4 +293,10 @@ class SmartLawnAI extends IPSModuleStrict {
             $this->LogAndDebug('SmartLawnAI', "Hausmodus gewechselt auf $mode. (Bewässerung bleibt aus, falls sie zuvor im Party-Modus deaktiviert wurde).", 0);
         }
     }
+
+    protected function LogMessage($Message, $KL_MESSAGE = KL_MESSAGE)
+    {
+        IPS_LogMessage('SmartVillaKunterbunt', 'SmartLawnAI: ' . $Message);
+    }
 }
+
