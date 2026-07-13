@@ -101,12 +101,11 @@ class SmartLawnAI extends IPSModuleStrict {
         // Timer aktivieren (alle 1.000 ms = 1 Sekunde)
         // Status/Trigger Variablen
         $this->EnableAction('AutomaticActive');
-        if (function_exists('IPS_SetVariableCustomPresentation')) { 
-            IPS_SetVariableCustomPresentation($this->GetIDForIdent('AutomaticActive'), [
-                'PRESENTATION' => VARIABLE_PRESENTATION_SWITCH,
-                'ICON' => 'Gear'
-            ]); 
-        }
+         
+        IPS_SetVariableCustomPresentation($this->GetIDForIdent('AutomaticActive'), [
+            'PRESENTATION' => VARIABLE_PRESENTATION_SWITCH,
+            'ICON' => 'Gear'
+        ]);
         if (!IPS_VariableExists($this->GetIDForIdent('AutomaticActive')) || (GetValue($this->GetIDForIdent('AutomaticActive')) === false && IPS_GetVariable($this->GetIDForIdent('AutomaticActive'))['VariableUpdated'] == 0)) {
             $this->SetValue('AutomaticActive', true); // Default true
             $this->SetTimerInterval('LawnAITimer', 1000);
@@ -121,78 +120,72 @@ class SmartLawnAI extends IPSModuleStrict {
             }
         }
         $this->EnableAction('ForceStart');
-        if (function_exists('IPS_SetVariableCustomPresentation')) { 
-            IPS_SetVariableCustomPresentation($this->GetIDForIdent('ForceStart'), [
-                'PRESENTATION' => VARIABLE_PRESENTATION_SWITCH,
-                'ICON' => 'Play'
-            ]); 
-        }
+         
+        IPS_SetVariableCustomPresentation($this->GetIDForIdent('ForceStart'), [
+            'PRESENTATION' => VARIABLE_PRESENTATION_SWITCH,
+            'ICON' => 'Play'
+        ]);
         $this->SetValue('ForceStart', false);
 
         $this->EnableAction('DefaultZielFeuchte');
         IPS_SetName($this->GetIDForIdent('DefaultZielFeuchte'), 'Bewässerungs-Ziel-Feuchte');
         if (GetValue($this->GetIDForIdent('DefaultZielFeuchte')) == 0) { $this->SetValue('DefaultZielFeuchte', 55.0); }
-        if (function_exists('IPS_SetVariableCustomPresentation')) { 
-            IPS_SetVariableCustomPresentation($this->GetIDForIdent('DefaultZielFeuchte'), [
-                'PRESENTATION' => VARIABLE_PRESENTATION_SLIDER,
-                'ICON' => 'Drops',
-                'SUFFIX' => ' %',
-                'MIN' => 0,
-                'MAX' => 100,
-                'STEP' => 5
-            ]); 
-        }
+         
+        IPS_SetVariableCustomPresentation($this->GetIDForIdent('DefaultZielFeuchte'), [
+            'PRESENTATION' => VARIABLE_PRESENTATION_SLIDER,
+            'ICON' => 'Drops',
+            'SUFFIX' => ' %',
+            'MIN' => 0,
+            'MAX' => 100,
+            'STEP' => 5
+        ]);
         
         $this->EnableAction('DefaultStartSchwellwert');
         IPS_SetName($this->GetIDForIdent('DefaultStartSchwellwert'), 'Bewässerungs-Trigger-Feuchte');
         if (GetValue($this->GetIDForIdent('DefaultStartSchwellwert')) == 0) { $this->SetValue('DefaultStartSchwellwert', 20.0); }
-        if (function_exists('IPS_SetVariableCustomPresentation')) { 
-            IPS_SetVariableCustomPresentation($this->GetIDForIdent('DefaultStartSchwellwert'), [
-                'PRESENTATION' => VARIABLE_PRESENTATION_SLIDER,
-                'ICON' => 'Drops',
-                'SUFFIX' => ' %',
-                'MIN' => 0,
-                'MAX' => 100,
-                'STEP' => 5
-            ]); 
-        }
+         
+        IPS_SetVariableCustomPresentation($this->GetIDForIdent('DefaultStartSchwellwert'), [
+            'PRESENTATION' => VARIABLE_PRESENTATION_SLIDER,
+            'ICON' => 'Drops',
+            'SUFFIX' => ' %',
+            'MIN' => 0,
+            'MAX' => 100,
+            'STEP' => 5
+        ]);
         
         $this->EnableAction('SickerpauseMinuten');
         IPS_SetName($this->GetIDForIdent('SickerpauseMinuten'), 'Sickerpause');
         if (GetValue($this->GetIDForIdent('SickerpauseMinuten')) == 0) { $this->SetValue('SickerpauseMinuten', 15); }
-        if (function_exists('IPS_SetVariableCustomPresentation')) { 
-            IPS_SetVariableCustomPresentation($this->GetIDForIdent('SickerpauseMinuten'), [
-                'PRESENTATION' => VARIABLE_PRESENTATION_SLIDER,
-                'ICON' => 'Clock',
-                'SUFFIX' => ' Min',
-                'MIN' => 0,
-                'MAX' => 180,
-                'STEP' => 5
-            ]); 
-        }
+         
+        IPS_SetVariableCustomPresentation($this->GetIDForIdent('SickerpauseMinuten'), [
+            'PRESENTATION' => VARIABLE_PRESENTATION_SLIDER,
+            'ICON' => 'Clock',
+            'SUFFIX' => ' Min',
+            'MIN' => 0,
+            'MAX' => 180,
+            'STEP' => 5
+        ]);
         
         $this->EnableAction('GlobalMaxDuration');
         IPS_SetName($this->GetIDForIdent('GlobalMaxDuration'), 'Maximale Bewässerungsdauer');
         if (GetValue($this->GetIDForIdent('GlobalMaxDuration')) == 0) { $this->SetValue('GlobalMaxDuration', 30); }
-        if (function_exists('IPS_SetVariableCustomPresentation')) { 
-            IPS_SetVariableCustomPresentation($this->GetIDForIdent('GlobalMaxDuration'), [
-                'PRESENTATION' => VARIABLE_PRESENTATION_SLIDER,
-                'ICON' => 'Clock',
-                'SUFFIX' => ' Min',
-                'MIN' => 0,
-                'MAX' => 180,
-                'STEP' => 5
-            ]); 
-        }
+         
+        IPS_SetVariableCustomPresentation($this->GetIDForIdent('GlobalMaxDuration'), [
+            'PRESENTATION' => VARIABLE_PRESENTATION_SLIDER,
+            'ICON' => 'Clock',
+            'SUFFIX' => ' Min',
+            'MIN' => 0,
+            'MAX' => 180,
+            'STEP' => 5
+        ]);
 
         $splitterID = $this->ReadPropertyInteger('GardenaSplitterID');
         if ($splitterID > 0 && IPS_InstanceExists($splitterID)) {
             $this->RegisterMessage($splitterID, IM_CHANGESTATUS);
         }
 
-        if (function_exists('IPS_SetVariableCustomPresentation')) { 
-            // Removed presentation for IrrigationLog per user request
-        }
+         
+        // Removed presentation for IrrigationLog per user request
 
         if (GetValue($this->GetIDForIdent('IrrigationLog')) === '') {
             $this->SetValue('IrrigationLog', "Noch keine Bewässerungsvorgänge protokolliert.");
@@ -209,29 +202,26 @@ class SmartLawnAI extends IPSModuleStrict {
                     $this->RegisterVariableString('Status_' . $sid, 'ℹ️ Status ' . $name, '', 1);
                     $this->RegisterVariableFloat('Effizienz_' . $sid, '📈 Effizienz ' . $name, '', 2);
                     $this->EnableArchive($this->GetIDForIdent('Effizienz_' . $sid));
-                    if (function_exists('IPS_SetVariableCustomPresentation')) { 
-                        IPS_SetVariableCustomPresentation($this->GetIDForIdent('Effizienz_' . $sid), [
-                            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-                            'ICON' => 'Graph',
-                            'SUFFIX' => ' x'
-                        ]); 
-                    }
+                     
+                    IPS_SetVariableCustomPresentation($this->GetIDForIdent('Effizienz_' . $sid), [
+                        'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+                        'ICON' => 'Graph',
+                        'SUFFIX' => ' x'
+                    ]);
                     $this->RegisterVariableFloat('StartFeuchte_' . $sid, '💧 StartFeuchte ' . $name, '', 3);
-                    if (function_exists('IPS_SetVariableCustomPresentation')) { 
-                        IPS_SetVariableCustomPresentation($this->GetIDForIdent('StartFeuchte_' . $sid), [
-                            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-                            'ICON' => 'Drops',
-                            'SUFFIX' => ' %'
-                        ]); 
-                    }
+                     
+                    IPS_SetVariableCustomPresentation($this->GetIDForIdent('StartFeuchte_' . $sid), [
+                        'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+                        'ICON' => 'Drops',
+                        'SUFFIX' => ' %'
+                    ]);
                     $this->RegisterVariableFloat('Dauer_' . $sid, '⏱️ Dauer ' . $name, '', 4);
-                    if (function_exists('IPS_SetVariableCustomPresentation')) { 
-                        IPS_SetVariableCustomPresentation($this->GetIDForIdent('Dauer_' . $sid), [
-                            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-                            'ICON' => 'Clock',
-                            'SUFFIX' => ' Min'
-                        ]); 
-                    }
+                     
+                    IPS_SetVariableCustomPresentation($this->GetIDForIdent('Dauer_' . $sid), [
+                        'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+                        'ICON' => 'Clock',
+                        'SUFFIX' => ' Min'
+                    ]);
                     $this->RegisterVariableInteger('SickerpauseStart_' . $sid, '⏳ SickerpauseStart ' . $name, '', 5);
                     $this->RegisterVariableInteger('WateringStart_' . $sid, '🚿 Bewässerungsstart ' . $name, '', 6);
                     
