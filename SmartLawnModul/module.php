@@ -325,118 +325,150 @@ class SmartLawnAI extends IPSModuleStrict {
 {
     "elements": [
         {
-            "type": "Label",
-            "caption": "Gemini AI Konfiguration"
-        },
-        {
-            "type": "ValidationTextBox",
-            "name": "GeminiApiKey",
-            "caption": "Gemini API-Schlüssel"
-        },
-        {
-            "type": "Select",
-            "name": "GeminiModel",
-            "caption": "Gemini Modell",
-            "options": [
+            "type": "ExpansionPanel",
+            "caption": "⚙️ Gemini AI Konfiguration",
+            "items": [
                 {
-                    "caption": "Gemini 3.5 Flash",
-                    "value": "gemini-3.5-flash"
+                    "type": "RowLayout",
+                    "items": [
+                        {
+                            "type": "ValidationTextBox",
+                            "name": "GeminiApiKey",
+                            "caption": "Gemini API-Schlüssel"
+                        },
+                        {
+                            "type": "Select",
+                            "name": "GeminiModel",
+                            "caption": "Gemini Modell",
+                            "options": [
+                                {
+                                    "caption": "Gemini 3.5 Flash",
+                                    "value": "gemini-3.5-flash"
+                                },
+                                {
+                                    "caption": "Gemini 2.5 Flash",
+                                    "value": "gemini-2.5-flash"
+                                },
+                                {
+                                    "caption": "Gemini 2.5 Flash Preview",
+                                    "value": "gemini-2.5-flash-preview-09-2025"
+                                }
+                            ]
+                        }
+                    ]
                 },
                 {
-                    "caption": "Gemini 2.5 Flash",
-                    "value": "gemini-2.5-flash"
+                    "type": "Label",
+                    "caption": "Bewässerungs-Zeitplan"
                 },
                 {
-                    "caption": "Gemini 2.5 Flash Preview",
-                    "value": "gemini-2.5-flash-preview-09-2025"
+                    "type": "RowLayout",
+                    "items": [
+                        {
+                            "type": "Select",
+                            "name": "IrrigationSchedule",
+                            "caption": "Prüfungs-Intervalle (KI fragt nur zu diesen Zeiten)",
+                            "options": [
+                                {
+                                    "caption": "1x täglich (06:00)",
+                                    "value": 1
+                                },
+                                {
+                                    "caption": "2x täglich (06:00, 18:00)",
+                                    "value": 2
+                                },
+                                {
+                                    "caption": "4x täglich (alle 6 Stunden)",
+                                    "value": 4
+                                },
+                                {
+                                    "caption": "6x täglich (alle 4 Stunden)",
+                                    "value": 6
+                                },
+                                {
+                                    "caption": "8x täglich (alle 3 Stunden)",
+                                    "value": 8
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "Label",
+                    "caption": "Globale Sensorik (Thermodynamik & Wetter)"
+                },
+                {
+                    "type": "RowLayout",
+                    "items": [
+                        {
+                            "type": "SelectVariable",
+                            "name": "GlobalAirTempID",
+                            "caption": "Umgebungstemperatur-Sensor (ID Lufttemperatur in °C)"
+                        },
+                        {
+                            "type": "SelectVariable",
+                            "name": "GlobalHumidityID",
+                            "caption": "Luftfeuchtigkeits-Sensor (ID relative Feuchte in %)"
+                        }
+                    ]
+                },
+                {
+                    "type": "RowLayout",
+                    "items": [
+                        {
+                            "type": "SelectVariable",
+                            "name": "GlobalIlluminanceID",
+                            "caption": "Helligkeitssensor (ID in Lux)"
+                        }
+                    ]
+                },
+                {
+                    "type": "Label",
+                    "caption": "Automatische Wetterdaten über Open-Meteo (Kostenlos, ohne API-Key)"
+                },
+                {
+                    "type": "RowLayout",
+                    "items": [
+                        {
+                            "type": "NumberSpinner",
+                            "name": "Latitude",
+                            "caption": "Breitengrad (Latitude)",
+                            "digits": 6,
+                            "minimum": -90,
+                            "maximum": 90
+                        },
+                        {
+                            "type": "NumberSpinner",
+                            "name": "Longitude",
+                            "caption": "Längengrad (Longitude)",
+                            "digits": 6,
+                            "minimum": -180,
+                            "maximum": 180
+                        }
+                    ]
+                },
+                {
+                    "type": "Label",
+                    "caption": "Zonen & Hardware-Zuweisung (0 = nutzt globales Default)"
+                },
+                {
+                    "type": "RowLayout",
+                    "items": [
+                        {
+                            "type": "SelectInstance",
+                            "name": "GardenaSplitterID",
+                            "caption": "Gardena Cloud Splitter / IO (für Verbindungs-Überwachung)"
+                        },
+                        {
+                            "type": "NumberSpinner",
+                            "name": "HardwareGracePeriod",
+                            "caption": "Cloud / Hardware Verzögerung (Grace Period in Sekunden)",
+                            "minimum": 0,
+                            "maximum": 300
+                        }
+                    ]
                 }
             ]
-        },
-        {
-            "type": "Label",
-            "caption": "Bewässerungs-Zeitplan"
-        },
-        {
-            "type": "Select",
-            "name": "IrrigationSchedule",
-            "caption": "Prüfungs-Intervalle (KI fragt nur zu diesen Zeiten)",
-            "options": [
-                {
-                    "caption": "1x täglich (06:00)",
-                    "value": 1
-                },
-                {
-                    "caption": "2x täglich (06:00, 18:00)",
-                    "value": 2
-                },
-                {
-                    "caption": "4x täglich (alle 6 Stunden)",
-                    "value": 4
-                },
-                {
-                    "caption": "6x täglich (alle 4 Stunden)",
-                    "value": 6
-                },
-                {
-                    "caption": "8x täglich (alle 3 Stunden)",
-                    "value": 8
-                }
-            ]
-        },
-        {
-            "type": "Label",
-            "caption": "Globale Sensorik (Thermodynamik & Wetter)"
-        },
-        {
-            "type": "SelectVariable",
-            "name": "GlobalAirTempID",
-            "caption": "Umgebungstemperatur-Sensor (ID Lufttemperatur in °C)"
-        },
-        {
-            "type": "SelectVariable",
-            "name": "GlobalHumidityID",
-            "caption": "Luftfeuchtigkeits-Sensor (ID relative Feuchte in %)"
-        },
-        {
-            "type": "SelectVariable",
-            "name": "GlobalIlluminanceID",
-            "caption": "Helligkeitssensor (ID in Lux)"
-        },
-        {
-            "type": "Label",
-            "caption": "Automatische Wetterdaten über Open-Meteo (Kostenlos, ohne API-Key)"
-        },
-        {
-            "type": "NumberSpinner",
-            "name": "Latitude",
-            "caption": "Breitengrad (Latitude)",
-            "digits": 6,
-            "minimum": -90,
-            "maximum": 90
-        },
-        {
-            "type": "NumberSpinner",
-            "name": "Longitude",
-            "caption": "Längengrad (Longitude)",
-            "digits": 6,
-            "minimum": -180,
-            "maximum": 180
-        },
-        {
-            "type": "Label",
-            "caption": "Zonen & Hardware-Zuweisung (0 = nutzt globales Default)"
-        },
-        {
-            "type": "SelectInstance",
-            "name": "GardenaSplitterID",
-            "caption": "Gardena Cloud Splitter / IO (für Verbindungs-Überwachung)"
-        },
-        {
-            "type": "NumberSpinner",
-            "name": "HardwareGracePeriod",
-            "caption": "Cloud / Hardware Verzögerung (Grace Period in Sekunden)",
-            "minimum": 0,
-            "maximum": 300
         },
         {
             "type": "List",
@@ -513,12 +545,14 @@ class SmartLawnAI extends IPSModuleStrict {
                 {
                     "type": "Button",
                     "caption": "Test: Start Ventil 25027 (5 Min)",
-                    "onClick": "echo 'Sende Start-Befehl...'; SLAI_RunTestCommand($id, 25027, 'START');"
+                    "onClick": "echo 'Sende Start-Befehl...'; SLAI_RunTestCommand($id, 25027, 'START');",
+                    "icon": "Play"
                 },
                 {
                     "type": "Button",
                     "caption": "Test: Stop Ventil 25027",
-                    "onClick": "echo 'Sende Stop-Befehl...'; SLAI_RunTestCommand($id, 25027, 'STOP');"
+                    "onClick": "echo 'Sende Stop-Befehl...'; SLAI_RunTestCommand($id, 25027, 'STOP');",
+                    "icon": "Stop"
                 }
             ]
         }
