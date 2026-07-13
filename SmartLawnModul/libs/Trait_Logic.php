@@ -148,7 +148,7 @@ trait SmartLawnAI_Logic {
             if (empty($aktuellerStatus)) {
                 $aktuellerStatus = 'IDLE';
             }
-            $this->LogAndDebug('ProcessLogic', 'Bearbeite Zone ' . $zone['SensorID'] . ' (Aktueller Status: ' . $aktuellerStatus . ')', 0);
+            $this->SendDebug('ProcessLogic', 'Bearbeite Zone ' . $zone['SensorID'] . ' (Aktueller Status: ' . $aktuellerStatus . ')', 0);
 
             if (empty($zoneSprinklers)) {
                 $this->LogAndDebug('ProcessLogic', 'Zone ' . $zone['SensorID'] . ' hat keine zugeordneten Sprinkler. Überspringe.', 0);
