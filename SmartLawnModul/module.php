@@ -98,6 +98,25 @@ class SmartLawnAI extends IPSModuleStrict {
 
     public function ApplyChanges(): void {
         parent::ApplyChanges();
+        // --- Auto-generated References ---
+        $ref_GlobalAirTempID = $this->ReadPropertyInteger('GlobalAirTempID');
+        if ($ref_GlobalAirTempID > 1 && @IPS_ObjectExists($ref_GlobalAirTempID)) {
+            $this->RegisterReference($ref_GlobalAirTempID);
+        }
+        $ref_GlobalHumidityID = $this->ReadPropertyInteger('GlobalHumidityID');
+        if ($ref_GlobalHumidityID > 1 && @IPS_ObjectExists($ref_GlobalHumidityID)) {
+            $this->RegisterReference($ref_GlobalHumidityID);
+        }
+        $ref_GlobalIlluminanceID = $this->ReadPropertyInteger('GlobalIlluminanceID');
+        if ($ref_GlobalIlluminanceID > 1 && @IPS_ObjectExists($ref_GlobalIlluminanceID)) {
+            $this->RegisterReference($ref_GlobalIlluminanceID);
+        }
+        $ref_GardenaSplitterID = $this->ReadPropertyInteger('GardenaSplitterID');
+        if ($ref_GardenaSplitterID > 1 && @IPS_ObjectExists($ref_GardenaSplitterID)) {
+            $this->RegisterReference($ref_GardenaSplitterID);
+        }
+        // ---------------------------------
+
         // Timer aktivieren (alle 1.000 ms = 1 Sekunde)
         // Status/Trigger Variablen
         $this->EnableAction('AutomaticActive');
