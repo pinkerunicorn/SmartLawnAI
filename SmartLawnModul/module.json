@@ -3,10 +3,15 @@
     "name": "SmartLawn AI",
     "type": 3,
     "vendor": "Florian Graßinger",
-    "url": "https://github.com/pinkerunicorn/SmartLawnAI",
-    "aliases": ["SmartLawnAI"],
+    "url": "https://github.com/pinkerunicorn/",
+    "aliases": [
+        "SmartLawnAI"
+    ],
     "parentRequirements": [],
     "childRequirements": [],
-    "implemented": ["{00000000-0000-0000-0000-000000000000}"],
-    "prefix": "SLAI"
+    "implemented": [
+        "{00000000-0000-0000-0000-000000000000}"
+    ],
+    "prefix": "SLAI",
+    "author": "Florian Graßinger"
 }

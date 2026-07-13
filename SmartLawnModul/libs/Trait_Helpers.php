@@ -162,7 +162,7 @@ trait SmartLawnAI_Helpers {
     protected function SafeRequestAction(int $variableID, $value): bool {
         if (!IPS_VariableExists($variableID)) return false;
         try {
-            return @RequestAction($variableID, $value);
+            return RequestAction($variableID, $value);
         } catch (\Throwable $e) {
             $this->LogAndDebug('SafeRequestAction', 'Fehler beim Senden an ID ' . $variableID . ': ' . $e->getMessage(), 0);
             IPS_LogMessage('SmartVillaKunterbunt', 'SmartLawnAI: ' . 'Sende-Fehler an ID ' . $variableID . ': ' . $e->getMessage());

@@ -10,7 +10,12 @@ trait SmartLawnAI_Weather {
         }
 
         $omUrl = "https://api.open-meteo.com/v1/forecast?latitude=" . number_format($lat, 6, '.', '') . "&longitude=" . number_format($lon, 6, '.', '') . "&daily=precipitation_sum&timezone=auto&forecast_days=3";
-        $omContent = @Sys_GetURLContent($omUrl);
+        try {
+            $omContent = Sys_GetURLContent($omUrl);
+        } catch (Exception $e) {
+            $this->LogMessage("SLAI_UpdateWeatherForecast: Fehler beim Abrufen der Wetterdaten: " . $e->getMessage(), KL_ERROR);
+            return;
+        }
         if ($omContent !== false) {
             $omData = json_decode($omContent, true);
             if (isset($omData['daily']) && isset($omData['daily']['precipitation_sum'])) {
