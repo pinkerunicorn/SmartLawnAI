@@ -486,9 +486,6 @@ trait SmartLawnAI_Logic {
                 $this->SetTimerInterval('LawnAITimer', 60000);
             }
         }
-
-        // Live-Update der Visualisierung pushen
-        $this->UpdateVisualizationValue($this->GetFullUpdateMessage());
     }
 
     private function CalculateAndApplyPlan(array $zones, array $sprinklers, bool $isManualStart, float $vpd, float $lux): void {

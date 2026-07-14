@@ -2,14 +2,12 @@
 
 declare(strict_types=1);
 
-require_once __DIR__ . '/libs/Trait_UI.php';
 require_once __DIR__ . '/libs/Trait_Weather.php';
 require_once __DIR__ . '/libs/Trait_AI.php';
 require_once __DIR__ . '/libs/Trait_Logic.php';
 require_once __DIR__ . '/libs/Trait_Helpers.php';
 
 class SmartLawnAI extends IPSModuleStrict {
-    use SmartLawnAI_UI;
     use SmartLawnAI_Weather;
     use SmartLawnAI_AI;
     use SmartLawnAI_Logic;
@@ -264,14 +262,10 @@ class SmartLawnAI extends IPSModuleStrict {
                 }
             }
         }
-        
-        $this->RegisterVisuMessages();
     }
 
     public function MessageSink(int $TimeStamp, int $SenderID, int $Message, array $Data): void {
-        if ($Message == VM_UPDATE) {
-            $this->UpdateVisualizationValue($this->GetFullUpdateMessage());
-        } else if ($Message == IM_CHANGESTATUS) {
+        if ($Message == IM_CHANGESTATUS) {
             $splitterID = $this->ReadPropertyInteger('GardenaSplitterID');
             if ($SenderID == $splitterID) {
                 $status = $Data[0]; // Neuer Instanz-Status
