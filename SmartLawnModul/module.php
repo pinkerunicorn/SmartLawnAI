@@ -473,25 +473,6 @@ class SmartLawnAI extends IPSModuleStrict {
                             "maximum": 300
                         }
                     ]
-                },
-                {
-                    "type": "Label",
-                    "caption": "Bewässerungssperre (Verbotene Zeiten)"
-                },
-                {
-                    "type": "RowLayout",
-                    "items": [
-                        {
-                            "type": "SelectTime",
-                            "name": "ForbiddenStartTime",
-                            "caption": "Sperrzeit Start"
-                        },
-                        {
-                            "type": "SelectTime",
-                            "name": "ForbiddenEndTime",
-                            "caption": "Sperrzeit Ende"
-                        }
-                    ]
                 }
             ]
         },
