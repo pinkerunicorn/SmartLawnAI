@@ -24,8 +24,8 @@ trait SmartLawnAI_Logic {
         }
         
         // Prüfen, ob wir uns in der Sperrzeit befinden
-        $fStart = $this->ReadPropertyString('ForbiddenStartTime');
-        $fEnd = $this->ReadPropertyString('ForbiddenEndTime');
+        $fStart = $this->GetTimeAsString('ForbiddenStartTime');
+        $fEnd = $this->GetTimeAsString('ForbiddenEndTime');
         if ($fStart !== $fEnd) {
             $now = time();
             $start = strtotime($fStart);
@@ -844,9 +844,20 @@ trait SmartLawnAI_Logic {
         return true;
     }
 
+    private function GetTimeAsString(string $propertyName): string {
+        $val = $this->ReadPropertyString($propertyName);
+        if (empty($val)) return "00:00";
+        $data = json_decode($val, true);
+        if (is_array($data) && isset($data['hour']) && isset($data['minute'])) {
+            return sprintf("%02d:%02d", $data['hour'], $data['minute']);
+        }
+        // Fallback falls es kein JSON ist (alte Version)
+        return substr($val, 0, 5);
+    }
+
     private function IsTimeForbidden(int $timestamp): bool {
-        $fStart = $this->ReadPropertyString('ForbiddenStartTime');
-        $fEnd = $this->ReadPropertyString('ForbiddenEndTime');
+        $fStart = $this->GetTimeAsString('ForbiddenStartTime');
+        $fEnd = $this->GetTimeAsString('ForbiddenEndTime');
         if ($fStart === $fEnd) return false;
         
         $timeStr = date('H:i', $timestamp);
