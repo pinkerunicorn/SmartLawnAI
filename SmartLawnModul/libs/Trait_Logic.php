@@ -22,6 +22,30 @@ trait SmartLawnAI_Logic {
                 return;
             }
         }
+        
+        // Prüfen, ob wir uns in der Sperrzeit befinden
+        $fStart = $this->ReadPropertyString('ForbiddenStartTime');
+        $fEnd = $this->ReadPropertyString('ForbiddenEndTime');
+        if ($fStart !== $fEnd) {
+            $now = time();
+            $start = strtotime($fStart);
+            $end = strtotime($fEnd);
+            
+            // Falls Endzeit am nächsten Tag liegt (z.B. 22:00 bis 06:00)
+            if ($end < $start) {
+                if ($now >= $start || $now <= $end) {
+                    $this->LogAndDebug('Planer', 'Zyklusprüfung übersprungen: Aktuelle Uhrzeit liegt innerhalb der Sperrzeit.', 0);
+                    $this->AddLogEvent("Zyklusprüfung", "Sperrzeit aktiv. Keine automatische Bewässerung.", '#FF9800');
+                    return;
+                }
+            } else {
+                if ($now >= $start && $now <= $end) {
+                    $this->LogAndDebug('Planer', 'Zyklusprüfung übersprungen: Aktuelle Uhrzeit liegt innerhalb der Sperrzeit.', 0);
+                    $this->AddLogEvent("Zyklusprüfung", "Sperrzeit aktiv. Keine automatische Bewässerung.", '#FF9800');
+                    return;
+                }
+            }
+        }
 
         $defaultStart = GetValue($this->GetIDForIdent('DefaultStartSchwellwert'));
         $needsWater = false;
@@ -89,6 +113,8 @@ trait SmartLawnAI_Logic {
                 $anyQueued = true;
             }
         }
+        
+        $this->SetValue('WateringActive', $einVentilIstAktiv);
 
         // 2. Thermodynamik (VPD) für alle Zonen vorbereiten
         $airTempID = $this->ReadPropertyInteger('GlobalAirTempID');
