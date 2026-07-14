@@ -298,7 +298,11 @@ class SmartLawnAI extends IPSModuleStrict {
             echo "START Befehl (5 Min) gesendet an " . $valveID . " (DurationID: " . $res['DurationID'] . ", ActionID: " . $res['ValveID'] . ")\n";
         } elseif ($command === 'STOP') {
             if ($res['ValveID'] > 0) {
-                $this->SafeRequestAction($res['ValveID'], 'STOP_UNTIL_NEXT_TASK');
+                if (IPS_VariableExists($res['ValveID']) && in_array(strtolower(IPS_GetObject($res['ValveID'])['ObjectIdent']), ['action', 'valvecontrol', 'control'])) {
+                    $this->SafeRequestAction($res['ValveID'], 'STOP_UNTIL_NEXT_TASK');
+                } else {
+                    $this->SafeRequestAction($res['ValveID'], false);
+                }
             }
             echo "STOP Befehl gesendet an " . $valveID . "\n";
         }

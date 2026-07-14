@@ -774,8 +774,8 @@ trait SmartLawnAI_Logic {
             foreach ($sprinklers as $s) {
                 $res = $this->ResolveSprinklerObject((int)@$s['ValveID']);
                 if ($res['ValveID'] > 0) {
-                    if (IPS_VariableExists($s['ValveID']) && in_array(strtolower(IPS_GetObject($s['ValveID'])['ObjectIdent']), ['action', 'valvecontrol', 'control'])) {
-                        $this->SafeRequestAction($s['ValveID'], 'STOP_UNTIL_NEXT_TASK');
+                    if (IPS_VariableExists($res['ValveID']) && in_array(strtolower(IPS_GetObject($res['ValveID'])['ObjectIdent']), ['action', 'valvecontrol', 'control'])) {
+                        $this->SafeRequestAction($res['ValveID'], 'STOP_UNTIL_NEXT_TASK');
                     } else {
                         $this->SafeRequestAction($res['ValveID'], false);
                     }
