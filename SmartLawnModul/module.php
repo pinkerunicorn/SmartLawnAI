@@ -50,10 +50,6 @@ class SmartLawnAI extends IPSModuleStrict {
         $this->RegisterPropertyInteger('HardwareGracePeriod', 90);
         $this->RegisterPropertyInteger('GardenaSplitterID', 0);
         
-        // NEU: Globale Bewässerungssperre
-        $this->RegisterPropertyString('ForbiddenStartTime', '10:00');
-        $this->RegisterPropertyString('ForbiddenEndTime', '17:00');
-        
         $this->RegisterVariableBoolean('WateringActive', '💦 Bewässerung läuft', '', 4);
         
         $this->SetVisualizationType(1);
@@ -471,25 +467,6 @@ class SmartLawnAI extends IPSModuleStrict {
                             "caption": "Cloud / Hardware Verzögerung (Grace Period in Sekunden)",
                             "minimum": 0,
                             "maximum": 300
-                        }
-                    ]
-                },
-                {
-                    "type": "Label",
-                    "caption": "Bewässerungssperre (Verbotene Zeiten)"
-                },
-                {
-                    "type": "RowLayout",
-                    "items": [
-                        {
-                            "type": "SelectTime",
-                            "name": "ForbiddenStartTime",
-                            "caption": "Sperrzeit Start"
-                        },
-                        {
-                            "type": "SelectTime",
-                            "name": "ForbiddenEndTime",
-                            "caption": "Sperrzeit Ende"
                         }
                     ]
                 }
