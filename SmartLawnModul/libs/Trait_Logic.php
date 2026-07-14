@@ -844,6 +844,20 @@ trait SmartLawnAI_Logic {
         return true;
     }
 
+    private function IsTimeForbidden(int $timestamp): bool {
+        $fStart = $this->ReadPropertyString('ForbiddenStartTime');
+        $fEnd = $this->ReadPropertyString('ForbiddenEndTime');
+        if ($fStart === $fEnd) return false;
+        
+        $timeStr = date('H:i', $timestamp);
+        if ($fEnd < $fStart) {
+            if ($timeStr >= $fStart || $timeStr <= $fEnd) return true;
+        } else {
+            if ($timeStr >= $fStart && $timeStr <= $fEnd) return true;
+        }
+        return false;
+    }
+
     private function GetNextScheduleTime(): int {
         $schedule = $this->ReadPropertyInteger('IrrigationSchedule');
         $now = time();
@@ -864,12 +878,17 @@ trait SmartLawnAI_Logic {
             $times = [6, 18];
         }
         
-        foreach ($times as $hour) {
-            $t = $today + ($hour * 3600);
-            if ($t > $now) return $t;
+        for ($dayOffset = 0; $dayOffset < 7; $dayOffset++) {
+            $baseDay = $today + ($dayOffset * 86400);
+            foreach ($times as $hour) {
+                $t = $baseDay + ($hour * 3600);
+                if ($t > $now && !$this->IsTimeForbidden($t)) {
+                    return $t;
+                }
+            }
         }
         
-        // Next day first time
+        // Fallback
         return $today + 86400 + ($times[0] * 3600);
     }
 }
