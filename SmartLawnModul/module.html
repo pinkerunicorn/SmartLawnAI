@@ -375,13 +375,7 @@ input[type=range]::-webkit-slider-thumb {
             <!-- Zonen werden dynamisch aus config.js generiert -->
         </main>
 
-        <!-- Einstellungen Container -->
-        <section class="glass-panel settings-panel">
-            <h2 class="settings-header">Einstellungen</h2>
-            <div class="settings-list" id="settingsContainer">
-                <!-- Settings rendered dynamically -->
-            </div>
-        </section>
+        </main>
     </div>
 
     <!-- App Logik -->
@@ -453,65 +447,7 @@ function initDashboard(data) {
         container.insertAdjacentHTML('beforeend', cardHtml);
     });
 
-    if (data.settings) {
-        const settingsContainer = document.getElementById('settingsContainer');
-        if (settingsContainer) {
-            settingsContainer.innerHTML = `
-                <!-- Switches -->
-                <div class="setting-row">
-                    <div class="setting-label"><span class="setting-icon">&#x23FB;</span> Automatik aktiv</div>
-                    <label class="switch">
-                        <input type="checkbox" id="setting_AutomaticActive" onchange="requestAction('AutomaticActive', this.checked)">
-                        <span class="slider"></span>
-                    </label>
-                </div>
-                <div class="setting-row">
-                    <div class="setting-label"><span class="setting-icon">&#x23FB;</span> Manuell Starten</div>
-                    <label class="switch">
-                        <input type="checkbox" id="setting_ManualStart" onchange="requestAction('ForceStart', this.checked)">
-                        <span class="slider"></span>
-                    </label>
-                </div>
-                <!-- Sliders -->
-                <div class="setting-row">
-                    <div class="setting-label"><span class="setting-icon">&#x1F4A7;</span> Bewässerungs-Trigger-Feuchte</div>
-                    <div class="setting-control">
-                        <input type="range" id="setting_DefaultStartSchwellwert" min="0" max="100" step="5" 
-                            onmousedown="window.isDragging=true" onmouseup="window.isDragging=false; requestAction('DefaultStartSchwellwert', parseFloat(this.value))" ontouchend="window.isDragging=false; requestAction('DefaultStartSchwellwert', parseFloat(this.value))"
-                            oninput="window.isDragging=true; document.getElementById('val_DefaultStartSchwellwert').innerText = this.value + ' %'">
-                        <span id="val_DefaultStartSchwellwert" class="setting-value">-- %</span>
-                    </div>
-                </div>
-                <div class="setting-row">
-                    <div class="setting-label"><span class="setting-icon">&#x1F4A7;</span> Bewässerungs-Ziel-Feuchte</div>
-                    <div class="setting-control">
-                        <input type="range" id="setting_DefaultZielFeuchte" min="0" max="100" step="5" 
-                            onmousedown="window.isDragging=true" onmouseup="window.isDragging=false; requestAction('DefaultZielFeuchte', parseFloat(this.value))" ontouchend="window.isDragging=false; requestAction('DefaultZielFeuchte', parseFloat(this.value))"
-                            oninput="window.isDragging=true; document.getElementById('val_DefaultZielFeuchte').innerText = this.value + ' %'">
-                        <span id="val_DefaultZielFeuchte" class="setting-value">-- %</span>
-                    </div>
-                </div>
-                <div class="setting-row">
-                    <div class="setting-label"><span class="setting-icon">&#x23F2;</span> Maximale Bewässerungsdauer</div>
-                    <div class="setting-control">
-                        <input type="range" id="setting_GlobalMaxDuration" min="5" max="120" step="5" 
-                            onmousedown="window.isDragging=true" onmouseup="window.isDragging=false; requestAction('GlobalMaxDuration', parseInt(this.value))" ontouchend="window.isDragging=false; requestAction('GlobalMaxDuration', parseInt(this.value))"
-                            oninput="window.isDragging=true; document.getElementById('val_GlobalMaxDuration').innerText = this.value + ' Min'">
-                        <span id="val_GlobalMaxDuration" class="setting-value">-- Min</span>
-                    </div>
-                </div>
-                <div class="setting-row">
-                    <div class="setting-label"><span class="setting-icon">&#x23F2;</span> Sickerpause</div>
-                    <div class="setting-control">
-                        <input type="range" id="setting_SickerpauseMinuten" min="5" max="120" step="5" 
-                            onmousedown="window.isDragging=true" onmouseup="window.isDragging=false; requestAction('SickerpauseMinuten', parseInt(this.value))" ontouchend="window.isDragging=false; requestAction('SickerpauseMinuten', parseInt(this.value))"
-                            oninput="window.isDragging=true; document.getElementById('val_SickerpauseMinuten').innerText = this.value + ' Min'">
-                        <span id="val_SickerpauseMinuten" class="setting-value">-- Min</span>
-                    </div>
-                </div>
-            `;
-        }
-    }
+    // Settings rendering removed per user request
 }
 
 function updateDashboard(data) {
@@ -611,29 +547,7 @@ function updateDashboard(data) {
         });
     }
 
-    if (data.settings) {
-        const updateSettingBoolean = (key) => {
-            const el = document.getElementById(`setting_${key}`);
-            if (el) {
-                el.checked = !!data.settings[key].value;
-            }
-        };
-        const updateSettingNumber = (key, unit) => {
-            const el = document.getElementById(`setting_${key}`);
-            const valEl = document.getElementById(`val_${key}`);
-            if (el && !window.isDragging) {
-                el.value = data.settings[key].value;
-                if (valEl) valEl.innerText = parseFloat(data.settings[key].value).toFixed(0) + ' ' + unit;
-            }
-        };
-
-        updateSettingBoolean('AutomaticActive');
-        updateSettingBoolean('ManualStart');
-        updateSettingNumber('DefaultStartSchwellwert', '%');
-        updateSettingNumber('DefaultZielFeuchte', '%');
-        updateSettingNumber('GlobalMaxDuration', 'Min');
-        updateSettingNumber('SickerpauseMinuten', 'Min');
-    }
+    // Settings update removed per user request
 }
 </script>
 </body>
