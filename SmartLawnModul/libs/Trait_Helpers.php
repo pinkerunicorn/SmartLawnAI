@@ -51,7 +51,7 @@ trait SmartLawnAI_Helpers {
         
         if (strpos($longStatus, 'Bereit (Nächste Ausführung:') !== false) {
             if (preg_match('/Nächste Ausführung: (.*?) um (.*?) Uhr/', $longStatus, $m)) {
-                return 'Start: ' . $m[1] . ' ' . $m[2];
+                return 'Wasser: ' . $m[1] . ' ' . $m[2];
             }
         }
         
