@@ -463,7 +463,7 @@ trait SmartLawnAI_Logic {
                 $nextTime = $this->GetNextScheduleTime();
                 if ($nextTime > 0) {
                     $dayStr = (date('Y-m-d', $nextTime) === date('Y-m-d')) ? 'heute': 'morgen';
-                    $baseStatus = 'Bereit (Nächste Ausführung: '. $dayStr . 'um '. date('H:i', $nextTime) . 'Uhr)';
+                    $baseStatus = 'Bereit (Nächste Ausführung: ' . $dayStr . ' um ' . date('H:i', $nextTime) . ' Uhr)';
                 } else {
                     $baseStatus = 'Bereit';
                 }
