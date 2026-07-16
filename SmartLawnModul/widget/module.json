@@ -1,12 +1,12 @@
 {
-    "id":  "{F3A2B1C0-9D8E-4F7A-B6C5-D4E3F2A10987}",
-    "name":  "SmartLawn Widget",
-    "type":  0,
-    "vendor":  "Florian Graßinger",
-    "version":  "1.0",
-    "compatibility":  {
-                          "version":  "9.0"
-                      },
-    "author":  "Florian GraÃŸinger",
-    "url":  "https://github.com/pinkerunicorn/"
+    "id": "{F3A2B1C0-9D8E-4F7A-B6C5-D4E3F2A10987}",
+    "name": "SmartLawn Widget",
+    "type": 0,
+    "vendor": "Florian Graßinger",
+    "version": "1.0",
+    "compatibility": {
+        "version": "9.0"
+    },
+    "author": "Florian Graßinger",
+    "url": "https://github.com/pinkerunicorn/"
 }

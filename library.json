@@ -1,12 +1,12 @@
 {
-    "id":  "{7B851C81-8083-424F-A14E-7EB459D6BE9F}",
-    "author":  "Florian GraÃŸinger",
-    "name":  "SmartLawn",
-    "url":  "https://github.com/pinkerunicorn/",
-    "version":  "1.0",
-    "build":  0,
-    "date":  0,
-    "compatibility":  {
-                          "version":  "9.0"
-                      }
+    "id": "{7B851C81-8083-424F-A14E-7EB459D6BE9F}",
+    "author": "Florian Graßinger",
+    "name": "SmartLawn",
+    "url": "https://github.com/pinkerunicorn/",
+    "version": "1.0",
+    "build": 0,
+    "date": 0,
+    "compatibility": {
+        "version": "9.0"
+    }
 }
