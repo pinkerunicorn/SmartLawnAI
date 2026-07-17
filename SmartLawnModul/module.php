@@ -116,6 +116,9 @@ class SmartLawnAI extends IPSModuleStrict {
     public function ApplyChanges(): void {
         parent::ApplyChanges();
         // --- Auto-generated References ---
+        foreach ($this->GetReferenceList() as $refID) {
+            $this->UnregisterReference($refID);
+        }
         $ref_GlobalAirTempID = $this->ReadPropertyInteger('GlobalAirTempID');
         if ($ref_GlobalAirTempID > 1 && @IPS_ObjectExists($ref_GlobalAirTempID)) {
             $this->RegisterReference($ref_GlobalAirTempID);
@@ -131,6 +134,15 @@ class SmartLawnAI extends IPSModuleStrict {
         $ref_GardenaSplitterID = $this->ReadPropertyInteger('GardenaSplitterID');
         if ($ref_GardenaSplitterID > 1 && @IPS_ObjectExists($ref_GardenaSplitterID)) {
             $this->RegisterReference($ref_GardenaSplitterID);
+        }
+        $list_Zones = json_decode($this->ReadPropertyString('Zones'), true);
+        if (is_array($list_Zones)) {
+            foreach ($list_Zones as $item) {
+                $vid = $item['SensorID'] ?? 0;
+                if ($vid > 1 && @IPS_ObjectExists($vid)) {
+                    $this->RegisterReference($vid);
+                }
+            }
         }
         // ---------------------------------
 
