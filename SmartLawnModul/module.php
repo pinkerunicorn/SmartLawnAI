@@ -353,201 +353,6 @@ class SmartLawnAI extends IPSModuleStrict {
     {
         IPS_LogMessage('SmartVillaKunterbunt', 'SmartLawnAI: '. $Message);
         return true;
-} else {
-            $active = GetValue($this->GetIDForIdent('AutomaticActive'));
-            $this->MaintainScheduleEvents($active);
-            if ($active) {
-                $this->SetTimerInterval('LawnAITimer', 1000);
-            } else {
-                $this->SetTimerInterval('LawnAITimer', 0);
-            }
-        }
-        $this->EnableAction('ForceStart');
-         
-        IPS_SetVariableCustomPresentation($this->GetIDForIdent('ForceStart'), [
-            'PRESENTATION'=> VARIABLE_PRESENTATION_SWITCH,
-            'ICON'=> 'Play'
-        ]);
-        $this->SetValue('ForceStart', false);
-
-        $this->EnableAction('DefaultZielFeuchte');
-        IPS_SetName($this->GetIDForIdent('DefaultZielFeuchte'), 'Bewässerungs-Ziel-Feuchte');
-        if (GetValue($this->GetIDForIdent('DefaultZielFeuchte')) == 0) { $this->SetValue('DefaultZielFeuchte', 55.0); }
-         
-        IPS_SetVariableCustomPresentation($this->GetIDForIdent('DefaultZielFeuchte'), [
-            'PRESENTATION'=> VARIABLE_PRESENTATION_SLIDER,
-            'ICON'=> 'Drops',
-            'SUFFIX'=> '%',
-            'MIN'=> 0,
-            'MAX'=> 100,
-            'STEP'=> 5
-        ]);
-        
-        $this->EnableAction('DefaultStartSchwellwert');
-        IPS_SetName($this->GetIDForIdent('DefaultStartSchwellwert'), 'Bewässerungs-Trigger-Feuchte');
-        if (GetValue($this->GetIDForIdent('DefaultStartSchwellwert')) == 0) { $this->SetValue('DefaultStartSchwellwert', 20.0); }
-         
-        IPS_SetVariableCustomPresentation($this->GetIDForIdent('DefaultStartSchwellwert'), [
-            'PRESENTATION'=> VARIABLE_PRESENTATION_SLIDER,
-            'ICON'=> 'Drops',
-            'SUFFIX'=> '%',
-            'MIN'=> 0,
-            'MAX'=> 100,
-            'STEP'=> 5
-        ]);
-        
-        $this->EnableAction('SickerpauseMinuten');
-        IPS_SetName($this->GetIDForIdent('SickerpauseMinuten'), 'Sickerpause');
-        if (GetValue($this->GetIDForIdent('SickerpauseMinuten')) == 0) { $this->SetValue('SickerpauseMinuten', 15); }
-         
-        IPS_SetVariableCustomPresentation($this->GetIDForIdent('SickerpauseMinuten'), [
-            'PRESENTATION'=> VARIABLE_PRESENTATION_SLIDER,
-            'ICON'=> 'Clock',
-            'SUFFIX'=> 'Min',
-            'MIN'=> 0,
-            'MAX'=> 180,
-            'STEP'=> 5
-        ]);
-        
-        $this->EnableAction('GlobalMaxDuration');
-        IPS_SetName($this->GetIDForIdent('GlobalMaxDuration'), 'Maximale Bewässerungsdauer');
-        if (GetValue($this->GetIDForIdent('GlobalMaxDuration')) == 0) { $this->SetValue('GlobalMaxDuration', 30); }
-         
-        IPS_SetVariableCustomPresentation($this->GetIDForIdent('GlobalMaxDuration'), [
-            'PRESENTATION'=> VARIABLE_PRESENTATION_SLIDER,
-            'ICON'=> 'Clock',
-            'SUFFIX'=> 'Min',
-            'MIN'=> 0,
-            'MAX'=> 180,
-            'STEP'=> 5
-        ]);
-
-        $splitterID = $this->ReadPropertyInteger('GardenaSplitterID');
-        if ($splitterID > 0 && IPS_InstanceExists($splitterID)) {
-            $this->RegisterMessage($splitterID, IM_CHANGESTATUS);
-        }
-
-         
-        // Removed presentation for IrrigationLog per user request
-
-        if (GetValue($this->GetIDForIdent('IrrigationLog')) === '') {
-            $this->SetValue('IrrigationLog', "Noch keine Bewässerungsvorgänge protokolliert.");
-        }
-
-        $zonesJson = $this->ReadPropertyString('Zones');
-        $zones = json_decode($zonesJson, true);
-        if (is_array($zones)) {
-            foreach ($zones as $zone) {
-                $sid = $zone['SensorID'];
-                $hasSoak = isset($zone['SoakEnabled']) ? $zone['SoakEnabled'] : false;
-                $name = isset($zone['GroupName']) && !empty($zone['GroupName']) ? $zone['GroupName'] : 'Zone '. $sid;
-                if (!empty($name)) {
-                    $this->RegisterVariableString('Status_'. $sid, 'ℹ Status '. $name, '', 1);
-                    IPS_SetIcon($this->GetIDForIdent('Status_'. $sid), 'Information');
-                    $this->RegisterVariableFloat('Effizienz_'. $sid, '📈 Effizienz '. $name, '', 2);
-                    IPS_SetIcon($this->GetIDForIdent('Effizienz_'. $sid), 'Gauge');
-                    $this->EnableArchive($this->GetIDForIdent('Effizienz_'. $sid));
-                     
-                    IPS_SetVariableCustomPresentation($this->GetIDForIdent('Effizienz_'. $sid), [
-                        'PRESENTATION'=> VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-                        'ICON'=> 'Graph',
-                        'SUFFIX'=> 'x'
-                    ]);
-                    $this->RegisterVariableFloat('StartFeuchte_'. $sid, 'StartFeuchte '. $name, '', 3);
-                    IPS_SetIcon($this->GetIDForIdent('StartFeuchte_'. $sid), 'Drop');
-                     
-                    IPS_SetVariableCustomPresentation($this->GetIDForIdent('StartFeuchte_'. $sid), [
-                        'PRESENTATION'=> VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-                        'ICON'=> 'Drops',
-                        'SUFFIX'=> '%'
-                    ]);
-                    $this->RegisterVariableFloat('Dauer_'. $sid, '⏱ Dauer '. $name, '', 4);
-                    IPS_SetIcon($this->GetIDForIdent('Dauer_'. $sid), 'Clock');
-                     
-                    IPS_SetVariableCustomPresentation($this->GetIDForIdent('Dauer_'. $sid), [
-                        'PRESENTATION'=> VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-                        'ICON'=> 'Clock',
-                        'SUFFIX'=> 'Min'
-                    ]);
-                    $this->RegisterVariableInteger('SickerpauseStart_'. $sid, '⏳ SickerpauseStart '. $name, '', 5);
-                    IPS_SetIcon($this->GetIDForIdent('SickerpauseStart_'. $sid), 'Drop');
-                    $this->RegisterVariableInteger('WateringStart_'. $sid, '🚿 Bewässerungsstart '. $name, '', 6);
-                    IPS_SetIcon($this->GetIDForIdent('WateringStart_'. $sid), 'Drop');
-                    
-                    $this->RegisterVariableInteger('CurrentSprinklerIndex_'. $sid, '🔢 Aktueller Sprinkler Index '. $name, '', 7);
-                    IPS_SetIcon($this->GetIDForIdent('CurrentSprinklerIndex_'. $sid), 'Drop');
-                    IPS_SetHidden($this->GetIDForIdent('CurrentSprinklerIndex_'. $sid), true);
-
-                    // IP-Symcon benennt bestehende Variablen nicht automatisch um, daher erzwingen wir es hier
-                    IPS_SetName($this->GetIDForIdent('Status_'. $sid), 'Status '. $name);
-                    IPS_SetName($this->GetIDForIdent('Effizienz_'. $sid), 'Effizienz '. $name);
-                    IPS_SetName($this->GetIDForIdent('StartFeuchte_'. $sid), 'StartFeuchte '. $name);
-                    IPS_SetName($this->GetIDForIdent('Dauer_'. $sid), 'Dauer '. $name);
-                    IPS_SetName($this->GetIDForIdent('SickerpauseStart_'. $sid), 'SickerpauseStart '. $name);
-                    IPS_SetName($this->GetIDForIdent('WateringStart_'. $sid), 'Bewässerungsstart '. $name);
-                    IPS_SetName($this->GetIDForIdent('CurrentSprinklerIndex_'. $sid), 'Aktueller Sprinkler Index '. $name);
-                }
-            }
-        }
-    }
-
-    public function MessageSink(int $TimeStamp, int $SenderID, int $Message, array $Data): void {
-        if ($Message == IM_CHANGESTATUS) {
-            $splitterID = $this->ReadPropertyInteger('GardenaSplitterID');
-            if ($SenderID == $splitterID) {
-                $status = $Data[0]; // Neuer Instanz-Status
-                if ($status >= 200) {
-                    $this->LogAndDebug('Gardena', "Gardena Splitter Verbindungsfehler! (Status: $status)", 0);
-                    $this->SetSummaryStatus('Gardena Cloud Verbindung getrennt');
-                } else if ($status == 102) {
-                    $this->LogAndDebug('Gardena', 'Gardena Splitter Verbindung wiederhergestellt.', 0);
-                    $this->SetSummaryStatus('Bereit');
-                }
-            }
-        }
-    }
-
-    public function RunTestCommand(int $valveID, string $command): void {
-        $res = $this->ResolveSprinklerObject($valveID);
-        if ($command === 'START') {
-            if ($res['DurationID'] > 0) {
-                $this->SafeRequestAction($res['DurationID'], 5); // 5 Minuten
-            }
-            if ($res['ValveID'] > 0) {
-                $this->SafeRequestAction($res['ValveID'], 'START_SECONDS_TO_OVERRIDE');
-            }
-            echo "START Befehl (5 Min) gesendet an ". $valveID . "(DurationID: ". $res['DurationID'] . ", ActionID: ". $res['ValveID'] . ")\n";
-        } elseif ($command === 'STOP') {
-            if ($res['ValveID'] > 0) {
-                if (IPS_VariableExists($res['ValveID']) && in_array(strtolower(IPS_GetObject($res['ValveID'])['ObjectIdent']), ['action', 'valvecontrol', 'control'])) {
-                    $this->SafeRequestAction($res['ValveID'], 'STOP_UNTIL_NEXT_TASK');
-                } else {
-                    $this->SafeRequestAction($res['ValveID'], false);
-                }
-            }
-            echo "STOP Befehl gesendet an ". $valveID . "\n";
-        }
-    }
-    
-    public function SetHouseMode(int $mode): void {
-        // 0=Anwesenheit, 1=Abwesenheit, 2=Urlaub, 3=Party, 4=Heimkino, 5=Schlafen, 6=Putzen
-        if ($mode == 3) {
-            // Party Mode -> Turn off automatic watering to prevent wet guests
-            if ($this->GetValue('AutomaticActive')) {
-                $this->RequestAction('AutomaticActive', false);
-                $this->LogAndDebug('SmartLawnAI', 'Party-Modus aktiv: Bewässerungsautomatik pausiert.', 0);
-            }
-        } else {
-            // We do not automatically turn it back on, because we don't know if the user manually turned it off before.
-            // But we could log that it's no longer blocked by Party Mode.
-            $this->LogAndDebug('SmartLawnAI', "Hausmodus gewechselt auf $mode. (Bewässerung bleibt aus, falls sie zuvor im Party-Modus deaktiviert wurde).", 0);
-        }
-    }
-
-    protected function LogMessage(string $Message, int $Type): bool
-    {
-        IPS_LogMessage('SmartVillaKunterbunt', 'SmartLawnAI: '. $Message);
-        return true;
     }
 
     public function GetConfigurationForm(): string
@@ -684,10 +489,6 @@ class SmartLawnAI extends IPSModuleStrict {
                 },
                 {
                     "type": "Label",
-                    "caption": "Wähle hier deine Hardware (z.B. den Gardena IO) und leg eine Verzögerung fest, damit die Cloud-Befehle sicher ankommen."
-                },
-                {
-                    "type": "Label",
                     "caption": "Zonen & Hardware-Zuweisung (0 = nutzt globales Default)"
                 },
                 {
@@ -732,6 +533,79 @@ class SmartLawnAI extends IPSModuleStrict {
             "type": "Label",
             "caption": "Hier definierst du deine Beregnungskreise. Gib jedem Kreis einen Namen und verknüpfe ihn mit einem passenden Bodenfeuchtesensor."
         },
+        {
+            "type": "List",
+            "name": "Zones",
+            "caption": "Beregnungskreise",
+            "rowCount": 5,
+            "add": true,
+            "delete": true,
+            "changeOrder": true,
+            "columns": [
+                {
+                    "caption": "Gruppen-Name",
+                    "name": "GroupName",
+                    "width": "auto",
+                    "add": "",
+                    "edit": {
+                        "type": "ValidationTextBox"
+                    }
+                },
+                {
+                    "caption": "Feuchte-Sensor",
+                    "name": "SensorID",
+                    "width": "250px",
+                    "add": 0,
+                    "edit": {
+                        "type": "SelectVariable"
+                    }
+                }
+            ]
+        },
+        {
+            "type": "Label",
+            "caption": "Weise hier deine physischen Sprinkler oder Ventile den angelegten Kreisen zu."
+        },
+        {
+            "type": "List",
+            "name": "Sprinklers",
+            "caption": "Sprinkler / Ventile",
+            "rowCount": 10,
+            "add": true,
+            "delete": true,
+            "changeOrder": true,
+            "columns": [
+                {
+                    "caption": "Zu Kreis (Name)",
+                    "name": "ZoneName",
+                    "width": "150px",
+                    "add": "",
+                    "edit": {
+                        "type": "ValidationTextBox"
+                    }
+                },
+                {
+                    "caption": "Sprinkler Name",
+                    "name": "SprinklerName",
+                    "width": "auto",
+                    "add": "",
+                    "edit": {
+                        "type": "ValidationTextBox"
+                    }
+                },
+                {
+                    "caption": "Ventil (Instanz/Variable)",
+                    "name": "ValveID",
+                    "width": "250px",
+                    "add": 0,
+                    "edit": {
+                        "type": "SelectObject"
+                    }
+                }
+            ]
+        }
+    ],
+    "actions": [
         {
             "type": "RowLayout",
             "items": [
