@@ -368,34 +368,11 @@ class SmartLawnAI extends IPSModuleStrict {
             "caption": "⚙ Gemini AI Konfiguration",
             "items": [
                 {
-                    "type": "RowLayout",
-                    "items": [
-                        {
-                            "type": "ValidationTextBox",
-                            "name": "GeminiApiKey",
-                            "caption": "Gemini API-Schlüssel"
-                        },
-                        {
-                            "type": "Select",
-                            "name": "GeminiModel",
-                            "caption": "Gemini Modell",
-                            "options": [
-                                {
-                                    "caption": "Gemini 3.5 Flash",
-                                    "value": "gemini-3.5-flash"
-                                },
-                                {
-                                    "caption": "Gemini 2.5 Flash",
-                                    "value": "gemini-2.5-flash"
-                                },
-                                {
-                                    "caption": "Gemini 2.5 Flash Preview",
-                                    "value": "gemini-2.5-flash-preview-09-2025"
-                                }
-                            ]
-                        }
-                    ]
-                },
+                    "type": "Label",
+                    "caption": "API-Key und Modell werden zentral über die 'Smart Gemini IO' Instanz konfiguriert.\nBitte dort einmalig deinen Google Gemini API-Key und das gewünschte Modell hinterlegen.\nAlle KI-Module finden die Instanz dann automatisch."
+                }
+            ]
+        },
                 {
                     "type": "Label",
                     "caption": "Bewässerungs-Zeitplan"

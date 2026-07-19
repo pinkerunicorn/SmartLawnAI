@@ -490,19 +490,16 @@ trait SmartLawnAI_Logic {
 
     private function CalculateAndApplyPlan(array $zones, array $sprinklers, bool $isManualStart, float $vpd, float $lux): void {
         $this->SetSummaryStatus('Berechne Bewässerungsplan (Gemini AI)...');
-        $apiKey = trim($this->ReadPropertyString('GeminiApiKey'));
-        $model = $this->ReadPropertyString('GeminiModel');
-        if (empty($model)) {
-            $model = 'gemini-1.5-flash';
-        }
 
-        if (empty($apiKey)) {
-            $this->LogAndDebug('Planer', 'Kein Gemini API-Schlüssel konfiguriert. Abbruch.', 0);
-            IPS_LogMessage('SmartVillaKunterbunt', 'SmartLawnAI: '. 'Kein Gemini API-Schlüssel konfiguriert. Bewässerungsplan kann nicht berechnet werden.');
-            $this->SetSummaryStatus('Fehler: Kein Gemini API-Schlüssel');
-            $this->AddLogEvent("API Fehler", "Kein Gemini API-Schlüssel konfiguriert.", '#F44336');
+        // SmartGeminiIO auto-discover
+        $geminiInstances = IPS_GetInstanceListByModuleID('{4C8B2A6D-9E3F-4A7B-8C5D-1F6E2A3B7C4D}');
+        if (empty($geminiInstances)) {
+            $this->LogAndDebug('Planer', 'SmartGeminiIO Instanz nicht gefunden! Bitte eine erstellen.', 0);
+            IPS_LogMessage('SmartVillaKunterbunt', 'SmartLawnAI: SmartGeminiIO Instanz nicht gefunden.');
+            $this->SetSummaryStatus('Fehler: SmartGeminiIO nicht konfiguriert');
             return;
         }
+        $geminiId = $geminiInstances[0];
 
         $ambientContext = [
             'airTemperatureCelsius'=> ($this->ReadPropertyInteger('GlobalAirTempID') > 0) ? (float)GetValue($this->ReadPropertyInteger('GlobalAirTempID')) : 20.0,
@@ -624,57 +621,46 @@ trait SmartLawnAI_Logic {
             ]
         ];
 
-        $this->LogAndDebug('Planer', 'Gemini Anfrage gesendet (Modell: '. $model . ')...', 0);
+        $this->LogAndDebug('Planer', 'Gemini Anfrage wird gesendet...', 0);
         $this->LogAndDebug('Planer Prompt', $userPrompt, 0);
 
+        $responseSchema = json_encode($responseSchema);
+        $instanceId     = $this->InstanceID;
+        $isManualInt    = $isManualStart ? 1 : 0;
+
+        // Async via IPS_RunScriptText — GIO_Query blockiert, daher in Background
         $script = '<?php
-            $ch = curl_init("'. $url . '");
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_POST, true);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, '. var_export(json_encode($payload), true) . ');
-            curl_setopt($ch, CURLOPT_HTTPHEADER, ["Content-Type: application/json"]);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 45);
-            
-            $response = curl_exec($ch);
-            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            $curlErr = curl_error($ch);
-            curl_close($ch);
-            
-            SLAI_ProcessGeminiPlanResponse('. $this->InstanceID . ', $response, $httpCode, $curlErr, '. ($isManualStart ? 'true': 'false') . ');
+            $result = GIO_Query(' . $geminiId . ',
+                ' . var_export($userPrompt, true) . ',
+                ' . var_export($systemInstruction, true) . ',
+                ' . var_export($responseSchema, true) . '
+            );
+            SLAI_ProcessGeminiPlanResult(' . $instanceId . ', $result, ' . $isManualInt . ');
         ';
         IPS_RunScriptText($script);
     }
 
-    public function ProcessGeminiPlanResponse(string $response, int $httpCode, string $curlErr, bool $isManualStart): void {
+    public function ProcessGeminiPlanResult(string $jsonText, int $isManualStartInt): void {
+        $isManualStart = (bool)$isManualStartInt;
         $zonesJson = $this->ReadPropertyString('Zones');
         $zones = json_decode($zonesJson, true);
         if (!is_array($zones)) $zones = [];
-        
+
         $sprinklersJson = $this->ReadPropertyString('Sprinklers');
         $sprinklers = json_decode($sprinklersJson, true);
         if (!is_array($sprinklers)) $sprinklers = [];
 
-        if ($response === false || $httpCode !== 200) {
-            $this->LogAndDebug('Planer Fehler', 'Gemini API call failed. HTTP Code: '. $httpCode . ', Curl-Fehler: '. $curlErr . ', Response: '. $response, 0);
-            IPS_LogMessage('SmartVillaKunterbunt', 'SmartLawnAI: '. 'Gemini API-Aufruf fehlgeschlagen (HTTP '. $httpCode . '). Curl-Fehler: '. $curlErr . '| Details: '. $response);
-            $this->SetSummaryStatus('Fehler: Gemini API (HTTP '. $httpCode . ')');
-            $this->AddLogEvent("API Fehler", "Gemini API-Aufruf fehlgeschlagen (HTTP {$httpCode})", '#F44336');
+        if (empty($jsonText)) {
+            $this->LogAndDebug('Planer Fehler', 'SmartGeminiIO lieferte keine Antwort.', 0);
+            IPS_LogMessage('SmartVillaKunterbunt', 'SmartLawnAI: Gemini Plan-Anfrage fehlgeschlagen (leere Antwort).');
+            $this->SetSummaryStatus('Fehler: Gemini API (keine Antwort)');
+            $this->AddLogEvent('API Fehler', 'Keine Antwort von SmartGeminiIO.', '#F44336');
             return;
         }
 
-        $result = json_decode($response, true);
-        if (json_last_error() !== JSON_ERROR_NONE || !isset($result['candidates'][0]['content']['parts'][0]['text'])) {
-            $this->LogAndDebug('Planer Fehler', 'Ungültiges API-Response-Format.', 0);
-            $this->SetSummaryStatus('Fehler: Ungültige API-Antwort');
-            $this->AddLogEvent("API Fehler", "Ungültige API-Antwort erhalten.", '#F44336');
-            return;
-        }
+        $this->LogAndDebug('Planer Antwort', $jsonText, 0);
 
-        $rawText = $result['candidates'][0]['content']['parts'][0]['text'];
-        $this->LogAndDebug('Planer Antwort', $rawText, 0);
-
-        $planData = json_decode($rawText, true);
+        $planData = json_decode($jsonText, true);
         if (json_last_error() !== JSON_ERROR_NONE || !isset($planData['irrigationPlan']) || !is_array($planData['irrigationPlan'])) {
             $this->LogAndDebug('Planer Fehler', 'Plan-JSON konnte nicht geparst werden.', 0);
             $this->SetSummaryStatus('Fehler: Gemini JSON-Parsing fehlgeschlagen');
