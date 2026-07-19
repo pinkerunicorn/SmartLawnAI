@@ -502,9 +502,7 @@ class SmartLawnAI extends IPSModuleStrict {
                             "caption": "Sperrzeit Ende"
                         }
                     ]
-                }
-            ]
-        },
+                },
         {
             "type": "Label",
             "caption": "Hier definierst du deine Beregnungskreise. Gib jedem Kreis einen Namen und verknüpfe ihn mit einem passenden Bodenfeuchtesensor."
