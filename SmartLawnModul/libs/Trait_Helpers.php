@@ -108,6 +108,7 @@ trait SmartLawnAI_Helpers {
                 if ($eid === false) {
                     $eid = IPS_CreateEvent(1); // Zyklisches Event
                     IPS_SetParent($eid, $this->InstanceID);
+                    IPS_SetHidden($eid, true);
                     IPS_SetName($eid, sprintf('Zeitplan Prüfung (%02d:00)', $i));
                     IPS_SetIdent($eid, $ident);
                     IPS_SetEventScript($eid, "SLAI_ScheduledEvaluation(\$_IPS['TARGET']);");
