@@ -93,7 +93,8 @@ trait SmartLawnAI_AI {
             $result = GIO_Query(' . $geminiId . ',
                 ' . var_export($userPrompt, true) . ',
                 ' . var_export($systemInstruction, true) . ',
-                ' . var_export($responseSchema, true) . '
+                ' . var_export($responseSchema, true) . ',
+                0.1
             );
             SLAI_ProcessGeminiResult(' . $instanceId . ', $result, ' . $zoneID . ', ' . $startFeuchte . ', ' . $aktuelleFeuchte . ', ' . $dauer . ', ' . $vpd . ', ' . $lux . ', ' . $retryCount . ');
         ';

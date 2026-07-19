@@ -633,7 +633,8 @@ trait SmartLawnAI_Logic {
             $result = GIO_Query(' . $geminiId . ',
                 ' . var_export($userPrompt, true) . ',
                 ' . var_export($systemInstruction, true) . ',
-                ' . var_export($responseSchema, true) . '
+                ' . var_export($responseSchema, true) . ',
+                0.1
             );
             SLAI_ProcessGeminiPlanResult(' . $instanceId . ', $result, ' . $isManualInt . ');
         ';
