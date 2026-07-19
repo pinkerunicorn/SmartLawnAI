@@ -29,8 +29,8 @@ class SmartLawnAI extends IPSModuleStrict {
         // Summenstatus Variable (fürs Webfront)
         $this->RegisterVariableString('SummaryStatus', '🤖 Aktueller Status', '', 0);
         IPS_SetIcon($this->GetIDForIdent('SummaryStatus'), 'Information');
-        $this->RegisterVariableString('VestaboardStatus', 'Kurz-Status (Vestaboard)', '', 1);
-        IPS_SetIcon($this->GetIDForIdent('VestaboardStatus'), 'Information');
+        $this->RegisterVariableString('VestaboardMessage', 'Vestaboard Nachricht', '', 1);
+        IPS_SetIcon($this->GetIDForIdent('VestaboardMessage'), 'Information');
         $this->RegisterVariableString('LastGeminiResponse', '🧠 Letzte KI-Antwort', '', 2);
         IPS_SetIcon($this->GetIDForIdent('LastGeminiResponse'), 'Information');
         $this->RegisterVariableString('IrrigationLog', '📝 Bewässerungs-Log', '', 3);

@@ -8,9 +8,9 @@ trait SmartLawnAI_Helpers {
             $this->SetValue('SummaryStatus', $status);
         }
         
-        $vID = @$this->GetIDForIdent('VestaboardStatus');
+        $vID = @$this->GetIDForIdent('VestaboardMessage');
         if ($vID > 0) {
-            $this->SetValue('VestaboardStatus', $this->GetShortStatus($status));
+            $this->SetValue('VestaboardMessage', $this->GetShortStatus($status));
         }
     }
 
