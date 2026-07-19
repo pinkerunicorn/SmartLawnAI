@@ -571,7 +571,6 @@ trait SmartLawnAI_Logic {
         $systemInstruction = "Du bist ein präzises Steuerungsmodul für Agrarsysteme. Deine Aufgabe ist es, für die übergebenen Zonen-IDs (zoneId) Laufzeiten in Minuten zu berechnen. Antworte ausschließlich im vorgegebenen JSON-Format.";
 
         // 3. API-Aufruf (Gemini mit striktem JSON Schema)
-        $url = "https://generativelanguage.googleapis.com/v1beta/models/". $model . ":generateContent?key=". $apiKey;
 
         $responseSchema = [
             'type'=> 'OBJECT',
@@ -600,25 +599,6 @@ trait SmartLawnAI_Logic {
                 ]
             ],
             'required'=> ['irrigationPlan']
-        ];
-
-        $payload = [
-            'contents'=> [
-                [
-                    'parts'=> [
-                        ['text'=> $userPrompt]
-                    ]
-                ]
-            ],
-            'systemInstruction'=> [
-                'parts'=> [
-                    ['text'=> $systemInstruction]
-                ]
-            ],
-            'generationConfig'=> [
-                'responseMimeType'=> 'application/json',
-                'responseSchema'=> $responseSchema
-            ]
         ];
 
         $this->LogAndDebug('Planer', 'Gemini Anfrage wird gesendet...', 0);
