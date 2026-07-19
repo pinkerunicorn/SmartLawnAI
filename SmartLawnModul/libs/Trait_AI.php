@@ -127,7 +127,7 @@ trait SmartLawnAI_AI {
                 $begruendung   = $parsed['reasoning'] ?? '';
 
                 $this->SetValue('Effizienz_' . $zoneID, $neueEffizienz);
-                IPS_LogMessage('SmartVillaKunterbunt', 'SmartLawnAI: Gemini Effizienz-Lernen (Zone ' . $zoneID . '): Neuer Faktor = ' . $neueEffizienz . 'x. Begründung: ' . $begruendung);
+                $this->SLog('INFO', 'Gemini Effizienz-Lernen (Zone ' . $zoneID . '): Neuer Faktor = ' . $neueEffizienz . 'x', $begruendung);
                 $this->AddLogEvent("{$zoneName}: KI-Lernen erfolgreich", "Neue Effizienz: {$neueEffizienz}x. Grund: {$begruendung}", '#9C27B0');
                 return;
             }
@@ -155,7 +155,7 @@ trait SmartLawnAI_AI {
             $this->SetTimerInterval('GeminiRetryTimer', 300000);
         } else {
             $this->LogAndDebug('Weather', "Gemini Effizienz-Lernen für Zone $zoneID nach 3 Versuchen endgültig fehlgeschlagen.", 0);
-            IPS_LogMessage('SmartVillaKunterbunt', 'SmartLawnAI: Gemini Effizienz-Lernen für Zone ' . $zoneID . ' endgültig fehlgeschlagen.');
+            $this->SLog('ERROR', 'Gemini Effizienz-Lernen für Zone ' . $zoneID . ' endgültig fehlgeschlagen.');
             $this->AddLogEvent("{$zoneName}: KI-Lernen fehlgeschlagen", 'SmartGeminiIO: Keine Antwort nach 3 Versuchen.', '#F44336');
         }
     }

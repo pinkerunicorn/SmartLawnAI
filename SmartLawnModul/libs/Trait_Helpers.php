@@ -61,9 +61,9 @@ trait SmartLawnAI_Helpers {
     private function LogAndDebug(string $Topic, string $Payload, int $Format = 0): void {
         $this->SendDebug($Topic, $Payload, $Format);
         if (is_scalar($Payload)) {
-            IPS_LogMessage('SmartVillaKunterbunt', 'SmartLawnAI: ' . $Topic . ': ' . $Payload);
+            $this->SLog('INFO', $Topic . ': ' . $Payload);
         } else {
-            IPS_LogMessage('SmartVillaKunterbunt', 'SmartLawnAI: ' . $Topic . ': ' . json_encode($Payload));
+            $this->SLog('INFO', $Topic . ': ' . json_encode($Payload));
         }
     }
 
@@ -166,7 +166,7 @@ trait SmartLawnAI_Helpers {
             return RequestAction($variableID, $value);
         } catch (\Throwable $e) {
             $this->LogAndDebug('SafeRequestAction', 'Fehler beim Senden an ID ' . $variableID . ': ' . $e->getMessage(), 0);
-            IPS_LogMessage('SmartVillaKunterbunt', 'SmartLawnAI: ' . 'Sende-Fehler an ID ' . $variableID . ': ' . $e->getMessage());
+            $this->SLog('ERROR', 'Sende-Fehler an ID ' . $variableID . ': ' . $e->getMessage());
             return false;
         }
     }

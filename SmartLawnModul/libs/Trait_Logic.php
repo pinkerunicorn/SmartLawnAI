@@ -199,7 +199,7 @@ trait SmartLawnAI_Logic {
                 }
             }
             if ($hardwareFehler) {
-                IPS_LogMessage('SmartVillaKunterbunt', 'SmartLawnAI: '. 'HARDWARE_FEHLER für Zone '. $zone['SensorID'] . '! '. $fehlerhafterSprinklerName . 'meldet einen Defekt.');
+                $this->SLog('ERROR', 'HARDWARE_FEHLER für Zone '. $zone['SensorID'] . '! '. $fehlerhafterSprinklerName . 'meldet einen Defekt.');
                 $this->SetValue('Status_'. $zone['SensorID'], 'HARDWARE_FEHLER');
                 continue; 
             }
@@ -251,7 +251,7 @@ trait SmartLawnAI_Logic {
                             }
                             
                             if ($startErfolgreich) {
-                                IPS_LogMessage('SmartVillaKunterbunt', 'SmartLawnAI: '. 'Bewässerungs-Startbefehl für Zone '. $zone['SensorID'] . 'gesendet!');
+                                $this->SLog('INFO', 'Bewässerungs-Startbefehl für Zone '. $zone['SensorID'] . 'gesendet!');
                                 $this->SetValue('Status_'. $zone['SensorID'], 'WAITING_FOR_OPEN');
                                 $this->SetValue('WateringStart_'. $zone['SensorID'], time());
                                 $this->SetValue('CurrentSprinklerIndex_'. $zone['SensorID'], $currentIndex);
@@ -317,7 +317,7 @@ trait SmartLawnAI_Logic {
                         } else {
                             $wateringStart = (int)GetValue($this->GetIDForIdent('WateringStart_'. $zone['SensorID']));
                             if ((time() - $wateringStart) > 180) { // 3 Minuten Timeout!
-                                IPS_LogMessage('SmartVillaKunterbunt', 'SmartLawnAI: '. 'TIMEOUT! Ventil '. $currentSprinklerName . 'meldet nicht OPEN nach 3 Minuten. Überspringe.');
+                                $this->SLog('ERROR', 'TIMEOUT! Ventil '. $currentSprinklerName . 'meldet nicht OPEN nach 3 Minuten. Überspringe.');
                                 $this->AddLogEvent("Timeout", "{$currentSprinklerName} meldet nicht OPEN.", '#F44336');
                                 $aktuellerStatus = 'WATERING'; // force next logic block to finish it
                             } else {
@@ -346,7 +346,7 @@ trait SmartLawnAI_Logic {
                     }
 
                     if (!$ventilOffen && $aktuellerStatus === 'WATERING') {
-                        IPS_LogMessage('SmartVillaKunterbunt', 'SmartLawnAI: '. $currentSprinklerName . 'in Zone '. $zone['SensorID'] . 'ist fertig. Hardware-Status: '. $hwVal);
+                        $this->SLog('INFO', $currentSprinklerName . 'in Zone '. $zone['SensorID'] . 'ist fertig. Hardware-Status: '. $hwVal);
                         
                         $currentIndex++;
                         if ($currentIndex < count($zoneSprinklers)) {
@@ -495,7 +495,7 @@ trait SmartLawnAI_Logic {
         $geminiInstances = IPS_GetInstanceListByModuleID('{4C8B2A6D-9E3F-4A7B-8C5D-1F6E2A3B7C4D}');
         if (empty($geminiInstances)) {
             $this->LogAndDebug('Planer', 'SmartGeminiIO Instanz nicht gefunden! Bitte eine erstellen.', 0);
-            IPS_LogMessage('SmartVillaKunterbunt', 'SmartLawnAI: SmartGeminiIO Instanz nicht gefunden.');
+            $this->SLog('ERROR', 'SmartGeminiIO Instanz nicht gefunden.');
             $this->SetSummaryStatus('Fehler: SmartGeminiIO nicht konfiguriert');
             return;
         }
@@ -633,7 +633,7 @@ trait SmartLawnAI_Logic {
 
         if (empty($jsonText)) {
             $this->LogAndDebug('Planer Fehler', 'SmartGeminiIO lieferte keine Antwort.', 0);
-            IPS_LogMessage('SmartVillaKunterbunt', 'SmartLawnAI: Gemini Plan-Anfrage fehlgeschlagen (leere Antwort).');
+            $this->SLog('ERROR', 'Gemini Plan-Anfrage fehlgeschlagen (leere Antwort).');
             $this->SetSummaryStatus('Fehler: Gemini API (keine Antwort)');
             $this->AddLogEvent('API Fehler', 'Keine Antwort von SmartGeminiIO.', '#F44336');
             return;
@@ -725,7 +725,7 @@ trait SmartLawnAI_Logic {
         $this->LogAndDebug('Reset', $actionName . 'aufgerufen', 0);
         
         if (!$queueForStart) {
-            IPS_LogMessage('SmartVillaKunterbunt', 'SmartLawnAI: '. 'Automatik deaktiviert! Alle Ventile werden gestoppt und Zonen zurückgesetzt.');
+            $this->SLog('WARNING', 'Automatik deaktiviert! Alle Ventile werden gestoppt und Zonen zurückgesetzt.');
             $this->SetSummaryStatus('Automatik deaktiviert (Zonen gestoppt)');
             $this->AddLogEvent("System: Abbruch", "Automatik deaktiviert, alle Ventile gestoppt.", '#F44336');
         }
@@ -766,7 +766,7 @@ trait SmartLawnAI_Logic {
                     
                     if ($queueForStart) {
                         $this->LogAndDebug('Reset', 'Zone '. $sid . 'hart resettet und -> QUEUED.', 0);
-                        IPS_LogMessage('SmartVillaKunterbunt', 'SmartLawnAI: '. 'Zone '. $sid . 'wurde manuell zurückgesetzt und in Warteschlange eingereiht.');
+                        $this->SLog('INFO', 'Zone '. $sid . 'wurde manuell zurückgesetzt und in Warteschlange eingereiht.');
                     } else {
                         $this->LogAndDebug('Reset', 'Zone '. $sid . 'hart resettet und gestoppt -> IDLE.', 0);
                     }
