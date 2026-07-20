@@ -155,7 +155,7 @@ trait SmartLawnAI_AI {
             $this->SetTimerInterval('GeminiRetryTimer', 300000);
         } else {
             $this->LogAndDebug('Weather', "Gemini Effizienz-Lernen für Zone $zoneID nach 3 Versuchen endgültig fehlgeschlagen.", 0);
-            $this->SLog('ERROR', 'Gemini Effizienz-Lernen für Zone ' . $zoneID . ' endgültig fehlgeschlagen.');
+            $this->SLog('ERROR', 'Gemini Effizienz-Lernen fehlgeschlagen', 'Zone ' . $zoneID . ' endgültig fehlgeschlagen nach 3 Versuchen');
             $this->AddLogEvent("{$zoneName}: KI-Lernen fehlgeschlagen", 'SmartGeminiIO: Keine Antwort nach 3 Versuchen.', '#F44336');
         }
     }
